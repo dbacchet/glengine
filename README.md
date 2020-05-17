@@ -1,2 +1,4 @@
-# visualizer
-simple visualizer for rapid prototyping
+# simple visualizer
+basic visualizer for prototyping
+
+
