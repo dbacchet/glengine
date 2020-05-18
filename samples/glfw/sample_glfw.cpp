@@ -39,9 +39,15 @@ std::unordered_map<GLenum, std::string> shader_type_map = {
     {GL_VERTEX_SHADER, "VERTEX_SHADER"},
 };
 
+struct Color {
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    uint8_t a = 255;
+};
 struct Vertex {
     math::Vector3f pos;
-    math::Vector4f color;
+    Color color;
 };
 
 class Mesh {
@@ -87,7 +93,7 @@ class Mesh {
         // vertex color
         GLuint vcol_location = glGetAttribLocation(shader, "vCol");
         glEnableVertexAttribArray(vcol_location);
-        glVertexAttribPointer(vcol_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, color));
+        glVertexAttribPointer(vcol_location, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void *)offsetof(Vertex, color));
 
         glBindVertexArray(0);
     }
@@ -162,17 +168,17 @@ class Shader {
     }
 };
 
-std::vector<Vertex> vertices = {{{-0.6f, -0.4f, 0.0f}, {1.f, 0.f, 0.f, 1.0f}},
-                                {{0.6f, -0.4f, 0.0f}, {0.f, 1.f, 0.f, 1.0f}},
-                                {{0.0f, 0.6f, 0.0f}, {0.f, 0.f, 1.f, 1.0f}}};
+std::vector<Vertex> vertices = {{{-0.6f,-0.4f, 0.0f}, {255, 0, 0, 255}},
+                                {{ 0.6f,-0.4f, 0.0f}, {0, 255, 0, 255}},
+                                {{ 0.0f, 0.6f, 0.0f}, {0, 0, 255, 255}}};
 
 std::vector<Vertex> create_grid(float len, float step) {
     std::vector<Vertex> vertices;
     const int32_t major = 5;
     int32_t nlines = len / step;
-    math::Vector4f col0 = {0.3f, 0.3f, 0.3f, 1.0f};
-    math::Vector4f col1 = {0.15f, 0.15f, 0.15f, 1.0f};
-    math::Vector4f col2 = {0.20f, 0.20f, 0.20f, 1.0f};
+    Color col0 = {80, 80, 80, 255};
+    Color col1 = {40, 40, 40, 255};
+    Color col2 = {50, 50, 50, 255};
     // main axis
     vertices.push_back({{-len, 0, 0}, col0});
     vertices.push_back({{len, 0, 0}, col0});
@@ -212,8 +218,8 @@ int main(void) {
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -249,10 +255,12 @@ int main(void) {
     // camera.set_ortho(-100, 100, -20, 20, -10, 10);
     camera.set_transform(math::create_lookat<float>({-10.0f, -1.0f, 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
 
+    int width, height;
     while (!glfwWindowShouldClose(window)) {
-        int width, height;
+        float t = glfwGetTime();
         glfwGetFramebufferSize(window, &width, &height);
 
+        camera.set_transform(math::create_lookat<float>({10.0f*std::cos(0.5f*t), 5.0f*std::sin(0.5f*t), 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
         camera.update(width, height);
 
         glViewport(0, 0, width, height);
@@ -265,7 +273,7 @@ int main(void) {
         grid.draw(shader.program_id);
         // triangle
         math::Matrix4f m = math::create_transformation({0.0f, 0.0f, 0.0f},
-                                                       math::quat_from_euler_321(0.0f, 0.0f, (float)glfwGetTime()));
+                                                       math::quat_from_euler_321(0.0f, 0.0f, t*1.5f));
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, pv * m);
         triangle.draw(shader.program_id);
 
