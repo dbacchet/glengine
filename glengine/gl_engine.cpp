@@ -80,8 +80,11 @@ GLEngine::~GLEngine() {}
 bool GLEngine::init(const Config &config) {
     _context = glengine::init_context(1280, 720, "GLEngine sample app");
 
-    _camera.set_perspective(0.1, 100.0, math::utils::deg2rad(45.0f));
+    _camera.set_perspective(0.1, 1000.0, math::utils::deg2rad(45.0f));
     _camera.set_transform(math::create_lookat<float>({-10.0f, -1.0f, 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
+
+    // create stock shaders and prefabs
+    create_stock_shaders();
 
     // callbacks for mouse interaction
     glengine::set_callbacks(_context, (void *)this,
@@ -93,11 +96,33 @@ bool GLEngine::init(const Config &config) {
                                 nullptr,                  // cursorenterexit_fun_callback
                                 nullptr,                  // char_fun_callback
                             });
+
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+
     return true;
 }
 
 bool GLEngine::render() {
-    return true;
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    int width = -1;
+    int height = -1;
+    glfwGetFramebufferSize(_context.window, &width, &height);
+
+    _camera_manipulator.update(_camera);
+    _camera.update(width, height);
+
+    glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    for (auto &ro : _renderobjects) {
+        ro.second->draw(_camera);
+    }
+
+    glfwSwapBuffers(_context.window);
+    glfwPollEvents();
+    return !glfwWindowShouldClose(_context.window);
 }
 
 bool GLEngine::terminate() {
@@ -114,32 +139,94 @@ bool GLEngine::terminate() {
     return true;
 }
 
-Mesh &GLEngine::create_mesh(uint32_t id) {
+Mesh *GLEngine::create_mesh(uint32_t id) {
     Mesh *m = new Mesh();
     _meshes[id] = m;
-    return *m;
+    return m;
 }
 
-Mesh &GLEngine::get_mesh(uint32_t id) {
-    return *_meshes[id];
+Mesh *GLEngine::get_mesh(uint32_t id) {
+    return _meshes[id];
 }
 
 bool GLEngine::has_mesh(uint32_t id) const {
     return _meshes.count(id) > 0;
 }
 
-Shader &GLEngine::create_shader(uint32_t id) {
-    Shader *s = new Shader();
-    _shaders[id] = s;
-    return *s;
+Mesh *GLEngine::create_box_mesh(uint32_t id, const math::Vector3f &size) {
+    Mesh *m = create_mesh(id);
+    MeshData md = create_box_data(size);
+    m->init(md.vertices, md.indices, GL_TRIANGLES);
+    return m;
 }
 
-Shader &GLEngine::get_shader(uint32_t id) {
-    return *_shaders[id];
+Mesh *GLEngine::create_grid_mesh(uint32_t id, float len, float step) {
+    Mesh *m = create_mesh(id);
+    MeshData md = create_grid_data(len, step);
+    m->init(md.vertices, md.indices, GL_LINES);
+    return m;
+}
+
+Shader *GLEngine::create_shader(uint32_t id) {
+    Shader *s = new Shader();
+    _shaders[id] = s;
+    return s;
+}
+
+Shader *GLEngine::get_shader(uint32_t id) {
+    return _shaders[id];
 }
 
 bool GLEngine::has_shader(uint32_t id) const {
     return _shaders.count(id) > 0;
+}
+
+Shader *GLEngine::get_stock_shader(StockShader type) {
+    return _stock_shaders[type];
+}
+
+RenderObject *GLEngine::create_renderobject(uint32_t id) {
+    RenderObject *ro = new RenderObject();
+    _renderobjects[id] = ro;
+    return ro;
+}
+
+RenderObject *GLEngine::create_renderobject(uint32_t id, Mesh *mesh, Shader *shader) {
+    RenderObject *ro = create_renderobject(id);
+    ro->init(mesh, shader);
+    return ro;
+}
+
+RenderObject *GLEngine::get_renderobject(uint32_t id) {
+    return _renderobjects[id];
+}
+
+bool GLEngine::has_renderobject(uint32_t id) const {
+    return _renderobjects.count(id) > 0;
+}
+
+// RenderObject* GLEngine::create_box(uint32_t id, const math::Vector3f &size, StockShader shader) {
+//     RenderObject *ro = create_renderobject(id);
+//     ro->init()
+// }
+
+void GLEngine::create_stock_shaders() {
+    Shader *shader_flat = new Shader();
+    Shader *shader_diffuse = new Shader();
+    Shader *shader_phong = new Shader();
+    Shader *shader_vertexcolor = new Shader();
+    ShaderSrc flat_src = get_stock_shader_source(StockShader::Flat);
+    ShaderSrc diffuse_src = get_stock_shader_source(StockShader::Diffuse);
+    ShaderSrc phong_src = get_stock_shader_source(StockShader::Phong);
+    ShaderSrc vertexcolor_src = get_stock_shader_source(StockShader::VertexColor);
+    shader_flat->init(flat_src.vertex_shader, flat_src.fragment_shader);
+    shader_diffuse->init(diffuse_src.vertex_shader, diffuse_src.fragment_shader);
+    shader_phong->init(phong_src.vertex_shader, phong_src.fragment_shader);
+    shader_vertexcolor->init(vertexcolor_src.vertex_shader, vertexcolor_src.fragment_shader);
+    _stock_shaders[StockShader::Flat] = shader_flat;
+    _stock_shaders[StockShader::Diffuse] = shader_diffuse;
+    _stock_shaders[StockShader::Phong] = shader_phong;
+    _stock_shaders[StockShader::VertexColor] = shader_vertexcolor;
 }
 
 } // namespace glengine
