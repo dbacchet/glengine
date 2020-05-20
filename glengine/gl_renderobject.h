@@ -1,6 +1,7 @@
 #pragma once
 
 #include "math/vmath.h"
+#include "gl_types.h"
 #include "gl_mesh.h"
 #include "gl_shader.h"
 
@@ -8,48 +9,34 @@ namespace glengine {
 
 class RenderObject {
   public:
-    // //// //
-    // data //
-    // //// //
-    // const std::vector<Vertex> &vertices() const { return _vertices; }
-    // const std::vector<uint32_t> &indices() const { return _indices; }
-    //
-    // std::vector<Vertex> &mutable_vertices() {
-    //     _data_dirty = true;
-    //     return _vertices;
-    // }
-    // std::vector<uint32_t> &mutable_indices() {
-    //     _data_dirty = true;
-    //     return _indices;
-    // }
-    //
-    // RenderObject &set_vertices(const std::vector<Vertex> &vertices) {
-    //     _vertices = vertices;
-    //     _data_dirty = true;
-    //     return *this;
-    // }
-    // RenderObject &set_vertices(const Vertex *vertices, uint32_t nv) {
-    //     _vertices = std::vector<Vertex>(vertices, vertices + nv);
-    //     _data_dirty = true;
-    //     return *this;
-    // }
-    // RenderObject &set_indices(const std::vector<uint32_t> indices) {
-    //     _indices = indices;
-    //     _data_dirty = true;
-    //     return *this;
-    // }
-    // RenderObject &set_indices(const uint32_t *indices, uint32_t ni) {
-    //     _indices = std::vector<uint32_t>(indices, indices + ni);
-    //     _data_dirty = true;
-    //     return *this;
-    // }
 
+    bool init(Mesh *mesh, Shader *shader) {
+        if (!mesh || !shader) {
+            return false;
+        }
+        _mesh = mesh;
+        _shader = shader;
+        return true;
+    }
+
+    bool draw(const Camera &cam) {
+        if (_visible) {
+            _shader->activate();
+            _shader->set_uniform_model(_transform * _scale);
+            _shader->set_uniform_view(cam.inverse_transform());
+            _shader->set_uniform_projection(cam.projection());
+            _shader->set_uniform_color(_color);
+            _shader->set_uniform_light0_pos(math::Vector3f(100,100,100));
+            _mesh->draw();
+        }
+        return true;
+    }
     // ////////// //
     // attributes //
     // ////////// //
     math::Matrix4f transform() const { return _transform; }
     math::Vector3f scale() const { return {_transform(0, 0), _transform(1, 1), _transform(2, 2)}; }
-    math::Vector4f color() const { return _color; }
+    glengine::Color color() const { return _color; }
     bool visible() const { return _visible; }
 
     RenderObject &set_transform(const math::Matrix4f &tf) {
@@ -64,7 +51,7 @@ class RenderObject {
         _attr_dirty = true; // mark the attributes as changed
         return *this;
     }
-    RenderObject &set_color(const math::Vector4f &color) {
+    RenderObject &set_color(const glengine::Color &color) {
         _color = color;
         _attr_dirty = true; // mark the attributes as changed
         return *this;
@@ -80,7 +67,7 @@ class RenderObject {
 
     math::Matrix4f _transform = math::matrix4_identity<float>();
     math::Matrix4f _scale = math::matrix4_identity<float>();
-    math::Vector4f _color = {0.5f, 0.5f, 0.5f, 1.0f};
+    glengine::Color _color = {100,100,100,255};
     bool _visible = true; ///< visibility flag
 
     bool _data_dirty = true; ///< flag to mark the data (vertices and indices) as out-of-date

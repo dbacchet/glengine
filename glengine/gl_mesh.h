@@ -44,9 +44,8 @@ class Mesh {
         return true;
     }
 
-    void draw(GLuint shader) {
+    void draw() {
         // draw mesh
-        glUseProgram(shader);
         glBindVertexArray(vao);
         if (indices.size() > 0) {
             glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);
@@ -85,6 +84,8 @@ class Mesh {
 
         constexpr GLuint vpos_location = 0; // position
         constexpr GLuint vcol_location = 1; // color
+        constexpr GLuint vnorm_location = 2; // normal
+        constexpr GLuint vtex0_location = 3; // texture0 coords
         // vertex positions
         glEnableVertexAttribArray(vpos_location);
         glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
@@ -92,6 +93,14 @@ class Mesh {
         glEnableVertexAttribArray(vcol_location);
         glVertexAttribPointer(vcol_location, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex),
                               (void *)offsetof(Vertex, color));
+        // vertex normal
+        glEnableVertexAttribArray(vnorm_location);
+        glVertexAttribPointer(vnorm_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                              (void *)offsetof(Vertex, normal));
+        // vertex color
+        glEnableVertexAttribArray(vtex0_location);
+        glVertexAttribPointer(vtex0_location, 2, GL_HALF_FLOAT, GL_FALSE, sizeof(Vertex),
+                              (void *)offsetof(Vertex, tex_coords));
 
         glBindVertexArray(0);
     }
