@@ -6,9 +6,11 @@
 #include "gl_stock_shaders.h"
 #include "gl_prefabs.h"
 #include "gl_renderobject.h"
+#include "imgui/imgui.h"
 
 #include <cstdint>
 #include <unordered_map>
+#include <functional>
 
 namespace glengine {
 
@@ -80,6 +82,12 @@ class GLEngine {
     // prefabs
     // RenderObject* create_box(uint32_t id, const math::Vector3f &size={1.0f,1.0f,1.0f}, StockShader shader=StockShader::Diffuse);
 
+    // // //
+    // UI //
+    // // //
+    /// add a function to be called during the UI rendering
+    void add_ui_function(std::function<void(void)> fun);
+
 // protected:
     Context _context;
     Camera _camera;
@@ -91,6 +99,8 @@ class GLEngine {
     std::unordered_map<StockShader, Shader*> _stock_shaders;
 
     std::unordered_map<uint32_t, RenderObject*> _renderobjects;
+
+    std::vector<std::function<void(void)>> _ui_functions;
 
     void create_stock_shaders();
 };

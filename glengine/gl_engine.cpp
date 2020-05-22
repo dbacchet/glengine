@@ -1,6 +1,10 @@
 #include "gl_engine.h"
 #include "gl_renderobject.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 #include "math/vmath.h"
 #include "math/math_utils.h"
 
@@ -23,6 +27,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void scroll_callback(GLFWwindow *window, double xoffs, double yoffs) {
+    if (ImGui::GetIO().WantCaptureMouse) {
+        // do nothing if the mouse is on top a UI element
+        return;
+    }
     auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
     app._camera_manipulator.set_distance(app._camera_manipulator.distance() * (1 + yoffs / 10));
 }
@@ -59,6 +67,10 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    if (ImGui::GetIO().WantCaptureMouse) {
+        // do nothing if the mouse is on top a UI element
+        return;
+    }
     auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
     auto &ctx = app._context;
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -78,24 +90,21 @@ namespace glengine {
 GLEngine::~GLEngine() {}
 
 bool GLEngine::init(const Config &config) {
-    _context = glengine::init_context(1280, 720, "GLEngine sample app");
+    _context = glengine::init_context(1280, 720, "GLEngine sample app", (void *)this,
+                                      {
+                                          scroll_callback,          // scroll_fun_callback
+                                          mouse_button_callback,    // mousebutton_fun_callback
+                                          key_callback,             // key_fun_callback
+                                          cursor_position_callback, // cursorpos_fun_callback
+                                          nullptr,                  // cursorenterexit_fun_callback
+                                          nullptr,                  // char_fun_callback
+                                      });
 
     _camera.set_perspective(0.1, 1000.0, math::utils::deg2rad(45.0f));
     _camera.set_transform(math::create_lookat<float>({-10.0f, -1.0f, 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
 
     // create stock shaders and prefabs
     create_stock_shaders();
-
-    // callbacks for mouse interaction
-    glengine::set_callbacks(_context, (void *)this,
-                            {
-                                scroll_callback,          // scroll_fun_callback
-                                mouse_button_callback,    // mousebutton_fun_callback
-                                key_callback,             // key_fun_callback
-                                cursor_position_callback, // cursorpos_fun_callback
-                                nullptr,                  // cursorenterexit_fun_callback
-                                nullptr,                  // char_fun_callback
-                            });
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -119,6 +128,21 @@ bool GLEngine::render() {
     for (auto &ro : _renderobjects) {
         ro.second->draw(_camera);
     }
+
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::ShowMetricsWindow();
+
+    for (auto& fun: _ui_functions) {
+        fun();
+    }
+
+    // render ImGui
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(_context.window);
     glfwPollEvents();
@@ -209,6 +233,10 @@ bool GLEngine::has_renderobject(uint32_t id) const {
 //     RenderObject *ro = create_renderobject(id);
 //     ro->init()
 // }
+
+void GLEngine::add_ui_function(std::function<void(void)> fun) {
+    _ui_functions.push_back(fun);
+}
 
 void GLEngine::create_stock_shaders() {
     Shader *shader_flat = new Shader();

@@ -2,7 +2,7 @@
 
 #include "math/vmath.h"
 
-#include "glad/gl.h"
+#include "glad/glad.h"
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
@@ -43,7 +43,7 @@ struct Callbacks {
 };
 
 /// initialize the opengl context
-Context init_context(uint32_t width = 1280, uint32_t height = 720, const char *title = "sample");
+Context init_context(uint32_t width = 1280, uint32_t height = 720, const char *title = "sample", void *user_pointer=nullptr, const Callbacks &callbacks={});
 /// set the window callbacks
 void set_callbacks(const Context &ctx, void *user_pointer, const Callbacks &callbacks);
 /// destroy the given context
