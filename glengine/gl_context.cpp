@@ -14,7 +14,7 @@ static void error_callback(int error, const char *description) {
     fprintf(stderr, "Error (%d) creating context: %s\n", error, description);
 }
 
-Context init_context(uint32_t width, uint32_t height, const char *title, void *user_pointer, const Callbacks &callbacks) {
+Context init_context(const Config &config, const char *title, void *user_pointer, const Callbacks &callbacks) {
 
     Context context;
 
@@ -30,7 +30,7 @@ Context init_context(uint32_t width, uint32_t height, const char *title, void *u
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    context.window = glfwCreateWindow(width, height, title, NULL, NULL);
+    context.window = glfwCreateWindow(config.window_width, config.window_height, title, NULL, NULL);
     if (!context.window) {
         glfwTerminate();
         exit(EXIT_FAILURE);
@@ -38,7 +38,7 @@ Context init_context(uint32_t width, uint32_t height, const char *title, void *u
 
     glfwMakeContextCurrent(context.window);
     gladLoadGL(glfwGetProcAddress);
-    glfwSwapInterval(1);
+    glfwSwapInterval(config.vsync ? 1 : 0);
 
     printf("OpenGL version %s\n", (char *)glGetString(GL_VERSION));
 
@@ -61,12 +61,12 @@ Context init_context(uint32_t width, uint32_t height, const char *title, void *u
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
-    // ImGui::StyleColorsDark();
-    ImGui::StyleColorsClassic();
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(context.window, true);
-    ImGui_ImplOpenGL3_Init(NULL);//glsl_version);
+    ImGui_ImplOpenGL3_Init(NULL);
 
     return context;
 }

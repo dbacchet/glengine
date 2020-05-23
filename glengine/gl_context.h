@@ -9,6 +9,14 @@
 
 namespace glengine {
 
+// generic context config parameters
+struct Config {
+    uint32_t window_width = 1280;
+    uint32_t window_height = 720;
+    bool vsync = true;
+};
+
+
 // callbacks: see glfw docs for more info
 typedef void (*GLFWscrollfun)(GLFWwindow *, double, double);
 typedef void (*GLFWmousebuttonfun)(GLFWwindow *, int, int, int);
@@ -43,7 +51,7 @@ struct Callbacks {
 };
 
 /// initialize the opengl context
-Context init_context(uint32_t width = 1280, uint32_t height = 720, const char *title = "sample", void *user_pointer=nullptr, const Callbacks &callbacks={});
+Context init_context(const Config &config = {}, const char *title = "sample", void *user_pointer=nullptr, const Callbacks &callbacks={});
 /// set the window callbacks
 void set_callbacks(const Context &ctx, void *user_pointer, const Callbacks &callbacks);
 /// destroy the given context
