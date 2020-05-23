@@ -73,41 +73,70 @@ std::vector<glengine::Vertex> create_grid(float len, float step) {
     return vertices;
 }
 
+bool create_sphere(float radius, uint32_t subdiv, std::vector<glengine::Vertex> &out_vertices, std::vector<uint32_t> &out_indices) {
+    const int num_sectors = 2*subdiv;
+    const int num_stacks = subdiv;
+    out_vertices.clear();
+    out_indices.clear();
+    // vertices
+    for (int i = 0; i <= num_stacks; ++i) {
+        float stack_angle = M_PI / 2 - i * M_PI / num_stacks; // starting from pi/2 to -pi/2
+        float xy = radius * std::cos(stack_angle);     // r * cos(u)
+        float z = radius * std::sin(stack_angle);      // r * sin(u)
+        // add (num_sectors+1) vertices per stack. the first and last vertices have same position and normal, but different tex coords
+        for (int j = 0; j <= num_sectors; ++j) {
+            float sector_angle = j * 2 * M_PI / num_sectors; // starting from 0 to 2pi
+            math::Vector3f pos(xy * std::cos(sector_angle), xy * std::sin(sector_angle), z);
+            math::Vector3f normal = math::normalized(pos);
+            glengine::TexCoords texcoord{(GLhalf)(j / num_sectors), (GLhalf)(i / num_stacks)};
+            out_vertices.push_back({pos, {140, 140, 140, 255}, normal, texcoord});
+        }
+    }
+    // indices
+    for (int i = 0; i < num_stacks; ++i) {
+        uint32_t k1 = i * (num_sectors + 1); // beginning of current stack
+        uint32_t k2 = k1 + num_sectors + 1;  // beginning of next stack
+        for (int j = 0; j < num_sectors; ++j, ++k1, ++k2) {
+            // 2 triangles per sector excluding first and last stacks
+            if (i != 0) {
+                out_indices.push_back(k1);
+                out_indices.push_back(k2);
+                out_indices.push_back(k1 + 1);
+            }
+            if (i != (num_stacks - 1)) {
+                out_indices.push_back(k1 + 1);
+                out_indices.push_back(k2);
+                out_indices.push_back(k2 + 1);
+            }
+        }
+    }
+    return true;
+}
+
 }
 
 namespace glengine {
-// enum class Prefab {
-//     Axis = 0,
-//     Box,
-//     Quad,
-//     Sphere,
-//     Grid,
-//     NumPrefabs
-// };
 
-// MeshData get_prefab_mesh(Prefab type) {
-//     MeshData md;
-//     switch (type) {
-//     case Prefab::Axis:
-//         break;
-//     case Prefab::Box:
-//         create_box({1.0f, 1.0f, 1.0f}, md.vertices, md.indices);
-//         break;
-//     case Prefab::Quad:
-//         break;
-//     case Prefab::Sphere:
-//         break;
-//     case Prefab::Grid:
-//         break;
-//     default:
-//         break;
-//     }
-//     return md;
-// }
+MeshData create_axis_data() {
+    MeshData md;
+    md.vertices = { {{0,0,0}, {255,0,0,255}},   // x0
+                    {{1,0,0}, {255,0,0,255}},   // x1
+                    {{0,0,0}, {0,255,0,255}},   // y0
+                    {{0,1,0}, {0,255,0,255}},   // y1
+                    {{0,0,0}, {0,0,255,255}},   // z0
+                    {{0,0,1}, {0,0,255,255}} }; // z1
+    return md;
+}
 
 MeshData create_box_data(const math::Vector3f &size) {
     MeshData md;
     create_box(size, md.vertices, md.indices);
+    return md;
+}
+
+MeshData create_sphere_data(float radius, uint32_t subdiv) {
+    MeshData md;
+    create_sphere(radius, subdiv, md.vertices, md.indices);
     return md;
 }
 

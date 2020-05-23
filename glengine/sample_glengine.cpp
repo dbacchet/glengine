@@ -40,6 +40,8 @@ int main(void) {
     glengine::Mesh *grid_mesh = eng.create_grid_mesh(204, 50.0f, 1.0f);
     glengine::Mesh *box_mesh = eng.create_box_mesh(202, {1, 1, 1});
     glengine::Mesh *box_dyn_mesh = eng.create_box_mesh(203, {1, 1, 1});
+    glengine::Mesh *axis_mesh = eng.create_axis_mesh(205);
+    glengine::Mesh *sphere_mesh = eng.create_sphere_mesh(206, 0.7);
     glengine::Mesh *polyline_mesh = eng.create_mesh(200);
     polyline_mesh->init(create_polyline(), GL_LINES);
     glengine::Mesh *triangle_mesh = eng.create_mesh(201);
@@ -54,11 +56,10 @@ int main(void) {
     auto &box2     = *eng.create_renderobject(107, box_mesh,      eng.get_stock_shader(glengine::StockShader::VertexColor));
     auto &box3     = *eng.create_renderobject(108, box_mesh,      eng.get_stock_shader(glengine::StockShader::Phong));
     auto &box_dyn  = *eng.create_renderobject(109, box_dyn_mesh,  eng.get_stock_shader(glengine::StockShader::VertexColor));
+    auto &axis     = *eng.create_renderobject(110, axis_mesh,     eng.get_stock_shader(glengine::StockShader::VertexColor));
+    auto &sphere   = *eng.create_renderobject(111, sphere_mesh,   eng.get_stock_shader(glengine::StockShader::Phong));
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f);
-
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
 
     int width = 0, height = 0, cnt = 0;
     while (eng.render()) {
@@ -99,8 +100,12 @@ int main(void) {
             bm.vertices.push_back({{-2.0f, 0.0f, zoffs}, {100, 100, 100, 255}});
         }
         bm.update();
-        box_dyn.set_transform(
-            math::create_transformation({0.0f, 0.0f, 3.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)));
+        box_dyn.set_transform( math::create_transformation({0.0f, 0.0f, 3.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)));
+        // axis
+        axis.set_transform( math::create_transformation({0.0f,-1.0f, 2.0f}, math::quat_from_euler_321(0.0f, 0.0f, t*2.1f)));
+        // sphere
+        sphere.set_transform( math::create_transformation({0.0f, 3.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)))
+            .set_color({0, k1, k2, 255});
 
         cnt++;
     }

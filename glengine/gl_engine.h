@@ -17,12 +17,6 @@ namespace glengine {
 class Mesh;
 class Shader;
 
-struct Config {
-    uint32_t window_width = 1280;
-    uint32_t window_height = 720;
-    bool vsync = true;
-};
-
 class GLEngine {
   public:
     virtual ~GLEngine();
@@ -49,8 +43,12 @@ class GLEngine {
     bool has_mesh(uint32_t id) const;
 
     // prefab meshes
+    /// axis gizmo
+    Mesh* create_axis_mesh(uint32_t id);
     /// solid box
     Mesh* create_box_mesh(uint32_t id, const math::Vector3f &size={1.0f,1.0f,1.0f});
+    /// sphere
+    Mesh* create_sphere_mesh(uint32_t id, float radius=1.0f, uint32_t subdiv=10);
     /// grid
     Mesh* create_grid_mesh(uint32_t id, float len, float step);
 

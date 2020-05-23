@@ -32,7 +32,7 @@ void scroll_callback(GLFWwindow *window, double xoffs, double yoffs) {
         return;
     }
     auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
-    app._camera_manipulator.set_distance(app._camera_manipulator.distance() * (1 + yoffs / 10));
+    app._camera_manipulator.set_distance(app._camera_manipulator.distance() * (1 - yoffs / 10));
 }
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
@@ -90,7 +90,7 @@ namespace glengine {
 GLEngine::~GLEngine() {}
 
 bool GLEngine::init(const Config &config) {
-    _context = glengine::init_context(1280, 720, "GLEngine sample app", (void *)this,
+    _context = glengine::init_context(config, "GLEngine sample app", (void *)this,
                                       {
                                           scroll_callback,          // scroll_fun_callback
                                           mouse_button_callback,    // mousebutton_fun_callback
@@ -177,9 +177,23 @@ bool GLEngine::has_mesh(uint32_t id) const {
     return _meshes.count(id) > 0;
 }
 
+Mesh *GLEngine::create_axis_mesh(uint32_t id) {
+    Mesh *m = create_mesh(id);
+    MeshData md = create_axis_data();
+    m->init(md.vertices, md.indices, GL_LINES);
+    return m;
+}
+
 Mesh *GLEngine::create_box_mesh(uint32_t id, const math::Vector3f &size) {
     Mesh *m = create_mesh(id);
     MeshData md = create_box_data(size);
+    m->init(md.vertices, md.indices, GL_TRIANGLES);
+    return m;
+}
+
+Mesh *GLEngine::create_sphere_mesh(uint32_t id, float radius, uint32_t subdiv) {
+    Mesh *m = create_mesh(id);
+    MeshData md = create_sphere_data(radius, subdiv);
     m->init(md.vertices, md.indices, GL_TRIANGLES);
     return m;
 }
