@@ -27,6 +27,7 @@ void main() {
 
 const char *vertexcolor_fs_src =
     R"(#version 330
+uniform uint u_id;
 in vec4 color;
 out vec4 fragment_color;
 
@@ -56,6 +57,7 @@ void main() {
 
 const char *flat_fs_src =
     R"(#version 330
+uniform uint u_id;
 uniform vec4 u_color;
 out vec4 fragment_color;
 
@@ -95,7 +97,7 @@ void main() {
 
 const char *diffuse_fs_src =
     R"(#version 330
-// uniform float u_shininess;
+uniform uint u_id;
 uniform vec4 u_color;
 // inputs
 in vec3 frag_pos;
@@ -129,7 +131,7 @@ const char *phong_vs_src = diffuse_vs_src; // the vertex shader is the same for 
 
 const char *phong_fs_src =
     R"(#version 330
-// uniform float u_shininess;
+uniform uint u_id;
 uniform vec4 u_color;
 // inputs
 in vec3 frag_pos;
@@ -161,6 +163,42 @@ void main() {
     fragment_color = vec4(result, 1.0);
 })";
 
+// //// //
+// quad //
+// //// //
+
+const char *quad_vs_src =
+    R"(#version 330
+// vertex attributes
+layout (location=0) in vec3 v_position;
+layout (location=1) in vec4 v_color;
+layout (location=2) in vec3 v_normal;
+layout (location=3) in vec2 v_texcoord0;
+// outputs
+out vec2 texcoord;
+
+void main()
+{
+    texcoord = v_texcoord0;
+    gl_Position = vec4(v_position.x, v_position.y, 0.0, 1.0); 
+})";
+
+const char *quad_fs_src =
+    R"(#version 330
+// uniforms
+uniform sampler2D screen_texture;
+// inputs
+in vec2 texcoord;
+// outputs
+out vec4 fragment_color;
+
+void main()
+{
+    vec3 col = texture(screen_texture, texcoord).rgb;
+    fragment_color = vec4(col, 1.0);
+})";
+
+
 } // namespace
 
 namespace glengine {
@@ -173,6 +211,8 @@ ShaderSrc get_stock_shader_source(StockShader type) {
         return {diffuse_vs_src, diffuse_fs_src};
     case StockShader::Phong:
         return {phong_vs_src, phong_fs_src};
+    case StockShader::Quad:
+        return {quad_vs_src, quad_fs_src};
     default: // use vertexcolor by default
         return {vertexcolor_vs_src, vertexcolor_fs_src};
     }

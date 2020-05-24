@@ -99,7 +99,7 @@ class Mesh {
                               (void *)offsetof(Vertex, normal));
         // vertex color
         glEnableVertexAttribArray(vtex0_location);
-        glVertexAttribPointer(vtex0_location, 2, GL_HALF_FLOAT, GL_FALSE, sizeof(Vertex),
+        glVertexAttribPointer(vtex0_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                               (void *)offsetof(Vertex, tex_coords));
 
         glBindVertexArray(0);

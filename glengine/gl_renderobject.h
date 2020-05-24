@@ -9,6 +9,8 @@ namespace glengine {
 
 class RenderObject {
   public:
+    RenderObject(ID id=NULL_ID)
+    : _id(id) {}
 
     bool init(Mesh *mesh, Shader *shader) {
         if (!mesh || !shader) {
@@ -22,6 +24,7 @@ class RenderObject {
     bool draw(const Camera &cam) {
         if (_visible) {
             _shader->activate();
+            _shader->set_uniform_id(_id);
             _shader->set_uniform_model(_transform * _scale);
             _shader->set_uniform_view(cam.inverse_transform());
             _shader->set_uniform_projection(cam.projection());
@@ -62,6 +65,7 @@ class RenderObject {
         return *this;
     }
 
+    ID _id = NULL_ID;
     Mesh *_mesh = nullptr;
     Shader *_shader = nullptr;
 

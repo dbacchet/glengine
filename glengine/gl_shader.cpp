@@ -66,6 +66,10 @@ void Shader::update_uniforms() {
     u_light0_pos = glGetUniformLocation(program_id, "u_light0_pos");
 }
 
+void Shader::set_uniform_id(ID id) {
+    glUniform1ui(u_id, id);
+}
+
 void Shader::set_uniform_model(const math::Matrix4f &m) {
     glUniformMatrix4fv(u_model, 1, GL_FALSE, m);
 }

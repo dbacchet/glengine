@@ -20,6 +20,7 @@ add_library(glengine STATIC gl_context.cpp
                             gl_stock_shaders.cpp
                             gl_prefabs.cpp
                             glad/glad_gl.c
+                            stb_image.cpp
                             ${imgui_files}
            )
 target_include_directories(glengine PUBLIC .)

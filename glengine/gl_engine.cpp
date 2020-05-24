@@ -8,7 +8,34 @@
 #include "math/vmath.h"
 #include "math/math_utils.h"
 
+#include "stb_image_write.h"
+
 namespace {
+
+int saveScreenshot(const char *filename)
+{
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    int x = viewport[0];
+    int y = viewport[1];
+    int width = viewport[2];
+    int height = viewport[3];
+
+    char *data = (char*) malloc((size_t) (width * height * 3)); // 3 components (R, G, B)
+
+    if (!data)
+        return 0;
+
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+    int saved = stbi_write_png(filename, width, height, 3, data, 0);
+
+    free(data);
+
+    return saved;
+}
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
@@ -83,6 +110,7 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         ctx.input_state.right_button_pressed = action == GLFW_PRESS;
     }
 }
+
 } // namespace
 
 namespace glengine {
@@ -103,8 +131,44 @@ bool GLEngine::init(const Config &config) {
     _camera.set_perspective(0.1, 1000.0, math::utils::deg2rad(45.0f));
     _camera.set_transform(math::create_lookat<float>({-10.0f, -1.0f, 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
 
-    // create stock shaders and prefabs
+    // create stock shaders
     create_stock_shaders();
+
+    // configure g-buffer framebuffer
+    glGenFramebuffers(1, &_g_buffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, _g_buffer);
+    // position color buffer
+    glGenTextures(1, &_gb_color);
+    glBindTexture(GL_TEXTURE_2D, _gb_color);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, config.window_width, config.window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _gb_color, 0);
+    // object id buffer
+    glGenTextures(1, &_gb_id);
+    glBindTexture(GL_TEXTURE_2D, _gb_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, config.window_width, config.window_height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _gb_id, 0);
+    // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, attachments);
+    // create and attach depth buffer (renderbuffer)
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, config.window_width, config.window_height); // use a single renderbuffer object for both a depth AND stencil buffer.
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboDepth); // now actually attach it
+    // finally check if framebuffer is complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        printf("Error: framebuffer not complete!\n");
+        return false;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // create the screen quad mesh
+    _ss_quad = create_quad_mesh(NULL_ID);
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -113,7 +177,6 @@ bool GLEngine::init(const Config &config) {
 }
 
 bool GLEngine::render() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     int width = -1;
     int height = -1;
@@ -123,11 +186,26 @@ bool GLEngine::render() {
     _camera.update(width, height);
 
     glViewport(0, 0, width, height);
-    glClear(GL_COLOR_BUFFER_BIT);
+
+    // bind to framebuffer and draw scene as we normally would to color texture 
+    glBindFramebuffer(GL_FRAMEBUFFER, _g_buffer);
+
+    glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (auto &ro : _renderobjects) {
         ro.second->draw(_camera);
     }
+
+    // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+
+    Shader *quad_shader = get_stock_shader(StockShader::Quad);
+    quad_shader->activate();
+    // glUniform1i(glGetUniformLocation(quad_shader->program_id, "screen_texture"), 0); 
+    glBindTexture(GL_TEXTURE_2D, _gb_color);	// use the color attachment texture as the texture of the quad plane
+    _ss_quad->draw();
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -140,6 +218,9 @@ bool GLEngine::render() {
         fun();
     }
 
+    ImGui::Begin("fb image");
+    ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(300,200),ImVec2(0,1),ImVec2(1,0));
+    ImGui::End();
     // render ImGui
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -163,59 +244,66 @@ bool GLEngine::terminate() {
     return true;
 }
 
-Mesh *GLEngine::create_mesh(uint32_t id) {
+Mesh *GLEngine::create_mesh(ID id) {
     Mesh *m = new Mesh();
     _meshes[id] = m;
     return m;
 }
 
-Mesh *GLEngine::get_mesh(uint32_t id) {
+Mesh *GLEngine::get_mesh(ID id) {
     return _meshes[id];
 }
 
-bool GLEngine::has_mesh(uint32_t id) const {
+bool GLEngine::has_mesh(ID id) const {
     return _meshes.count(id) > 0;
 }
 
-Mesh *GLEngine::create_axis_mesh(uint32_t id) {
+Mesh *GLEngine::create_axis_mesh(ID id) {
     Mesh *m = create_mesh(id);
     MeshData md = create_axis_data();
     m->init(md.vertices, md.indices, GL_LINES);
     return m;
 }
 
-Mesh *GLEngine::create_box_mesh(uint32_t id, const math::Vector3f &size) {
+Mesh *GLEngine::create_quad_mesh(ID id) {
+    Mesh *m = create_mesh(id);
+    MeshData md = create_quad_data();
+    m->init(md.vertices, md.indices, GL_TRIANGLES);
+    return m;
+}
+
+Mesh *GLEngine::create_box_mesh(ID id, const math::Vector3f &size) {
     Mesh *m = create_mesh(id);
     MeshData md = create_box_data(size);
     m->init(md.vertices, md.indices, GL_TRIANGLES);
     return m;
 }
 
-Mesh *GLEngine::create_sphere_mesh(uint32_t id, float radius, uint32_t subdiv) {
+Mesh *GLEngine::create_sphere_mesh(ID id, float radius, uint32_t subdiv) {
     Mesh *m = create_mesh(id);
     MeshData md = create_sphere_data(radius, subdiv);
     m->init(md.vertices, md.indices, GL_TRIANGLES);
     return m;
 }
 
-Mesh *GLEngine::create_grid_mesh(uint32_t id, float len, float step) {
+Mesh *GLEngine::create_grid_mesh(ID id, float len, float step) {
     Mesh *m = create_mesh(id);
     MeshData md = create_grid_data(len, step);
     m->init(md.vertices, md.indices, GL_LINES);
     return m;
 }
 
-Shader *GLEngine::create_shader(uint32_t id) {
+Shader *GLEngine::create_shader(ID id) {
     Shader *s = new Shader();
     _shaders[id] = s;
     return s;
 }
 
-Shader *GLEngine::get_shader(uint32_t id) {
+Shader *GLEngine::get_shader(ID id) {
     return _shaders[id];
 }
 
-bool GLEngine::has_shader(uint32_t id) const {
+bool GLEngine::has_shader(ID id) const {
     return _shaders.count(id) > 0;
 }
 
@@ -223,27 +311,27 @@ Shader *GLEngine::get_stock_shader(StockShader type) {
     return _stock_shaders[type];
 }
 
-RenderObject *GLEngine::create_renderobject(uint32_t id) {
-    RenderObject *ro = new RenderObject();
+RenderObject *GLEngine::create_renderobject(ID id) {
+    RenderObject *ro = new RenderObject(id);
     _renderobjects[id] = ro;
     return ro;
 }
 
-RenderObject *GLEngine::create_renderobject(uint32_t id, Mesh *mesh, Shader *shader) {
+RenderObject *GLEngine::create_renderobject(ID id, Mesh *mesh, Shader *shader) {
     RenderObject *ro = create_renderobject(id);
     ro->init(mesh, shader);
     return ro;
 }
 
-RenderObject *GLEngine::get_renderobject(uint32_t id) {
+RenderObject *GLEngine::get_renderobject(ID id) {
     return _renderobjects[id];
 }
 
-bool GLEngine::has_renderobject(uint32_t id) const {
+bool GLEngine::has_renderobject(ID id) const {
     return _renderobjects.count(id) > 0;
 }
 
-// RenderObject* GLEngine::create_box(uint32_t id, const math::Vector3f &size, StockShader shader) {
+// RenderObject* GLEngine::create_box(ID id, const math::Vector3f &size, StockShader shader) {
 //     RenderObject *ro = create_renderobject(id);
 //     ro->init()
 // }
@@ -257,18 +345,22 @@ void GLEngine::create_stock_shaders() {
     Shader *shader_diffuse = new Shader();
     Shader *shader_phong = new Shader();
     Shader *shader_vertexcolor = new Shader();
+    Shader *shader_quad = new Shader();
     ShaderSrc flat_src = get_stock_shader_source(StockShader::Flat);
     ShaderSrc diffuse_src = get_stock_shader_source(StockShader::Diffuse);
     ShaderSrc phong_src = get_stock_shader_source(StockShader::Phong);
     ShaderSrc vertexcolor_src = get_stock_shader_source(StockShader::VertexColor);
+    ShaderSrc quad_src = get_stock_shader_source(StockShader::Quad);
     shader_flat->init(flat_src.vertex_shader, flat_src.fragment_shader);
     shader_diffuse->init(diffuse_src.vertex_shader, diffuse_src.fragment_shader);
     shader_phong->init(phong_src.vertex_shader, phong_src.fragment_shader);
     shader_vertexcolor->init(vertexcolor_src.vertex_shader, vertexcolor_src.fragment_shader);
+    shader_quad->init(quad_src.vertex_shader, quad_src.fragment_shader);
     _stock_shaders[StockShader::Flat] = shader_flat;
     _stock_shaders[StockShader::Diffuse] = shader_diffuse;
     _stock_shaders[StockShader::Phong] = shader_phong;
     _stock_shaders[StockShader::VertexColor] = shader_vertexcolor;
+    _stock_shaders[StockShader::Quad] = shader_quad;
 }
 
 } // namespace glengine
