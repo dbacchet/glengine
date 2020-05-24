@@ -4,8 +4,12 @@
 
 #include "math/vmath.h"
 #include <cstdint>
+#include <limits>
 
 namespace glengine {
+
+using ID = uint32_t; ///< id used for every object managed by the engine
+constexpr ID NULL_ID = std::numeric_limits<ID>::max();
 
 struct Color {
     uint8_t r = 100;
@@ -15,8 +19,10 @@ struct Color {
 };
 
 struct TexCoords {
-    GLhalf s = 0;
-    GLhalf t = 0;
+    float s = 0;
+    float t = 0;
+    // GLhalf s = 0;
+    // GLhalf t = 0;
 };
 
 struct Vertex {

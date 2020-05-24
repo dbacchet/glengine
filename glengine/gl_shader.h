@@ -14,6 +14,7 @@ class Shader {
     GLuint fragment_shader_id = 0;
     GLuint program_id = 0;
     // uniforms
+    GLint u_id = -1;         // object id
     GLint u_model = -1;      // model matrix
     GLint u_view = -1;       // view matrix
     GLint u_projection = -1; // projection matrix
@@ -28,6 +29,7 @@ class Shader {
     void activate();
     void deactivate();
 
+    void set_uniform_id(ID id);
     void set_uniform_model(const math::Matrix4f &m);
     void set_uniform_view(const math::Matrix4f &v);
     void set_uniform_projection(const math::Matrix4f &p);

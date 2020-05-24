@@ -8,7 +8,7 @@
 #include <vector>
 
 struct Obj {
-    uint32_t id = 0;
+    glengine::ID id = 0;
     float alpha = 0.0f;
     float beta = 0.0f;
     math::Matrix4f tf;

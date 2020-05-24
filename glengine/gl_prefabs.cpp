@@ -88,7 +88,7 @@ bool create_sphere(float radius, uint32_t subdiv, std::vector<glengine::Vertex> 
             float sector_angle = j * 2 * M_PI / num_sectors; // starting from 0 to 2pi
             math::Vector3f pos(xy * std::cos(sector_angle), xy * std::sin(sector_angle), z);
             math::Vector3f normal = math::normalized(pos);
-            glengine::TexCoords texcoord{(GLhalf)(j / num_sectors), (GLhalf)(i / num_stacks)};
+            glengine::TexCoords texcoord{float(j) / num_sectors, float(i) / num_stacks};
             out_vertices.push_back({pos, {140, 140, 140, 255}, normal, texcoord});
         }
     }
@@ -125,6 +125,30 @@ MeshData create_axis_data() {
                     {{0,1,0}, {0,255,0,255}},   // y1
                     {{0,0,0}, {0,0,255,255}},   // z0
                     {{0,0,1}, {0,0,255,255}} }; // z1
+    return md;
+}
+
+MeshData create_quad_data() {
+    MeshData md;
+    //-1 1
+    // *---*1 1
+    // |\  |
+    // | \ |
+    // |  \|
+    // *---*1-1
+    //-1-1  
+    // md.vertices = {{{ 0.0f, 1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,1}}, // this variant will draw to the top right quarter of the viewport
+    //                {{ 0.0f, 0.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,0}},
+    //                {{ 1.0f, 0.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {1,0}},
+    //                {{ 0.0f, 1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,1}},
+    //                {{ 1.0f, 0.0f,-0.0f}, {255,255,255,255}, { 0, 0, 1}, {1,0}},
+    //                {{ 1.0f, 1.0f,-0.0f}, {255,255,255,255}, { 0, 0, 1}, {1,1}}, };
+    md.vertices = {{{-1.0f, 1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,1}},
+                   {{-1.0f,-1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,0}},
+                   {{ 1.0f,-1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {1,0}},
+                   {{-1.0f, 1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,1}},
+                   {{ 1.0f,-1.0f,-0.0f}, {255,255,255,255}, { 0, 0,-1}, {1,0}},
+                   {{ 1.0f, 1.0f,-0.0f}, {255,255,255,255}, { 0, 0,-1}, {1,1}}, };
     return md;
 }
 
