@@ -61,6 +61,13 @@ int main(void) {
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f);
 
+    eng.add_ui_function([&](){
+            ImGui::Begin("Object Info");
+            auto id = eng.object_at_screen_coord(eng.cursor_pos());
+            ImGui::Text("Object id: %d", id);
+            ImGui::End();
+            });
+
     int width = 0, height = 0, cnt = 0;
     while (eng.render()) {
         float t = glfwGetTime();
