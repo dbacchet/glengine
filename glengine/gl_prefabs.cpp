@@ -1,5 +1,8 @@
 #include "gl_prefabs.h"
 
+#define TINYGLTF_IMPLEMENTATION
+#include "tinygltf/tiny_gltf.h"
+
 #include <vector>
 
 namespace {
@@ -167,6 +170,11 @@ MeshData create_sphere_data(float radius, uint32_t subdiv) {
 MeshData create_grid_data(float len, float step) {
     MeshData md;
     md.vertices = create_grid(len, step);
+    return md;
+}
+
+MeshData create_from_gltf(const char *filename) {
+    MeshData md;
     return md;
 }
 
