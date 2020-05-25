@@ -24,6 +24,8 @@ typedef void (*GLFWkeyfun)(GLFWwindow *, int, int, int, int);
 typedef void (*GLFWcursorposfun)(GLFWwindow *, double, double);
 typedef void (*GLFWcursorenterfun)(GLFWwindow *, int);
 typedef void (*GLFWcharfun)(GLFWwindow *, unsigned int);
+typedef void (*GLFWframebuffersizefun) (GLFWwindow *, int, int);
+typedef void (*GLFWwindowsizefun) (GLFWwindow *, int, int);
 
 // input states that are needed across different callbacks
 struct InputState {
@@ -36,18 +38,27 @@ struct InputState {
     math::Vector2i previous_cursor_pos{-1,-1};
 };
 
+// information about the current window
+struct WindowState {
+    math::Vector2i window_size{-1,-1};
+    math::Vector2i framebuffer_size{-1,-1};
+};
+
 struct Context {
     GLFWwindow *window = nullptr;
     InputState input_state;
+    WindowState window_state;
 };
 
 struct Callbacks {
-    GLFWscrollfun      scroll_fun_callback          = nullptr;
-    GLFWmousebuttonfun mousebutton_fun_callback     = nullptr;
-    GLFWkeyfun         key_fun_callback             = nullptr;
-    GLFWcursorposfun   cursorpos_fun_callback       = nullptr;
-    GLFWcursorenterfun cursorenterexit_fun_callback = nullptr;
-    GLFWcharfun        char_fun_callback            = nullptr;
+    GLFWscrollfun          scroll_fun_callback          = nullptr;
+    GLFWmousebuttonfun     mousebutton_fun_callback     = nullptr;
+    GLFWkeyfun             key_fun_callback             = nullptr;
+    GLFWcursorposfun       cursorpos_fun_callback       = nullptr;
+    GLFWcursorenterfun     cursorenterexit_fun_callback = nullptr;
+    GLFWcharfun            char_fun_callback            = nullptr;
+    GLFWwindowsizefun      window_size_callback         = nullptr;
+    GLFWframebuffersizefun framebuffer_size_callback    = nullptr;
 };
 
 /// initialize the opengl context

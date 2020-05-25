@@ -59,6 +59,7 @@ void Shader::deactivate() {
 
 void Shader::update_uniforms() {
     glUseProgram(program_id);
+    u_id = glGetUniformLocation(program_id, "u_id");
     u_model = glGetUniformLocation(program_id, "u_model");
     u_view = glGetUniformLocation(program_id, "u_view");
     u_projection = glGetUniformLocation(program_id, "u_projection");

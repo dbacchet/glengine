@@ -10,6 +10,7 @@ namespace glengine {
 
 using ID = uint32_t; ///< id used for every object managed by the engine
 constexpr ID NULL_ID = std::numeric_limits<ID>::max();
+constexpr GLuint INVALID_BUFFER = std::numeric_limits<GLuint>::max();
 
 struct Color {
     uint8_t r = 100;

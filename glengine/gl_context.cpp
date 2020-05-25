@@ -40,7 +40,7 @@ Context init_context(const Config &config, const char *title, void *user_pointer
     gladLoadGL(glfwGetProcAddress);
     glfwSwapInterval(config.vsync ? 1 : 0);
 
-    printf("OpenGL version %s\n", (char *)glGetString(GL_VERSION));
+    printf("[context] OpenGL version %s\n", (char *)glGetString(GL_VERSION));
 
     // callbacks
     if (user_pointer) {
@@ -52,6 +52,14 @@ Context init_context(const Config &config, const char *title, void *user_pointer
     glfwSetCursorPosCallback(context.window, callbacks.cursorpos_fun_callback);
     glfwSetCursorEnterCallback(context.window, callbacks.cursorenterexit_fun_callback);
     glfwSetCharCallback(context.window, callbacks.char_fun_callback);
+    glfwSetWindowSizeCallback(context.window, callbacks.window_size_callback);
+    glfwSetFramebufferSizeCallback(context.window, callbacks.framebuffer_size_callback);
+
+    // update window info in the context
+    glfwGetWindowSize(context.window, &context.window_state.window_size.x, &context.window_state.window_size.y);
+    glfwGetFramebufferSize(context.window, &context.window_state.framebuffer_size.x, &context.window_state.framebuffer_size.y);
+    printf("[context] win size: %d %d\n",context.window_state.window_size.x, context.window_state.window_size.y);
+    printf("[context] fb size: %d %d\n",context.window_state.framebuffer_size.x, context.window_state.framebuffer_size.y);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();

@@ -29,10 +29,12 @@ const char *vertexcolor_fs_src =
     R"(#version 330
 uniform uint u_id;
 in vec4 color;
-out vec4 fragment_color;
+layout (location = 0) out vec4 fragment_color;
+layout (location = 1) out uint object_id;  
 
 void main() {
     fragment_color = color;
+    object_id = u_id;
 })";
 
 // //// //
@@ -59,10 +61,12 @@ const char *flat_fs_src =
     R"(#version 330
 uniform uint u_id;
 uniform vec4 u_color;
-out vec4 fragment_color;
+layout (location = 0) out vec4 fragment_color;
+layout (location = 1) out uint object_id;  
 
 void main() {
     fragment_color = u_color;
+    object_id = u_id;
 })";
 
 // /////// //
@@ -105,7 +109,8 @@ in vec3 normal;
 in vec3 light_pos;
 // in vec4 vcolor;
 // output
-out vec4 fragment_color;
+layout (location = 0) out vec4 fragment_color;
+layout (location = 1) out uint object_id;  
 
 void main() {
     // params
@@ -121,6 +126,7 @@ void main() {
     
     vec3 result = (ambient + diffuse) * u_color.xyz;//vcolor.xyz;
     fragment_color = vec4(result, 1.0);
+    object_id = u_id;
 })";
 
 // ///// //
@@ -139,7 +145,8 @@ in vec3 normal;
 in vec3 light_pos;
 // in vec4 vcolor;
 // output
-out vec4 fragment_color;
+layout (location = 0) out vec4 fragment_color;
+layout (location = 1) out uint object_id;  
 
 void main() {
     // params
@@ -161,6 +168,7 @@ void main() {
     
     vec3 result = (ambient + diffuse + specular) * u_color.xyz; //vcolor.xyz;
     fragment_color = vec4(result, 1.0);
+    object_id = u_id;
 })";
 
 // //// //

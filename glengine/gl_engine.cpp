@@ -111,6 +111,21 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     }
 }
 
+void window_size_callback(GLFWwindow *window, int width, int height) {
+    auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
+    auto &ctx = app._context;
+    ctx.window_state.window_size = {width, height};
+    printf("win size: %d %d\n", width, height);
+}
+
+void framebuffer_size_callback(GLFWwindow *window, int fb_width, int fb_height) {
+    auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
+    auto &ctx = app._context;
+    ctx.window_state.framebuffer_size = {fb_width, fb_height};
+    printf("fb size: %d %d\n", fb_width, fb_height);
+    app.resize_buffers();
+}
+
 } // namespace
 
 namespace glengine {
@@ -126,6 +141,8 @@ bool GLEngine::init(const Config &config) {
                                           cursor_position_callback, // cursorpos_fun_callback
                                           nullptr,                  // cursorenterexit_fun_callback
                                           nullptr,                  // char_fun_callback
+                                          window_size_callback,
+                                          framebuffer_size_callback //
                                       });
 
     _camera.set_perspective(0.1, 1000.0, math::utils::deg2rad(45.0f));
@@ -140,14 +157,14 @@ bool GLEngine::init(const Config &config) {
     // position color buffer
     glGenTextures(1, &_gb_color);
     glBindTexture(GL_TEXTURE_2D, _gb_color);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, config.window_width, config.window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _gb_color, 0);
     // object id buffer
     glGenTextures(1, &_gb_id);
     glBindTexture(GL_TEXTURE_2D, _gb_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, config.window_width, config.window_height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _gb_id, 0);
@@ -155,17 +172,19 @@ bool GLEngine::init(const Config &config) {
     unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glDrawBuffers(2, attachments);
     // create and attach depth buffer (renderbuffer)
-    unsigned int rboDepth;
-    glGenRenderbuffers(1, &rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, config.window_width, config.window_height); // use a single renderbuffer object for both a depth AND stencil buffer.
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboDepth); // now actually attach it
+    glGenRenderbuffers(1, &_gb_depth);
+    glBindRenderbuffer(GL_RENDERBUFFER, _gb_depth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y); // use a single renderbuffer object for both a depth AND stencil buffer.
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _gb_depth); // now actually attach it
     // finally check if framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         printf("Error: framebuffer not complete!\n");
         return false;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // resize the cpu buffer for the object ids
+    _id_buffer.resize(_context.window_state.framebuffer_size.x*_context.window_state.framebuffer_size.y, NULL_ID);
 
     // create the screen quad mesh
     _ss_quad = create_quad_mesh(NULL_ID);
@@ -178,20 +197,21 @@ bool GLEngine::init(const Config &config) {
 
 bool GLEngine::render() {
 
-    int width = -1;
-    int height = -1;
-    glfwGetFramebufferSize(_context.window, &width, &height);
+    const auto &fbsize = _context.window_state.framebuffer_size;
 
     _camera_manipulator.update(_camera);
-    _camera.update(width, height);
+    _camera.update(fbsize.x, fbsize.y);
 
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, fbsize.x, fbsize.y);
 
     // bind to framebuffer and draw scene as we normally would to color texture 
     glBindFramebuffer(GL_FRAMEBUFFER, _g_buffer);
 
+    glViewport(0, 0, fbsize.x, fbsize.y);
     glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // "clear" the id buffer setting NULL_ID as clear value
+    glClearBufferuiv(GL_COLOR, 1, &NULL_ID);
 
     for (auto &ro : _renderobjects) {
         ro.second->draw(_camera);
@@ -201,11 +221,16 @@ bool GLEngine::render() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
+    glViewport(0, 0, fbsize.x, fbsize.y);
     Shader *quad_shader = get_stock_shader(StockShader::Quad);
     quad_shader->activate();
     // glUniform1i(glGetUniformLocation(quad_shader->program_id, "screen_texture"), 0); 
     glBindTexture(GL_TEXTURE_2D, _gb_color);	// use the color attachment texture as the texture of the quad plane
     _ss_quad->draw();
+
+    // copy the id texture in cpu memory
+    glBindTexture(GL_TEXTURE_2D, _gb_id);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, _id_buffer.data());
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -219,7 +244,7 @@ bool GLEngine::render() {
     }
 
     ImGui::Begin("fb image");
-    ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(300,200),ImVec2(0,1),ImVec2(1,0));
+    ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(300,300*(float)fbsize.y/fbsize.x),ImVec2(0,1),ImVec2(1,0));
     ImGui::End();
     // render ImGui
     ImGui::Render();
@@ -331,13 +356,21 @@ bool GLEngine::has_renderobject(ID id) const {
     return _renderobjects.count(id) > 0;
 }
 
-// RenderObject* GLEngine::create_box(ID id, const math::Vector3f &size, StockShader shader) {
-//     RenderObject *ro = create_renderobject(id);
-//     ro->init()
-// }
-
 void GLEngine::add_ui_function(std::function<void(void)> fun) {
     _ui_functions.push_back(fun);
+}
+
+math::Vector2i GLEngine::cursor_pos() const {
+    return _context.input_state.previous_cursor_pos;
+}
+
+ID GLEngine::object_at_screen_coord(const math::Vector2i &cursor_pos) const {
+    int32_t py = _context.window_state.framebuffer_size.y -1 - cursor_pos.y;
+    uint32_t idx = py*_context.window_state.framebuffer_size.x+cursor_pos.x;
+    if (idx<0 || idx>=_id_buffer.size()) {
+        return NULL_ID;
+    }
+    return _id_buffer[idx];
 }
 
 void GLEngine::create_stock_shaders() {
@@ -361,6 +394,25 @@ void GLEngine::create_stock_shaders() {
     _stock_shaders[StockShader::Phong] = shader_phong;
     _stock_shaders[StockShader::VertexColor] = shader_vertexcolor;
     _stock_shaders[StockShader::Quad] = shader_quad;
+}
+
+void GLEngine::resize_buffers() {
+    // const auto &win_size = _context.window_state.window_size;
+    const auto &fb_size = _context.window_state.framebuffer_size;
+    // align opengl buffers to the size of the framebuffer
+    if (_gb_color!=INVALID_BUFFER) {
+        glBindTexture(GL_TEXTURE_2D, _gb_color);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fb_size.x, fb_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    }
+    if (_gb_id!=INVALID_BUFFER) {
+        glBindTexture(GL_TEXTURE_2D, _gb_id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, fb_size.x, fb_size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    }
+    if (_gb_depth!=INVALID_BUFFER) {
+        glBindRenderbuffer(GL_RENDERBUFFER, _gb_depth);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fb_size.x, fb_size.y);
+    }
+    _id_buffer.resize(fb_size.x*fb_size.y, NULL_ID);
 }
 
 } // namespace glengine
