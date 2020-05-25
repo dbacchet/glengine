@@ -19,8 +19,10 @@ add_library(glengine STATIC gl_context.cpp
                             gl_shader.cpp
                             gl_stock_shaders.cpp
                             gl_prefabs.cpp
+                            gl_prefabs_gltf.cpp
                             glad/glad_gl.c
                             stb/stb_image.cpp
+                            tinygltf/tiny_gltf.cpp
                             ${imgui_files}
            )
 target_include_directories(glengine PUBLIC .)
