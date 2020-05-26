@@ -7,9 +7,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-glengine::MeshData load_mesh(const char *filename) {
-    return glengine::create_from_gltf(filename);
-}
 
 int main(int argc, char *argv[]) {
 
@@ -17,18 +14,22 @@ int main(int argc, char *argv[]) {
     eng.init({1280, 720, true});
 
     // meshes
-    glengine::Mesh *grid_mesh = eng.create_grid_mesh(204, 50.0f, 1.0f);
-    glengine::Mesh *axis_mesh = eng.create_axis_mesh(205);
-    glengine::Mesh *model_mesh = eng.create_mesh(206);
+    glengine::Mesh *grid_mesh = eng.create_grid_mesh(50.0f, 1.0f);
+    glengine::Mesh *axis_mesh = eng.create_axis_mesh();
     
-    glengine::MeshData md = glengine::create_from_gltf(argv[1]);
-    model_mesh->init(md.vertices, md.indices, GL_TRIANGLES);
+    std::vector<glengine::MeshData> md = glengine::create_from_gltf(argv[1]);
+    std::vector<glengine::Mesh*> model_meshes;
+    for (auto &m: md) {
+        glengine::Mesh *mesh = eng.create_mesh();
+        mesh->init(m.vertices, m.indices, GL_TRIANGLES);
+        model_meshes.push_back(mesh);
+    }
 
     // render objects
     auto &grid = *eng.create_renderobject(101, grid_mesh, eng.get_stock_shader(glengine::StockShader::VertexColor));
     auto &axis = *eng.create_renderobject(110, axis_mesh, eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &model = *eng.create_renderobject(201, model_mesh, eng.get_stock_shader(glengine::StockShader::Diffuse));
-    model.set_scale({0.2,0.2,0.2});
+    auto &model = *eng.create_renderobject(201, model_meshes, eng.get_stock_shader(glengine::StockShader::Diffuse));
+    model.set_scale({0.2,0.2,0.2}).set_color({200,200,200,255});
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f).set_distance(50.0f);
 

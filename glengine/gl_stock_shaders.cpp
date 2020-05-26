@@ -122,9 +122,77 @@ void main() {
     vec3 norm = normalize(normal);
     vec3 light_dir = normalize(light_pos - frag_pos);
     float diff = max(dot(norm, light_dir), 0.0);
+    // float diff = abs(dot(norm, light_dir)); // this will make the light come also from the opposite direction
     vec3 diffuse = diff * light_color;
     
     vec3 result = (ambient + diffuse) * u_color.xyz;//vcolor.xyz;
+    fragment_color = vec4(result, 1.0);
+    object_id = u_id;
+})";
+
+// //////////////// //
+// diffuse textured //
+// //////////////// //
+
+const char *diffuse_textured_vs_src =
+    R"(#version 330
+// uniforms
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_projection;
+uniform vec3 u_light0_pos;
+// vertex attributes
+layout (location=0) in vec3 v_position;
+layout (location=1) in vec4 v_color;
+layout (location=2) in vec3 v_normal;
+layout (location=3) in vec2 v_texcoord0;
+// outputs
+out vec3 frag_pos;
+out vec3 normal;
+out vec3 light_pos;
+out vec2 tex_coord;
+// out vec4 vcolor;
+
+void main() {
+    frag_pos = vec3(u_view * u_model * vec4(v_position,1.0));       // fragment position in view-space
+    normal = mat3(transpose(inverse(u_view * u_model))) * v_normal; // normal in view space - transp(inv()) is needed to take into account the scaling
+    light_pos = vec3(u_view * vec4(u_light0_pos, 1.0));             // world-space light position to view-space light position
+    tex_coord = v_texcoord0;
+    // vcolor   = v_color;
+    gl_Position = u_projection * u_view * u_model * vec4(v_position,1.0);
+})";
+
+const char *diffuse_textured_fs_src =
+    R"(#version 330
+uniform uint u_id;
+uniform vec4 u_color;
+uniform sampler2D texture_diffuse;
+// inputs
+in vec3 frag_pos;
+in vec3 normal;
+in vec3 light_pos;
+in vec2 tex_coord;
+// in vec4 vcolor;
+// output
+layout (location = 0) out vec4 fragment_color;
+layout (location = 1) out uint object_id;  
+
+void main() {
+    // params
+    float ambient_strength = 0.10;
+    vec3 light_color = vec3(1.0,1.0,1.0);
+    // ambient
+    vec3 ambient = ambient_strength * light_color;    
+    // diffuse 
+    vec3 norm = normalize(normal);
+    vec3 light_dir = normalize(light_pos - frag_pos);
+    float diff = max(dot(norm, light_dir), 0.0);
+    // float diff = abs(dot(norm, light_dir)); // this will make the light come also from the opposite direction
+    vec3 diffuse = diff * light_color;
+
+    // vec4 color = vec4(tex_coord.x,0.0,tex_coord.y,1.0);//texture(texture_diffuse, tex_coord);
+    vec4 color = texture(texture_diffuse, tex_coord);
+    vec3 result = (ambient + diffuse) * color.xyz;//vcolor.xyz;
     fragment_color = vec4(result, 1.0);
     object_id = u_id;
 })";
@@ -217,6 +285,8 @@ ShaderSrc get_stock_shader_source(StockShader type) {
         return {flat_vs_src, flat_fs_src};
     case StockShader::Diffuse:
         return {diffuse_vs_src, diffuse_fs_src};
+    case StockShader::DiffuseTextured:
+        return {diffuse_textured_vs_src, diffuse_textured_fs_src};
     case StockShader::Phong:
         return {phong_vs_src, phong_fs_src};
     case StockShader::Quad:

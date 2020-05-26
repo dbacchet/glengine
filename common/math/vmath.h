@@ -153,6 +153,8 @@ template <typename T> Matrix4<T> matrix4_identity();
 template <typename T> Matrix4<T> create_translation(const Vector3<T> &v);
 /// create a transformation matrix
 template <typename T> Matrix4<T> create_transformation(const Vector3<T> &v, const Quaternion<T> &q);
+/// create a scaling matrix
+template <typename T> Matrix4<T> create_scaling(const Vector3<T> &s);
 /// create look-at matrix
 template <typename T>
 Matrix4<T> create_lookat(const Vector3<T> &eye, const Vector3<T> &to,

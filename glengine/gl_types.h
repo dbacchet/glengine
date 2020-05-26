@@ -13,24 +13,20 @@ constexpr ID NULL_ID = std::numeric_limits<ID>::max();
 constexpr GLuint INVALID_BUFFER = std::numeric_limits<GLuint>::max();
 
 struct Color {
-    uint8_t r = 100;
-    uint8_t g = 100;
-    uint8_t b = 100;
+    uint8_t r = 180;
+    uint8_t g = 180;
+    uint8_t b = 180;
     uint8_t a = 255;
-};
-
-struct TexCoords {
-    float s = 0;
-    float t = 0;
-    // GLhalf s = 0;
-    // GLhalf t = 0;
 };
 
 struct Vertex {
     math::Vector3f pos;
-    Color color;
+    Color color = {180,180,180,255};
     math::Vector3f normal = {0,0,1};
-    TexCoords tex_coords;
+    math::Vector2f tex_coords = {0,0};
+    math::Vector3f tangent = {1,0,0};
+    math::Vector3f bitangent = {0,1,0};
+    uint8_t padding [4] = {}; // padding to have a multiple of 16bytes
 };
 
 } // namespace glengine

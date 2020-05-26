@@ -187,7 +187,7 @@ bool GLEngine::init(const Config &config) {
     _id_buffer.resize(_context.window_state.framebuffer_size.x*_context.window_state.framebuffer_size.y, NULL_ID);
 
     // create the screen quad mesh
-    _ss_quad = create_quad_mesh(NULL_ID);
+    _ss_quad = create_quad_mesh();
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -218,6 +218,7 @@ bool GLEngine::render() {
     }
 
     // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+    // glEnable(GL_FRAMEBUFFER_SRGB); 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
@@ -226,7 +227,8 @@ bool GLEngine::render() {
     quad_shader->activate();
     // glUniform1i(glGetUniformLocation(quad_shader->program_id, "screen_texture"), 0); 
     glBindTexture(GL_TEXTURE_2D, _gb_color);	// use the color attachment texture as the texture of the quad plane
-    _ss_quad->draw();
+    _ss_quad->draw(*quad_shader);
+    // glDisable(GL_FRAMEBUFFER_SRGB); 
 
     // copy the id texture in cpu memory
     glBindTexture(GL_TEXTURE_2D, _gb_id);
@@ -269,8 +271,9 @@ bool GLEngine::terminate() {
     return true;
 }
 
-Mesh *GLEngine::create_mesh(ID id) {
-    Mesh *m = new Mesh();
+Mesh *GLEngine::create_mesh() {
+    ID id = _next_mesh_id++;
+    Mesh *m = new Mesh(id);
     _meshes[id] = m;
     return m;
 }
@@ -283,43 +286,44 @@ bool GLEngine::has_mesh(ID id) const {
     return _meshes.count(id) > 0;
 }
 
-Mesh *GLEngine::create_axis_mesh(ID id) {
-    Mesh *m = create_mesh(id);
+Mesh *GLEngine::create_axis_mesh() {
+    Mesh *m = create_mesh();
     MeshData md = create_axis_data();
     m->init(md.vertices, md.indices, GL_LINES);
     return m;
 }
 
-Mesh *GLEngine::create_quad_mesh(ID id) {
-    Mesh *m = create_mesh(id);
+Mesh *GLEngine::create_quad_mesh() {
+    Mesh *m = create_mesh();
     MeshData md = create_quad_data();
     m->init(md.vertices, md.indices, GL_TRIANGLES);
     return m;
 }
 
-Mesh *GLEngine::create_box_mesh(ID id, const math::Vector3f &size) {
-    Mesh *m = create_mesh(id);
+Mesh *GLEngine::create_box_mesh(const math::Vector3f &size) {
+    Mesh *m = create_mesh();
     MeshData md = create_box_data(size);
     m->init(md.vertices, md.indices, GL_TRIANGLES);
     return m;
 }
 
-Mesh *GLEngine::create_sphere_mesh(ID id, float radius, uint32_t subdiv) {
-    Mesh *m = create_mesh(id);
+Mesh *GLEngine::create_sphere_mesh(float radius, uint32_t subdiv) {
+    Mesh *m = create_mesh();
     MeshData md = create_sphere_data(radius, subdiv);
     m->init(md.vertices, md.indices, GL_TRIANGLES);
     return m;
 }
 
-Mesh *GLEngine::create_grid_mesh(ID id, float len, float step) {
-    Mesh *m = create_mesh(id);
+Mesh *GLEngine::create_grid_mesh(float len, float step) {
+    Mesh *m = create_mesh();
     MeshData md = create_grid_data(len, step);
     m->init(md.vertices, md.indices, GL_LINES);
     return m;
 }
 
-Shader *GLEngine::create_shader(ID id) {
-    Shader *s = new Shader();
+Shader *GLEngine::create_shader() {
+    ID id = _next_shader_id++;
+    Shader *s = new Shader(id);
     _shaders[id] = s;
     return s;
 }
@@ -345,6 +349,12 @@ RenderObject *GLEngine::create_renderobject(ID id) {
 RenderObject *GLEngine::create_renderobject(ID id, Mesh *mesh, Shader *shader) {
     RenderObject *ro = create_renderobject(id);
     ro->init(mesh, shader);
+    return ro;
+}
+
+RenderObject *GLEngine::create_renderobject(ID id, const std::vector<Mesh*> &meshes, Shader *shader) {
+    RenderObject *ro = create_renderobject(id);
+    ro->init(meshes, shader);
     return ro;
 }
 
@@ -376,21 +386,25 @@ ID GLEngine::object_at_screen_coord(const math::Vector2i &cursor_pos) const {
 void GLEngine::create_stock_shaders() {
     Shader *shader_flat = new Shader();
     Shader *shader_diffuse = new Shader();
+    Shader *shader_diffuse_textured = new Shader();
     Shader *shader_phong = new Shader();
     Shader *shader_vertexcolor = new Shader();
     Shader *shader_quad = new Shader();
     ShaderSrc flat_src = get_stock_shader_source(StockShader::Flat);
     ShaderSrc diffuse_src = get_stock_shader_source(StockShader::Diffuse);
+    ShaderSrc diffuse_textured_src = get_stock_shader_source(StockShader::DiffuseTextured);
     ShaderSrc phong_src = get_stock_shader_source(StockShader::Phong);
     ShaderSrc vertexcolor_src = get_stock_shader_source(StockShader::VertexColor);
     ShaderSrc quad_src = get_stock_shader_source(StockShader::Quad);
     shader_flat->init(flat_src.vertex_shader, flat_src.fragment_shader);
     shader_diffuse->init(diffuse_src.vertex_shader, diffuse_src.fragment_shader);
+    shader_diffuse_textured->init(diffuse_textured_src.vertex_shader, diffuse_textured_src.fragment_shader);
     shader_phong->init(phong_src.vertex_shader, phong_src.fragment_shader);
     shader_vertexcolor->init(vertexcolor_src.vertex_shader, vertexcolor_src.fragment_shader);
     shader_quad->init(quad_src.vertex_shader, quad_src.fragment_shader);
     _stock_shaders[StockShader::Flat] = shader_flat;
     _stock_shaders[StockShader::Diffuse] = shader_diffuse;
+    _stock_shaders[StockShader::DiffuseTextured] = shader_diffuse_textured;
     _stock_shaders[StockShader::Phong] = shader_phong;
     _stock_shaders[StockShader::VertexColor] = shader_vertexcolor;
     _stock_shaders[StockShader::Quad] = shader_quad;

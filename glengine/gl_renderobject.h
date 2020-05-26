@@ -9,14 +9,23 @@ namespace glengine {
 
 class RenderObject {
   public:
-    RenderObject(ID id=NULL_ID)
+    RenderObject(ID id = NULL_ID)
     : _id(id) {}
 
     bool init(Mesh *mesh, Shader *shader) {
         if (!mesh || !shader) {
             return false;
         }
-        _mesh = mesh;
+        _meshes.push_back(mesh);
+        _shader = shader;
+        return true;
+    }
+
+    bool init(std::vector<Mesh *> meshes, Shader *shader) {
+        if (!shader) {
+            return false;
+        }
+        _meshes = meshes;
         _shader = shader;
         return true;
     }
@@ -29,8 +38,10 @@ class RenderObject {
             _shader->set_uniform_view(cam.inverse_transform());
             _shader->set_uniform_projection(cam.projection());
             _shader->set_uniform_color(_color);
-            _shader->set_uniform_light0_pos(math::Vector3f(100,100,100));
-            _mesh->draw();
+            _shader->set_uniform_light0_pos(math::Vector3f(100, 100, 100));
+            for (auto m : _meshes) {
+                m->draw(*_shader);
+            }
         }
         return true;
     }
@@ -66,12 +77,12 @@ class RenderObject {
     }
 
     ID _id = NULL_ID;
-    Mesh *_mesh = nullptr;
+    std::vector<Mesh *> _meshes;
     Shader *_shader = nullptr;
 
     math::Matrix4f _transform = math::matrix4_identity<float>();
     math::Matrix4f _scale = math::matrix4_identity<float>();
-    glengine::Color _color = {100,100,100,255};
+    glengine::Color _color = {100, 100, 100, 255};
     bool _visible = true; ///< visibility flag
 
     bool _data_dirty = true; ///< flag to mark the data (vertices and indices) as out-of-date

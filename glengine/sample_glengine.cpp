@@ -9,6 +9,7 @@
 #include "gl_mesh.h"
 #include "gl_engine.h"
 #include "gl_renderobject.h"
+#include "gl_texture.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,14 +38,14 @@ int main(void) {
     eng.init({1280, 720, true});
 
     // meshes
-    glengine::Mesh *grid_mesh = eng.create_grid_mesh(204, 50.0f, 1.0f);
-    glengine::Mesh *box_mesh = eng.create_box_mesh(202, {1, 1, 1});
-    glengine::Mesh *box_dyn_mesh = eng.create_box_mesh(203, {1, 1, 1});
-    glengine::Mesh *axis_mesh = eng.create_axis_mesh(205);
-    glengine::Mesh *sphere_mesh = eng.create_sphere_mesh(206, 0.7);
-    glengine::Mesh *polyline_mesh = eng.create_mesh(200);
+    glengine::Mesh *grid_mesh = eng.create_grid_mesh(50.0f, 1.0f);
+    glengine::Mesh *box_mesh = eng.create_box_mesh({1, 1, 1});
+    glengine::Mesh *box_dyn_mesh = eng.create_box_mesh({1, 1, 1});
+    glengine::Mesh *axis_mesh = eng.create_axis_mesh();
+    glengine::Mesh *sphere_mesh = eng.create_sphere_mesh(0.7);
+    glengine::Mesh *polyline_mesh = eng.create_mesh();
     polyline_mesh->init(create_polyline(), GL_LINES);
-    glengine::Mesh *triangle_mesh = eng.create_mesh(201);
+    glengine::Mesh *triangle_mesh = eng.create_mesh();
     triangle_mesh->init(triangle_vertices, GL_TRIANGLES);
 
     // render objects
@@ -53,13 +54,19 @@ int main(void) {
     auto &triangle = *eng.create_renderobject(103, triangle_mesh, eng.get_stock_shader(glengine::StockShader::VertexColor));
     auto &box0     = *eng.create_renderobject(105, box_mesh,      eng.get_stock_shader(glengine::StockShader::Diffuse));
     auto &box1     = *eng.create_renderobject(106, box_mesh,      eng.get_stock_shader(glengine::StockShader::Phong));
-    auto &box2     = *eng.create_renderobject(107, box_mesh,      eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &box3     = *eng.create_renderobject(108, box_mesh,      eng.get_stock_shader(glengine::StockShader::Phong));
+    auto &box2     = *eng.create_renderobject(107, box_mesh,      eng.get_stock_shader(glengine::StockShader::DiffuseTextured));
+    auto &box3     = *eng.create_renderobject(108, box_mesh,      eng.get_stock_shader(glengine::StockShader::VertexColor));
     auto &box_dyn  = *eng.create_renderobject(109, box_dyn_mesh,  eng.get_stock_shader(glengine::StockShader::VertexColor));
     auto &axis     = *eng.create_renderobject(110, axis_mesh,     eng.get_stock_shader(glengine::StockShader::VertexColor));
     auto &sphere   = *eng.create_renderobject(111, sphere_mesh,   eng.get_stock_shader(glengine::StockShader::Phong));
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f);
+
+    // load texture
+    box_mesh->texture_diffuse = glengine::create_texture("uv_grid_256.png");
+    // glActiveTexture(GL_TEXTURE0); // activate the texture unit first before binding texture
+    // glBindTexture(GL_TEXTURE_2D, tex);
+    // printf("texture id: %u\n", tex);
 
     eng.add_ui_function([&](){
             ImGui::Begin("Object Info");
@@ -88,12 +95,12 @@ int main(void) {
             .set_color({k1, 0, k2, 255});
         // third box
         box2.set_transform(math::create_transformation({2.0f, 0.0f, 0.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)))
-            .set_scale({0.5f, 0.5f, 0.5f});
+            .set_scale({1.5f, 1.5f, 1.5f});
         // fourth box
         box3.set_transform(math::create_transformation({-2.0f, -1.5f, 0.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)))
             .set_scale({0.5f, 0.5f, 0.5f});
         // box (update and draw)
-        auto &bm = *box_dyn._mesh;
+        auto &bm = *box_dyn._meshes[0];
         bm.vertices[0] = {{-0.5f + 0.2f * std::cos(3 * t), -0.5f + 0.2f * std::sin(3 * t), 0.5f}, {50, 50, 200, 255}};
         bm.vertices[15] = {{-0.5f + 0.2f * std::cos(3 * t), -0.5f + 0.2f * std::sin(3 * t), 0.5f}, {50, 50, 200, 255}};
         bm.vertices[23] = {{-0.5f + 0.2f * std::cos(3 * t), -0.5f + 0.2f * std::sin(3 * t), 0.5f}, {50, 50, 200, 255}};

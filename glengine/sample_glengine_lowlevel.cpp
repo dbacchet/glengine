@@ -116,21 +116,21 @@ int main(void) {
     glengine::ShaderSrc diffuse_src = glengine::get_stock_shader_source(glengine::StockShader::Diffuse);
     glengine::ShaderSrc phong_src = glengine::get_stock_shader_source(glengine::StockShader::Phong);
     glengine::ShaderSrc vertexcolor_src = glengine::get_stock_shader_source(glengine::StockShader::VertexColor);
-    glengine::Shader *shader_flat = eng.create_shader(101);
-    glengine::Shader *shader_diffuse = eng.create_shader(102);
-    glengine::Shader *shader_phong = eng.create_shader(103);
-    glengine::Shader *shader_vertexcolor = eng.create_shader(104);
+    glengine::Shader *shader_flat = eng.create_shader();
+    glengine::Shader *shader_diffuse = eng.create_shader();
+    glengine::Shader *shader_phong = eng.create_shader();
+    glengine::Shader *shader_vertexcolor = eng.create_shader();
     shader_flat->init(flat_src.vertex_shader, flat_src.fragment_shader);
     shader_diffuse->init(diffuse_src.vertex_shader, diffuse_src.fragment_shader);
     shader_phong->init(phong_src.vertex_shader, phong_src.fragment_shader);
     shader_vertexcolor->init(vertexcolor_src.vertex_shader, vertexcolor_src.fragment_shader);
 
     // meshes
-    glengine::Mesh *grid_mesh = eng.create_mesh(204);
-    glengine::Mesh *polyline_mesh = eng.create_mesh(200);
-    glengine::Mesh *triangle_mesh = eng.create_mesh(201);
-    glengine::Mesh *box_mesh = eng.create_mesh(202);
-    glengine::Mesh *box_dyn_mesh = eng.create_mesh(203);
+    glengine::Mesh *grid_mesh = eng.create_mesh();
+    glengine::Mesh *polyline_mesh = eng.create_mesh();
+    glengine::Mesh *triangle_mesh = eng.create_mesh();
+    glengine::Mesh *box_mesh = eng.create_mesh();
+    glengine::Mesh *box_dyn_mesh = eng.create_mesh();
     grid_mesh->init(grid_vertices, GL_LINES);
     polyline_mesh->init(create_polyline(), GL_LINES);
     triangle_mesh->init(triangle_vertices, GL_TRIANGLES);
@@ -202,7 +202,7 @@ int main(void) {
             .set_scale({0.5f,0.5f,0.5f});
         box3.draw(eng._camera);
         // box (update and draw)
-        auto &bm = *box_dyn._mesh;
+        auto &bm = *(box_dyn._meshes[0]);
         bm.vertices[0]  = {{-0.5f+0.2f*std::cos(3*t),-0.5f+0.2f*std::sin(3*t),0.5f},{50,50,200,255}};
         bm.vertices[15] = {{-0.5f+0.2f*std::cos(3*t),-0.5f+0.2f*std::sin(3*t),0.5f},{50,50,200,255}};
         bm.vertices[23] = {{-0.5f+0.2f*std::cos(3*t),-0.5f+0.2f*std::sin(3*t),0.5f},{50,50,200,255}};

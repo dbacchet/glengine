@@ -84,16 +84,41 @@ void Shader::set_uniform_projection(const math::Matrix4f &p) {
 }
 
 void Shader::set_uniform_color(const Color &c) {
-    set_uniform_color(math::Vector4f(c.r/255.0f,c.g/255.0f,c.b/255.0f,c.a/255.0f));
-}
-
-void Shader::set_uniform_color(const math::Vector4f &c) {
-    glUniform4fv(u_color, 1, c);
+    glUniform4fv(u_color, 1, math::Vector4f(c.r/255.0f,c.g/255.0f,c.b/255.0f,c.a/255.0f));
 }
 
 void Shader::set_uniform_light0_pos(const math::Vector3f &pos) {
     glUniform3fv(u_light0_pos, 1, pos);
 }
+    void Shader::set_bool(const char *name, bool value) const {
+        glUniform1i(glGetUniformLocation(program_id, name), (int)value);
+    }
+    void Shader::set_int(const char *name, int value) const { glUniform1i(glGetUniformLocation(program_id, name), value); }
+    void Shader::set_float(const char *name, float value) const { glUniform1f(glGetUniformLocation(program_id, name), value); }
+    void Shader::set_vec2(const char *name, const math::Vector2f &value) const {
+        glUniform2fv(glGetUniformLocation(program_id, name), 1, value);
+    }
+    void Shader::set_vec2(const char *name, float x, float y) const {
+        glUniform2f(glGetUniformLocation(program_id, name), x, y);
+    }
+    void Shader::set_vec3(const char *name, const math::Vector3f &value) const {
+        glUniform3fv(glGetUniformLocation(program_id, name), 1, value);
+    }
+    void Shader::set_vec3(const char *name, float x, float y, float z) const {
+        glUniform3f(glGetUniformLocation(program_id, name), x, y, z);
+    }
+    void Shader::set_vec4(const char *name, const math::Vector4f &value) const {
+        glUniform4fv(glGetUniformLocation(program_id, name), 1, value);
+    }
+    void Shader::set_vec4(const char *name, float x, float y, float z, float w) {
+        glUniform4f(glGetUniformLocation(program_id, name), x, y, z, w);
+    }
+    void Shader::set_mat3(const char *name, const math::Matrix3f &mat) const {
+        glUniformMatrix3fv(glGetUniformLocation(program_id, name), 1, GL_FALSE, mat);
+    }
+    void Shader::set_mat4(const char *name, const math::Matrix4f &mat) const {
+        glUniformMatrix4fv(glGetUniformLocation(program_id, name), 1, GL_FALSE, mat);
+    }
 
 void Shader::print_shader_info_log(GLuint shader) {
     int max_length = 2048;
