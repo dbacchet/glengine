@@ -148,8 +148,8 @@ bool GLEngine::init(const Config &config) {
     _camera.set_perspective(0.1, 1000.0, math::utils::deg2rad(45.0f));
     _camera.set_transform(math::create_lookat<float>({-10.0f, -1.0f, 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
 
-    // create stock shaders
-    create_stock_shaders();
+    // initialize the resource manager (creates default resources)
+    _resource_manager.init();
 
     // configure g-buffer framebuffer
     glGenFramebuffers(1, &_g_buffer);
@@ -218,17 +218,17 @@ bool GLEngine::render() {
     }
 
     // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
-    // glEnable(GL_FRAMEBUFFER_SRGB); 
+    glEnable(GL_FRAMEBUFFER_SRGB); 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
     glViewport(0, 0, fbsize.x, fbsize.y);
-    Shader *quad_shader = get_stock_shader(StockShader::Quad);
+    Shader *quad_shader = _resource_manager.get_stock_shader(StockShader::Quad);
     quad_shader->activate();
     // glUniform1i(glGetUniformLocation(quad_shader->program_id, "screen_texture"), 0); 
     glBindTexture(GL_TEXTURE_2D, _gb_color);	// use the color attachment texture as the texture of the quad plane
     _ss_quad->draw(*quad_shader);
-    // glDisable(GL_FRAMEBUFFER_SRGB); 
+    glDisable(GL_FRAMEBUFFER_SRGB); 
 
     // copy the id texture in cpu memory
     glBindTexture(GL_TEXTURE_2D, _gb_id);
@@ -263,10 +263,6 @@ bool GLEngine::terminate() {
         delete it.second;
     }
     _meshes.clear();
-    for (auto it : _shaders) {
-        delete it.second;
-    }
-    _shaders.clear();
     glengine::destroy_context(_context);
     return true;
 }
@@ -321,25 +317,6 @@ Mesh *GLEngine::create_grid_mesh(float len, float step) {
     return m;
 }
 
-Shader *GLEngine::create_shader() {
-    ID id = _next_shader_id++;
-    Shader *s = new Shader(id);
-    _shaders[id] = s;
-    return s;
-}
-
-Shader *GLEngine::get_shader(ID id) {
-    return _shaders[id];
-}
-
-bool GLEngine::has_shader(ID id) const {
-    return _shaders.count(id) > 0;
-}
-
-Shader *GLEngine::get_stock_shader(StockShader type) {
-    return _stock_shaders[type];
-}
-
 RenderObject *GLEngine::create_renderobject(ID id) {
     RenderObject *ro = new RenderObject(id);
     _renderobjects[id] = ro;
@@ -381,33 +358,6 @@ ID GLEngine::object_at_screen_coord(const math::Vector2i &cursor_pos) const {
         return NULL_ID;
     }
     return _id_buffer[idx];
-}
-
-void GLEngine::create_stock_shaders() {
-    Shader *shader_flat = new Shader();
-    Shader *shader_diffuse = new Shader();
-    Shader *shader_diffuse_textured = new Shader();
-    Shader *shader_phong = new Shader();
-    Shader *shader_vertexcolor = new Shader();
-    Shader *shader_quad = new Shader();
-    ShaderSrc flat_src = get_stock_shader_source(StockShader::Flat);
-    ShaderSrc diffuse_src = get_stock_shader_source(StockShader::Diffuse);
-    ShaderSrc diffuse_textured_src = get_stock_shader_source(StockShader::DiffuseTextured);
-    ShaderSrc phong_src = get_stock_shader_source(StockShader::Phong);
-    ShaderSrc vertexcolor_src = get_stock_shader_source(StockShader::VertexColor);
-    ShaderSrc quad_src = get_stock_shader_source(StockShader::Quad);
-    shader_flat->init(flat_src.vertex_shader, flat_src.fragment_shader);
-    shader_diffuse->init(diffuse_src.vertex_shader, diffuse_src.fragment_shader);
-    shader_diffuse_textured->init(diffuse_textured_src.vertex_shader, diffuse_textured_src.fragment_shader);
-    shader_phong->init(phong_src.vertex_shader, phong_src.fragment_shader);
-    shader_vertexcolor->init(vertexcolor_src.vertex_shader, vertexcolor_src.fragment_shader);
-    shader_quad->init(quad_src.vertex_shader, quad_src.fragment_shader);
-    _stock_shaders[StockShader::Flat] = shader_flat;
-    _stock_shaders[StockShader::Diffuse] = shader_diffuse;
-    _stock_shaders[StockShader::DiffuseTextured] = shader_diffuse_textured;
-    _stock_shaders[StockShader::Phong] = shader_phong;
-    _stock_shaders[StockShader::VertexColor] = shader_vertexcolor;
-    _stock_shaders[StockShader::Quad] = shader_quad;
 }
 
 void GLEngine::resize_buffers() {

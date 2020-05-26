@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/samples/gltf/sample_gltf",
-            "args": ["the_mill/scene.gltf"],
+            "args": ["../resources/models/the_mill/scene.gltf"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
             "environment": [],

@@ -59,7 +59,7 @@ int main(void) {
             obj.beta = beta;
             obj.vlen = rand_range(0.0f, 1.0f);
             obj.tf = t1 * t2 * t3 * t4;
-            obj.ro = eng.create_renderobject(i * N + j, box_mesh, eng.get_stock_shader(glengine::StockShader::Diffuse));
+            obj.ro = eng.create_renderobject(i * N + j, box_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::Diffuse));
             obj.ro->set_transform(obj.tf);
             obj.ro->set_color(
                 {rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), 255});
@@ -67,7 +67,7 @@ int main(void) {
     }
 
     auto grid_mesh = eng.create_grid_mesh(R, 1.0f);
-    eng.create_renderobject(101, grid_mesh, eng.get_stock_shader(glengine::StockShader::VertexColor));
+    eng.create_renderobject(101, grid_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
 
     eng._camera_manipulator.set_center({-18.33f, 1.01f, 0.0f})
         .set_azimuth(1.87f)

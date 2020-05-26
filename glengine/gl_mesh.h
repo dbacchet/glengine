@@ -54,10 +54,10 @@ class Mesh {
     void draw(Shader &shader) {
         // draw mesh
         glBindVertexArray(vao);
-        if (texture_diffuse.id != NULL_TEXTURE_ID) {
+        if (texture_diffuse.id != NULL_TEXTURE_ID && shader.has_uniform("texture_diffuse")) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture_diffuse.id);
-            shader.set_int("texture_diffuse",0);
+            shader.set_sampler("texture_diffuse",0);
         }
         if (indices.size() > 0) {
             glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);

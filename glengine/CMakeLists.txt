@@ -20,6 +20,7 @@ add_library(glengine STATIC gl_context.cpp
                             gl_stock_shaders.cpp
                             gl_prefabs.cpp
                             gl_prefabs_gltf.cpp
+                            gl_resource_manager.cpp
                             glad/glad_gl.c
                             stb/stb_image.cpp
                             tinygltf/tiny_gltf.cpp
