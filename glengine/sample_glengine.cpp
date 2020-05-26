@@ -49,16 +49,16 @@ int main(void) {
     triangle_mesh->init(triangle_vertices, GL_TRIANGLES);
 
     // render objects
-    auto &grid     = *eng.create_renderobject(101, grid_mesh,     eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &polyline = *eng.create_renderobject(102, polyline_mesh, eng.get_stock_shader(glengine::StockShader::Flat));
-    auto &triangle = *eng.create_renderobject(103, triangle_mesh, eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &box0     = *eng.create_renderobject(105, box_mesh,      eng.get_stock_shader(glengine::StockShader::Diffuse));
-    auto &box1     = *eng.create_renderobject(106, box_mesh,      eng.get_stock_shader(glengine::StockShader::Phong));
-    auto &box2     = *eng.create_renderobject(107, box_mesh,      eng.get_stock_shader(glengine::StockShader::DiffuseTextured));
-    auto &box3     = *eng.create_renderobject(108, box_mesh,      eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &box_dyn  = *eng.create_renderobject(109, box_dyn_mesh,  eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &axis     = *eng.create_renderobject(110, axis_mesh,     eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &sphere   = *eng.create_renderobject(111, sphere_mesh,   eng.get_stock_shader(glengine::StockShader::Phong));
+    auto &grid     = *eng.create_renderobject(101, grid_mesh,     eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
+    auto &polyline = *eng.create_renderobject(102, polyline_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::Flat));
+    auto &triangle = *eng.create_renderobject(103, triangle_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
+    auto &box0     = *eng.create_renderobject(105, box_mesh,      eng.resource_manager().get_stock_shader(glengine::StockShader::Diffuse));
+    auto &box1     = *eng.create_renderobject(106, box_mesh,      eng.resource_manager().get_stock_shader(glengine::StockShader::Phong));
+    auto &box2     = *eng.create_renderobject(107, box_mesh,      eng.resource_manager().get_stock_shader(glengine::StockShader::DiffuseTextured));
+    auto &box3     = *eng.create_renderobject(108, box_mesh,      eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
+    auto &box_dyn  = *eng.create_renderobject(109, box_dyn_mesh,  eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
+    auto &axis     = *eng.create_renderobject(110, axis_mesh,     eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
+    auto &sphere   = *eng.create_renderobject(111, sphere_mesh,   eng.resource_manager().get_stock_shader(glengine::StockShader::Phong));
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f);
 

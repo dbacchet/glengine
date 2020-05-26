@@ -116,10 +116,10 @@ int main(void) {
     glengine::ShaderSrc diffuse_src = glengine::get_stock_shader_source(glengine::StockShader::Diffuse);
     glengine::ShaderSrc phong_src = glengine::get_stock_shader_source(glengine::StockShader::Phong);
     glengine::ShaderSrc vertexcolor_src = glengine::get_stock_shader_source(glengine::StockShader::VertexColor);
-    glengine::Shader *shader_flat = eng.create_shader();
-    glengine::Shader *shader_diffuse = eng.create_shader();
-    glengine::Shader *shader_phong = eng.create_shader();
-    glengine::Shader *shader_vertexcolor = eng.create_shader();
+    glengine::Shader *shader_flat = eng.resource_manager().create_shader();
+    glengine::Shader *shader_diffuse = eng.resource_manager().create_shader();
+    glengine::Shader *shader_phong = eng.resource_manager().create_shader();
+    glengine::Shader *shader_vertexcolor = eng.resource_manager().create_shader();
     shader_flat->init(flat_src.vertex_shader, flat_src.fragment_shader);
     shader_diffuse->init(diffuse_src.vertex_shader, diffuse_src.fragment_shader);
     shader_phong->init(phong_src.vertex_shader, phong_src.fragment_shader);

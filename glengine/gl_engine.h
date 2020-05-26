@@ -6,6 +6,7 @@
 #include "gl_stock_shaders.h"
 #include "gl_prefabs.h"
 #include "gl_renderobject.h"
+#include "gl_resource_manager.h"
 #include "imgui/imgui.h"
 
 #include <cstdint>
@@ -32,6 +33,11 @@ class GLEngine {
 
     bool terminate();
 
+    /// get resource manager
+    ResourceManager& resource_manager() {
+        return _resource_manager;
+    }
+
     // ////// //
     // meshes //
     // ////// //
@@ -54,19 +60,6 @@ class GLEngine {
     Mesh *create_sphere_mesh(float radius = 1.0f, uint32_t subdiv = 10);
     /// grid
     Mesh *create_grid_mesh(float len, float step);
-
-    // /////// //
-    // shaders //
-    // /////// //
-
-    /// create a new (uninitialized) shader
-    Shader *create_shader();
-    /// get shader by id
-    Shader *get_shader(ID id);
-    /// check if the shader with the given id exists
-    bool has_shader(ID id) const;
-    /// get stock shader
-    Shader *get_stock_shader(StockShader type);
 
     // ///////////// //
     // renderobjects //
@@ -101,6 +94,7 @@ class GLEngine {
     Context _context;
     Camera _camera;
     CameraManipulator _camera_manipulator;
+    ResourceManager _resource_manager;
 
     GLuint _g_buffer = 0;              // framebuffer id
     GLuint _gb_color = INVALID_BUFFER; // framebuffer color attachment handle
@@ -110,17 +104,12 @@ class GLEngine {
     std::vector<ID> _id_buffer; // buffer containing the id of the object in every pixel
 
     std::unordered_map<ID, Mesh *> _meshes;
-    std::unordered_map<ID, Shader *> _shaders;
-    std::unordered_map<StockShader, Shader *> _stock_shaders;
 
     std::unordered_map<ID, RenderObject *> _renderobjects;
 
     std::vector<std::function<void(void)>> _ui_functions;
 
     ID _next_mesh_id = 0;
-    ID _next_shader_id = 0;
-
-    void create_stock_shaders();
 
     void resize_buffers();
 };

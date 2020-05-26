@@ -26,9 +26,9 @@ int main(int argc, char *argv[]) {
     }
 
     // render objects
-    auto &grid = *eng.create_renderobject(101, grid_mesh, eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &axis = *eng.create_renderobject(110, axis_mesh, eng.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &model = *eng.create_renderobject(201, model_meshes, eng.get_stock_shader(glengine::StockShader::Diffuse));
+    auto &grid = *eng.create_renderobject(101, grid_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
+    auto &axis = *eng.create_renderobject(110, axis_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
+    auto &model = *eng.create_renderobject(201, model_meshes, eng.resource_manager().get_stock_shader(glengine::StockShader::Diffuse));
     model.set_scale({0.2,0.2,0.2}).set_color({200,200,200,255});
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f).set_distance(50.0f);
