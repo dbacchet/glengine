@@ -4,6 +4,7 @@ namespace glengine {
 enum class StockShader {
     Flat = 0,
     Diffuse,
+    DiffuseTextured,
     Phong,
     VertexColor,
     Quad,

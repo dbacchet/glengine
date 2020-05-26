@@ -37,7 +37,7 @@ class GLEngine {
     // ////// //
 
     /// create a new (empty) mesh
-    Mesh *create_mesh(ID id);
+    Mesh *create_mesh();
     /// get mesh by id
     Mesh *get_mesh(ID id);
     /// check if the mesh with the given id exists
@@ -45,22 +45,22 @@ class GLEngine {
 
     // prefab meshes
     /// axis gizmo
-    Mesh *create_axis_mesh(ID id);
+    Mesh *create_axis_mesh();
     /// quad that extends -1..1
-    Mesh *create_quad_mesh(ID id);
+    Mesh *create_quad_mesh();
     /// solid box
-    Mesh *create_box_mesh(ID id, const math::Vector3f &size = {1.0f, 1.0f, 1.0f});
+    Mesh *create_box_mesh(const math::Vector3f &size = {1.0f, 1.0f, 1.0f});
     /// sphere
-    Mesh *create_sphere_mesh(ID id, float radius = 1.0f, uint32_t subdiv = 10);
+    Mesh *create_sphere_mesh(float radius = 1.0f, uint32_t subdiv = 10);
     /// grid
-    Mesh *create_grid_mesh(ID id, float len, float step);
+    Mesh *create_grid_mesh(float len, float step);
 
     // /////// //
     // shaders //
     // /////// //
 
     /// create a new (uninitialized) shader
-    Shader *create_shader(ID id);
+    Shader *create_shader();
     /// get shader by id
     Shader *get_shader(ID id);
     /// check if the shader with the given id exists
@@ -75,6 +75,8 @@ class GLEngine {
     RenderObject *create_renderobject(ID id);
     /// create a new renderobject, given a mesh and a shader
     RenderObject *create_renderobject(ID id, Mesh *mesh, Shader *shader);
+    /// create a new renderobject, given an array of meshes and a shader
+    RenderObject *create_renderobject(ID id, const std::vector<Mesh*> &meshes, Shader *shader);
     /// get renderobject by id
     RenderObject *get_renderobject(ID id);
     /// check if the renderobject with the given id exists
@@ -114,6 +116,9 @@ class GLEngine {
     std::unordered_map<ID, RenderObject *> _renderobjects;
 
     std::vector<std::function<void(void)>> _ui_functions;
+
+    ID _next_mesh_id = 0;
+    ID _next_shader_id = 0;
 
     void create_stock_shaders();
 

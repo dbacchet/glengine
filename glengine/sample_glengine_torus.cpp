@@ -42,7 +42,7 @@ int main(void) {
     std::vector<Obj> cubes(M * N);
 
     // meshes
-    glengine::Mesh *box_mesh = eng.create_box_mesh(101, {l, l, l});
+    glengine::Mesh *box_mesh = eng.create_box_mesh({l, l, l});
     // render objects
     for (uint32_t i = 0; i < M; i++) {
         float alpha = 2 * M_PI * i / M;
@@ -66,7 +66,7 @@ int main(void) {
         }
     }
 
-    auto grid_mesh = eng.create_grid_mesh(M * N + 1, R, 1.0f);
+    auto grid_mesh = eng.create_grid_mesh(R, 1.0f);
     eng.create_renderobject(101, grid_mesh, eng.get_stock_shader(glengine::StockShader::VertexColor));
 
     eng._camera_manipulator.set_center({-18.33f, 1.01f, 0.0f})

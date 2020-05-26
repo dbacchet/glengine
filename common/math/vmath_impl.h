@@ -430,17 +430,26 @@ template <typename T> Matrix4<T> matrix4_identity() {
     return m;
 }
 
-/// create a translation matrix
+// create a translation matrix
 template <typename T> Matrix4<T> create_translation(const Vector3<T> &v) {
     Matrix4<T> ret = matrix4_identity<T>();
     set_translation(ret, v);
     return ret;
 }
 
-/// create a transformation matrix
+// create a transformation matrix
 template <typename T> Matrix4<T> create_transformation(const Vector3<T> &v, const Quaternion<T> &q) {
     Matrix4<T> ret = transform(q);
     set_translation(ret, v);
+    return ret;
+}
+
+// create a scaling matrix
+template <typename T> Matrix4<T> create_scaling(const Vector3<T> &s) {
+    Matrix4<T> ret = matrix4_identity<T>();
+    ret(0,0) = s[0];
+    ret(1,1) = s[1];
+    ret(2,2) = s[2];
     return ret;
 }
 

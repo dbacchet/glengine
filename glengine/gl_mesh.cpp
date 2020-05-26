@@ -3,9 +3,6 @@
 #include "gl_context.h"
 #include "gl_types.h"
 
-#include "gl_shader.h"
-#include "gl_texture.h"
-
 #include <vector>
 
 namespace glengine {
@@ -15,16 +12,12 @@ namespace glengine {
 /// call the update() function.
 class Mesh {
   public:
-    ID id = NULL_ID;
     // mesh data
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     GLenum primitive = GL_TRIANGLES;
 
-    Texture texture_diffuse;
-
-    Mesh(ID id_=NULL_ID)
-    :id(id_) {}
+    Mesh() {}
 
     bool init(const std::vector<Vertex> &vertices_, GLenum primitive_) {
         return init(vertices_, std::vector<uint32_t>(), primitive_);
@@ -51,14 +44,9 @@ class Mesh {
         return true;
     }
 
-    void draw(Shader &shader) {
+    void draw() {
         // draw mesh
         glBindVertexArray(vao);
-        if (texture_diffuse.id != NULL_TEXTURE_ID) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture_diffuse.id);
-            shader.set_int("texture_diffuse",0);
-        }
         if (indices.size() > 0) {
             glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);
         } else {
