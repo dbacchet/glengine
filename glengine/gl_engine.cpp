@@ -307,8 +307,12 @@ math::Vector2i GLEngine::cursor_pos() const {
 }
 
 ID GLEngine::object_at_screen_coord(const math::Vector2i &cursor_pos) const {
-    int32_t py = _context.window_state.framebuffer_size.y -1 - cursor_pos.y;
-    uint32_t idx = py*_context.window_state.framebuffer_size.x+cursor_pos.x;
+    // cursor is in window coord, so we need to convert to framebuffer
+    float scale_x = float(_context.window_state.framebuffer_size.x)/_context.window_state.window_size.x;
+    float scale_y = float(_context.window_state.framebuffer_size.y)/_context.window_state.window_size.y;
+    int32_t px = int32_t(scale_x * cursor_pos.x + 0.5f);
+    int32_t py = int32_t(scale_y * (_context.window_state.window_size.y -1 - cursor_pos.y) + 0.5f);
+    uint32_t idx = py*_context.window_state.framebuffer_size.x+px;
     if (idx<0 || idx>=_id_buffer.size()) {
         return NULL_ID;
     }
