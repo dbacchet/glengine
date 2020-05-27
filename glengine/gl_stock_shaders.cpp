@@ -192,6 +192,8 @@ void main() {
 
     // vec4 color = vec4(tex_coord.x,0.0,tex_coord.y,1.0);//texture(texture_diffuse, tex_coord);
     vec4 color = texture(texture_diffuse, tex_coord);
+    if(color.a < 0.1)
+        discard;
     vec3 result = (ambient + diffuse) * color.xyz;//vcolor.xyz;
     fragment_color = vec4(result, color.a);
     object_id = u_id;
