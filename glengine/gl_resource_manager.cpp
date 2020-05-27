@@ -1,10 +1,10 @@
 #include "gl_resource_manager.h"
+#include "gl_prefabs.h"
 
 #include "math/vmath.h"
+#include "stb/stb_image.h"
 
-namespace {
-
-} // namespace
+namespace {} // namespace
 
 namespace glengine {
 
@@ -74,5 +74,84 @@ void ResourceManager::create_stock_shaders() {
     _stock_shaders[StockShader::Quad] = shader_quad;
 }
 
+Texture *ResourceManager::create_texture() {
+    ID id = _next_texture_id++;
+    Texture *t = new Texture(id);
+    _textures[id] = t;
+    return t;
+}
+
+Texture *ResourceManager::get_texture(ID id) {
+    return _textures[id];
+}
+
+bool ResourceManager::has_texture(ID id) const {
+    return _textures.count(id) > 0;
+}
+
+Texture *ResourceManager::create_texture_from_file(const char *filename) {
+    Texture *t = create_texture();
+    // load and generate the texture
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
+    if (t && data) {
+        t->init(width, height, data, GL_RGBA, nrChannels < 4 ? GL_RGB : GL_RGBA);
+    } else {
+        printf("Failed to generate/load texture\n");
+    }
+    stbi_image_free(data);
+    return t;
+}
+
+Mesh *ResourceManager::create_mesh() {
+    ID id = _next_mesh_id++;
+    Mesh *t = new Mesh(id);
+    _meshes[id] = t;
+    return t;
+}
+
+Mesh *ResourceManager::get_mesh(ID id) {
+    return _meshes[id];
+}
+
+bool ResourceManager::has_mesh(ID id) const {
+    return _meshes.count(id) > 0;
+}
+
+Mesh *ResourceManager::create_axis_mesh() {
+    Mesh *m = create_mesh();
+    MeshData md = create_axis_data();
+    m->init(md.vertices, md.indices, GL_LINES);
+    return m;
+}
+
+Mesh *ResourceManager::create_quad_mesh() {
+    Mesh *m = create_mesh();
+    MeshData md = create_quad_data();
+    m->init(md.vertices, md.indices, GL_TRIANGLES);
+    return m;
+}
+
+Mesh *ResourceManager::create_box_mesh(const math::Vector3f &size) {
+    Mesh *m = create_mesh();
+    MeshData md = create_box_data(size);
+    m->init(md.vertices, md.indices, GL_TRIANGLES);
+    return m;
+}
+
+Mesh *ResourceManager::create_sphere_mesh(float radius, uint32_t subdiv) {
+    Mesh *m = create_mesh();
+    MeshData md = create_sphere_data(radius, subdiv);
+    m->init(md.vertices, md.indices, GL_TRIANGLES);
+    return m;
+}
+
+Mesh *ResourceManager::create_grid_mesh(float len, float step) {
+    Mesh *m = create_mesh();
+    MeshData md = create_grid_data(len, step);
+    m->init(md.vertices, md.indices, GL_LINES);
+    return m;
+}
 
 } // namespace glengine

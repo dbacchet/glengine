@@ -36,37 +36,36 @@ int main(void) {
 
     glengine::GLEngine eng;
     eng.init({1280, 720, true});
+    auto &rm = eng.resource_manager();
 
     // meshes
-    glengine::Mesh *grid_mesh = eng.create_grid_mesh(50.0f, 1.0f);
-    glengine::Mesh *box_mesh = eng.create_box_mesh({1, 1, 1});
-    glengine::Mesh *box_dyn_mesh = eng.create_box_mesh({1, 1, 1});
-    glengine::Mesh *axis_mesh = eng.create_axis_mesh();
-    glengine::Mesh *sphere_mesh = eng.create_sphere_mesh(0.7);
-    glengine::Mesh *polyline_mesh = eng.create_mesh();
+    glengine::Mesh *grid_mesh = rm.create_grid_mesh(50.0f, 1.0f);
+    glengine::Mesh *box_mesh = rm.create_box_mesh({1, 1, 1});
+    glengine::Mesh *box_dyn_mesh = rm.create_box_mesh({1, 1, 1});
+    glengine::Mesh *axis_mesh = rm.create_axis_mesh();
+    glengine::Mesh *sphere_mesh = rm.create_sphere_mesh(0.7);
+    glengine::Mesh *polyline_mesh = rm.create_mesh();
     polyline_mesh->init(create_polyline(), GL_LINES);
-    glengine::Mesh *triangle_mesh = eng.create_mesh();
+    glengine::Mesh *triangle_mesh = rm.create_mesh();
     triangle_mesh->init(triangle_vertices, GL_TRIANGLES);
 
     // render objects
-    auto &grid     = *eng.create_renderobject(101, grid_mesh,     eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
-    auto &polyline = *eng.create_renderobject(102, polyline_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::Flat));
-    auto &triangle = *eng.create_renderobject(103, triangle_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
-    auto &box0     = *eng.create_renderobject(105, box_mesh,      eng.resource_manager().get_stock_shader(glengine::StockShader::Diffuse));
-    auto &box1     = *eng.create_renderobject(106, box_mesh,      eng.resource_manager().get_stock_shader(glengine::StockShader::Phong));
-    auto &box2     = *eng.create_renderobject(107, box_mesh,      eng.resource_manager().get_stock_shader(glengine::StockShader::DiffuseTextured));
-    auto &box3     = *eng.create_renderobject(108, box_mesh,      eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
-    auto &box_dyn  = *eng.create_renderobject(109, box_dyn_mesh,  eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
-    auto &axis     = *eng.create_renderobject(110, axis_mesh,     eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
-    auto &sphere   = *eng.create_renderobject(111, sphere_mesh,   eng.resource_manager().get_stock_shader(glengine::StockShader::Phong));
+    auto &grid     = *eng.create_renderobject(101, grid_mesh,     rm.get_stock_shader(glengine::StockShader::VertexColor));
+    auto &polyline = *eng.create_renderobject(102, polyline_mesh, rm.get_stock_shader(glengine::StockShader::Flat));
+    auto &triangle = *eng.create_renderobject(103, triangle_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
+    auto &box0     = *eng.create_renderobject(105, box_mesh,      rm.get_stock_shader(glengine::StockShader::Diffuse));
+    auto &box1     = *eng.create_renderobject(106, box_mesh,      rm.get_stock_shader(glengine::StockShader::Phong));
+    auto &box2     = *eng.create_renderobject(107, box_mesh,      rm.get_stock_shader(glengine::StockShader::DiffuseTextured));
+    auto &box3     = *eng.create_renderobject(108, box_mesh,      rm.get_stock_shader(glengine::StockShader::VertexColor));
+    auto &box_dyn  = *eng.create_renderobject(109, box_dyn_mesh,  rm.get_stock_shader(glengine::StockShader::VertexColor));
+    auto &axis     = *eng.create_renderobject(110, axis_mesh,     rm.get_stock_shader(glengine::StockShader::VertexColor));
+    auto &sphere   = *eng.create_renderobject(111, sphere_mesh,   rm.get_stock_shader(glengine::StockShader::Phong));
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f);
 
     // load texture
-    box_mesh->texture_diffuse = glengine::create_texture("uv_grid_256.png");
-    // glActiveTexture(GL_TEXTURE0); // activate the texture unit first before binding texture
-    // glBindTexture(GL_TEXTURE_2D, tex);
-    // printf("texture id: %u\n", tex);
+    // box_mesh->textures.diffuse = rm.create_texture_from_file("uv_grid_256.png");
+    box_mesh->textures.diffuse = rm.create_texture_from_file("Material_109_baseColor.png");
 
     eng.add_ui_function([&](){
             ImGui::Begin("Object Info");
