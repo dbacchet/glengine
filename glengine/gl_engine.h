@@ -38,29 +38,6 @@ class GLEngine {
         return _resource_manager;
     }
 
-    // ////// //
-    // meshes //
-    // ////// //
-
-    /// create a new (empty) mesh
-    Mesh *create_mesh();
-    /// get mesh by id
-    Mesh *get_mesh(ID id);
-    /// check if the mesh with the given id exists
-    bool has_mesh(ID id) const;
-
-    // prefab meshes
-    /// axis gizmo
-    Mesh *create_axis_mesh();
-    /// quad that extends -1..1
-    Mesh *create_quad_mesh();
-    /// solid box
-    Mesh *create_box_mesh(const math::Vector3f &size = {1.0f, 1.0f, 1.0f});
-    /// sphere
-    Mesh *create_sphere_mesh(float radius = 1.0f, uint32_t subdiv = 10);
-    /// grid
-    Mesh *create_grid_mesh(float len, float step);
-
     // ///////////// //
     // renderobjects //
     // ///////////// //

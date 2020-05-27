@@ -1,6 +1,7 @@
 #include "gl_prefabs.h"
 
 #include <vector>
+#include <cmath>
 
 namespace {
 
@@ -46,6 +47,10 @@ bool create_box(const math::Vector3f &size, std::vector<glengine::Vertex> &out_v
     return true;
 }
 
+uint8_t srgb_i(uint8_t v) {
+    float val = std::pow(float(v)/255,2.2f);
+    return uint8_t(val*255);
+}
 std::vector<glengine::Vertex> create_grid(float len, float step) {
     std::vector<glengine::Vertex> vertices;
     const int32_t major = 5;
@@ -54,6 +59,10 @@ std::vector<glengine::Vertex> create_grid(float len, float step) {
     glengine::Color col_y = {20, 120, 20, 255};
     glengine::Color col1 = {40, 40, 40, 255};
     glengine::Color col2 = {70, 70, 70, 255};
+    col_x = {srgb_i(120), srgb_i(20), srgb_i(20), 255};
+    col_y = {srgb_i(20), srgb_i(120), srgb_i(20), 255};
+    col1 = {srgb_i(40), srgb_i(40), srgb_i(40), 255};
+    col2 = {srgb_i(70), srgb_i(70), srgb_i(70), 255};
     // main axis
     vertices.push_back({{-len, 0, 0}, col_x});
     vertices.push_back({{len, 0, 0}, col_x});

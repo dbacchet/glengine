@@ -14,6 +14,9 @@ namespace glengine {
 /// The class is _completely passive_ so after updating the vertices or indices data you have to explicitly
 /// call the update() function.
 class Mesh {
+    struct Textures {
+        Texture *diffuse = nullptr;
+    };
   public:
     ID id = NULL_ID;
     // mesh data
@@ -21,7 +24,7 @@ class Mesh {
     std::vector<uint32_t> indices;
     GLenum primitive = GL_TRIANGLES;
 
-    Texture texture_diffuse;
+    Textures textures;
 
     Mesh(ID id_=NULL_ID)
     :id(id_) {}
@@ -54,11 +57,7 @@ class Mesh {
     void draw(Shader &shader) {
         // draw mesh
         glBindVertexArray(vao);
-        if (texture_diffuse.id != NULL_TEXTURE_ID && shader.has_uniform("texture_diffuse")) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture_diffuse.id);
-            shader.set_sampler("texture_diffuse",0);
-        }
+        bind_textures(shader);
         if (indices.size() > 0) {
             glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);
         } else {
@@ -109,7 +108,7 @@ class Mesh {
         glEnableVertexAttribArray(vnorm_location);
         glVertexAttribPointer(vnorm_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                               (void *)offsetof(Vertex, normal));
-        // vertex color
+        // texture coords
         glEnableVertexAttribArray(vtex0_location);
         glVertexAttribPointer(vtex0_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                               (void *)offsetof(Vertex, tex_coords));
@@ -139,6 +138,15 @@ class Mesh {
             }
         }
         glBindVertexArray(0);
+    }
+
+    void bind_textures(Shader &shader) {
+        // diffuse
+        if (textures.diffuse && textures.diffuse->texture_id != NULL_TEXTURE_ID && shader.has_uniform("texture_diffuse")) {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textures.diffuse->texture_id);
+            shader.set_sampler("texture_diffuse",0);
+        }
     }
 };
 } // namespace glengine

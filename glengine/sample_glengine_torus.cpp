@@ -25,6 +25,7 @@ int main(void) {
 
     glengine::GLEngine eng;
     eng.init({1280, 720, true});
+    auto &rm = eng.resource_manager();
 
     uint32_t N = 40;
     uint32_t M = 400;
@@ -42,7 +43,7 @@ int main(void) {
     std::vector<Obj> cubes(M * N);
 
     // meshes
-    glengine::Mesh *box_mesh = eng.create_box_mesh({l, l, l});
+    glengine::Mesh *box_mesh = rm.create_box_mesh({l, l, l});
     // render objects
     for (uint32_t i = 0; i < M; i++) {
         float alpha = 2 * M_PI * i / M;
@@ -59,15 +60,15 @@ int main(void) {
             obj.beta = beta;
             obj.vlen = rand_range(0.0f, 1.0f);
             obj.tf = t1 * t2 * t3 * t4;
-            obj.ro = eng.create_renderobject(i * N + j, box_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::Diffuse));
+            obj.ro = eng.create_renderobject(i * N + j, box_mesh, rm.get_stock_shader(glengine::StockShader::Diffuse));
             obj.ro->set_transform(obj.tf);
             obj.ro->set_color(
                 {rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), 255});
         }
     }
 
-    auto grid_mesh = eng.create_grid_mesh(R, 1.0f);
-    eng.create_renderobject(101, grid_mesh, eng.resource_manager().get_stock_shader(glengine::StockShader::VertexColor));
+    auto grid_mesh = rm.create_grid_mesh(R, 1.0f);
+    eng.create_renderobject(101, grid_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
 
     eng._camera_manipulator.set_center({-18.33f, 1.01f, 0.0f})
         .set_azimuth(1.87f)

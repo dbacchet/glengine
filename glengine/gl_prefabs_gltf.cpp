@@ -95,6 +95,15 @@ bool bindMesh(const tinygltf::Model &model, const tinygltf::Mesh &mesh, const ma
         for (int ii = 0; ii < indexAccessor.count; ii++) {
             md.indices.push_back(indices[ii]);
         }
+        // material
+        const tinygltf::Material &material = model.materials[primitive.material];
+        if (material.pbrMetallicRoughness.baseColorTexture.index>=0) {
+            const tinygltf::Image &img = model.images[material.pbrMetallicRoughness.baseColorTexture.index];
+            md.texture_diffuse.width = img.width;
+            md.texture_diffuse.height = img.height;
+            md.texture_diffuse.channels = img.component;
+            md.texture_diffuse.data = img.image;
+        }
         model_meshes.push_back(md);
     }
 
@@ -127,16 +136,14 @@ std::vector<MeshData> create_from_gltf(const char *filename) {
     std::string warn;
 
     bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, filename);
-    // bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, argv[1]); // for binary glTF(.glb)
+    // bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, filename); // for binary glTF(.glb)
 
     if (!warn.empty()) {
         printf("Warn: %s\n", warn.c_str());
     }
-
     if (!err.empty()) {
         printf("Err: %s\n", err.c_str());
     }
-
     if (!ret) {
         printf("Failed to parse glTF\n");
     }
@@ -152,15 +159,6 @@ std::vector<MeshData> create_from_gltf(const char *filename) {
         bindModelNodes(model, model.nodes[scene.nodes[i]], root_tf);
     }
     printf("created %lu meshdata structs\n", model_meshes.size());
-    // // flatten meshes for now, since we are not reading the material properties for each one
-    // for (const auto &m : model_meshes) {
-    //     uint32_t offs = md.vertices.size();
-    //     md.vertices.insert(md.vertices.end(), m.vertices.begin(), m.vertices.end());
-    //     for (uint32_t idx : m.indices) {
-    //         md.indices.push_back(idx + offs);
-    //     }
-    // }
-    // return md;
     return model_meshes;
 }
 

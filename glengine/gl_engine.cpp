@@ -65,6 +65,7 @@ void scroll_callback(GLFWwindow *window, double xoffs, double yoffs) {
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
     auto &ctx = app._context;
+    auto &cm = app._camera_manipulator;
     math::Vector2i cursor_pos(int(xpos + 0.5), int(ypos + 0.5));
     math::Vector2i cursor_delta(0, 0);
     if (ctx.input_state.previous_cursor_pos != math::Vector2i(-1, -1)) {
@@ -72,23 +73,24 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     }
     // rotate view
     if (ctx.input_state.left_button_pressed && ctx.input_state.ctrl_key_pressed == false) {
-        app._camera_manipulator.add_azimuth(-0.003f * cursor_delta.x);
-        app._camera_manipulator.add_elevation(-0.003f * cursor_delta.y);
+        cm.add_azimuth(-0.003f * cursor_delta.x);
+        // cm.add_elevation(-0.003f * cursor_delta.y);
+        cm.set_elevation(math::utils::clamp<float>(cm._elevation - 0.003f * cursor_delta.y, 0, M_PI));
     }
     // translate view center
     if (ctx.input_state.middle_button_pressed ||
         (ctx.input_state.left_button_pressed && ctx.input_state.ctrl_key_pressed == true)) {
-        float scaling = 0.001f * app._camera_manipulator._distance;
+        float scaling = 0.001f * cm._distance;
         float dx = scaling * cursor_delta.x;
         float dy = scaling * cursor_delta.y;
-        float azimuth = app._camera_manipulator._azimuth;
+        float azimuth = cm._azimuth;
         math::Vector3f delta(-std::cos(azimuth) * dx - std::sin(azimuth) * dy,
                              -std::sin(azimuth) * dx + std::cos(azimuth) * dy, 0.0f);
-        app._camera_manipulator.translate(delta);
+        cm.translate(delta);
     }
     // zoom view
     if (ctx.input_state.right_button_pressed) {
-        app._camera_manipulator.set_distance(app._camera_manipulator.distance() * (1 - cursor_delta.y / 100.0f));
+        cm.set_distance(cm.distance() * (1 - cursor_delta.y / 100.0f));
     }
     ctx.input_state.previous_cursor_pos = cursor_pos;
 }
@@ -187,9 +189,10 @@ bool GLEngine::init(const Config &config) {
     _id_buffer.resize(_context.window_state.framebuffer_size.x*_context.window_state.framebuffer_size.y, NULL_ID);
 
     // create the screen quad mesh
-    _ss_quad = create_quad_mesh();
+    _ss_quad = _resource_manager.create_quad_mesh();
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    float srgb_gamma = 2.2;
+    glClearColor(pow(0.1f,srgb_gamma), pow(0.1f,srgb_gamma), pow(0.1f,srgb_gamma), 1.0f);
     glEnable(GL_DEPTH_TEST);
 
     return true;
@@ -209,6 +212,8 @@ bool GLEngine::render() {
 
     glViewport(0, 0, fbsize.x, fbsize.y);
     glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // "clear" the id buffer setting NULL_ID as clear value
     glClearBufferuiv(GL_COLOR, 1, &NULL_ID);
@@ -265,56 +270,6 @@ bool GLEngine::terminate() {
     _meshes.clear();
     glengine::destroy_context(_context);
     return true;
-}
-
-Mesh *GLEngine::create_mesh() {
-    ID id = _next_mesh_id++;
-    Mesh *m = new Mesh(id);
-    _meshes[id] = m;
-    return m;
-}
-
-Mesh *GLEngine::get_mesh(ID id) {
-    return _meshes[id];
-}
-
-bool GLEngine::has_mesh(ID id) const {
-    return _meshes.count(id) > 0;
-}
-
-Mesh *GLEngine::create_axis_mesh() {
-    Mesh *m = create_mesh();
-    MeshData md = create_axis_data();
-    m->init(md.vertices, md.indices, GL_LINES);
-    return m;
-}
-
-Mesh *GLEngine::create_quad_mesh() {
-    Mesh *m = create_mesh();
-    MeshData md = create_quad_data();
-    m->init(md.vertices, md.indices, GL_TRIANGLES);
-    return m;
-}
-
-Mesh *GLEngine::create_box_mesh(const math::Vector3f &size) {
-    Mesh *m = create_mesh();
-    MeshData md = create_box_data(size);
-    m->init(md.vertices, md.indices, GL_TRIANGLES);
-    return m;
-}
-
-Mesh *GLEngine::create_sphere_mesh(float radius, uint32_t subdiv) {
-    Mesh *m = create_mesh();
-    MeshData md = create_sphere_data(radius, subdiv);
-    m->init(md.vertices, md.indices, GL_TRIANGLES);
-    return m;
-}
-
-Mesh *GLEngine::create_grid_mesh(float len, float step) {
-    Mesh *m = create_mesh();
-    MeshData md = create_grid_data(len, step);
-    m->init(md.vertices, md.indices, GL_LINES);
-    return m;
 }
 
 RenderObject *GLEngine::create_renderobject(ID id) {
