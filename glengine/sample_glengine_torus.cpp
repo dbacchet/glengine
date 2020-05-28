@@ -79,10 +79,10 @@ int main(void) {
     eng.add_ui_function([&]() {
         ImGui::SetNextWindowSize(math::Vector2f(0, 0)); // (0,0) will adjust the size to the content
         ImGui::Begin("Camera Manipulator");
-        ImGui::DragFloat3("center", eng._camera_manipulator._center);
-        ImGui::SliderAngle("azimuth", &eng._camera_manipulator._azimuth);
-        ImGui::SliderAngle("elevation", &eng._camera_manipulator._elevation);
-        ImGui::DragFloat("distance", &eng._camera_manipulator._distance, 1.0f, 0.01f, 100.0f);
+        ImGui::DragFloat3("center", eng._camera_manipulator.center());
+        ImGui::SliderAngle("azimuth", &eng._camera_manipulator.azimuth());
+        ImGui::SliderAngle("elevation", &eng._camera_manipulator.elevation());
+        ImGui::DragFloat("distance", &eng._camera_manipulator.distance(), 1.0f, 0.01f, 100.0f);
         ImGui::End();
     });
 

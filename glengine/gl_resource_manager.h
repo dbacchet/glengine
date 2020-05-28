@@ -55,6 +55,7 @@ class ResourceManager {
     bool has_texture(ID id) const;
     /// create a texture from file
     Texture *create_texture_from_file(const char *filename);
+    Texture *create_texture_from_data(uint32_t width, uint32_t height, uint8_t channels, const uint8_t *data);
 
     // ////// //
     // meshes //
@@ -67,7 +68,7 @@ class ResourceManager {
     /// check if the mesh with the given id exists
     bool has_mesh(ID id) const;
     /// create a mesh from file
-    Mesh *create_mesh_from_file(const char *filename);
+    std::vector<Mesh *> create_mesh_from_file(const char *filename);
 
     // prefab meshes
     /// axis gizmo

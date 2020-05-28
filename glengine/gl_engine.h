@@ -80,13 +80,9 @@ class GLEngine {
     Mesh *_ss_quad = nullptr;
     std::vector<ID> _id_buffer; // buffer containing the id of the object in every pixel
 
-    std::unordered_map<ID, Mesh *> _meshes;
-
     std::unordered_map<ID, RenderObject *> _renderobjects;
 
     std::vector<std::function<void(void)>> _ui_functions;
-
-    ID _next_mesh_id = 0;
 
     void resize_buffers();
 };

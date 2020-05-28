@@ -7,28 +7,18 @@
 #include <cstdlib>
 #include <cstdio>
 
-
 int main(int argc, char *argv[]) {
 
     glengine::GLEngine eng;
     eng.init({1280, 720, true});
     auto &rm = eng.resource_manager();
 
+    // return 0;
     // meshes
     glengine::Mesh *grid_mesh = rm.create_grid_mesh(50.0f, 1.0f);
     glengine::Mesh *axis_mesh = rm.create_axis_mesh();
+    std::vector<glengine::Mesh*> model_meshes = rm.create_mesh_from_file(argv[1]);
     
-    std::vector<glengine::MeshData> md = glengine::create_from_gltf(argv[1]);
-    std::vector<glengine::Mesh*> model_meshes;
-    for (auto &m: md) {
-        glengine::Mesh *mesh = rm.create_mesh();
-        mesh->init(m.vertices, m.indices, GL_TRIANGLES);
-        glengine::Texture *tex = rm.create_texture();
-        tex->init(m.texture_diffuse.width, m.texture_diffuse.height, m.texture_diffuse.data.data(), GL_SRGB_ALPHA, m.texture_diffuse.channels < 4 ? GL_RGB : GL_RGBA);
-        mesh->textures.diffuse = tex;
-        model_meshes.push_back(mesh);
-    }
-
     // render objects
     auto &grid = *eng.create_renderobject(101, grid_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
     auto &axis = *eng.create_renderobject(110, axis_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
