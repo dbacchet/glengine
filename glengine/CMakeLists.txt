@@ -16,11 +16,12 @@ set(imgui_files imgui/imconfig.h
 add_library(glengine STATIC gl_context.cpp
                             gl_camera_manipulator.cpp
                             gl_engine.cpp
+                            gl_mesh.cpp
                             gl_shader.cpp
                             gl_stock_shaders.cpp
                             gl_prefabs.cpp
-                            gl_prefabs_gltf.cpp
                             gl_resource_manager.cpp
+                            gl_resource_manager_gltf.cpp
                             gl_texture.cpp
                             glad/glad_gl.c
                             stb/stb_image.cpp

@@ -3,6 +3,43 @@
 
 namespace glengine {
 
+    CameraManipulator &CameraManipulator::set_azimuth(float angle) {
+        _azimuth = angle;
+        return *this;
+    }
+    CameraManipulator &CameraManipulator::add_azimuth(float angle) {
+        _azimuth += angle;
+        return *this;
+    }
+    CameraManipulator &CameraManipulator::set_elevation(float angle) {
+        _elevation = angle;
+        return *this;
+    }
+    CameraManipulator &CameraManipulator::add_elevation(float angle) {
+        _elevation += angle;
+        return *this;
+    }
+    CameraManipulator &CameraManipulator::set_distance(float val) {
+        _distance = val;
+        if (_distance < _min_distance)
+            _distance = _min_distance;
+        return *this;
+    }
+    CameraManipulator &CameraManipulator::add_distance(float val) {
+        _distance += val;
+        if (_distance < _min_distance)
+            _distance = _min_distance;
+        return *this;
+    }
+
+    CameraManipulator &CameraManipulator::set_center(const math::Vector3f &pos) {
+        _center = pos;
+        return *this;
+    };
+    CameraManipulator &CameraManipulator::translate(const math::Vector3f &delta) {
+        _center += delta;
+        return *this;
+    };
 bool CameraManipulator::update(Camera &cam) {
     math::Matrix4f center = math::create_translation<float>(_center);
     math::Matrix4f azim =

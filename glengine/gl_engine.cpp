@@ -75,15 +75,15 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     if (ctx.input_state.left_button_pressed && ctx.input_state.ctrl_key_pressed == false) {
         cm.add_azimuth(-0.003f * cursor_delta.x);
         // cm.add_elevation(-0.003f * cursor_delta.y);
-        cm.set_elevation(math::utils::clamp<float>(cm._elevation - 0.003f * cursor_delta.y, 0, M_PI));
+        cm.set_elevation(math::utils::clamp<float>(cm.elevation() - 0.003f * cursor_delta.y, 0, M_PI));
     }
     // translate view center
     if (ctx.input_state.middle_button_pressed ||
         (ctx.input_state.left_button_pressed && ctx.input_state.ctrl_key_pressed == true)) {
-        float scaling = 0.001f * cm._distance;
+        float scaling = 0.001f * cm.distance();
         float dx = scaling * cursor_delta.x;
         float dy = scaling * cursor_delta.y;
-        float azimuth = cm._azimuth;
+        float azimuth = cm.azimuth();
         math::Vector3f delta(-std::cos(azimuth) * dx - std::sin(azimuth) * dy,
                              -std::sin(azimuth) * dx + std::cos(azimuth) * dy, 0.0f);
         cm.translate(delta);
@@ -264,10 +264,6 @@ bool GLEngine::render() {
 
 bool GLEngine::terminate() {
     // deallocate all resources
-    for (auto it : _meshes) {
-        delete it.second;
-    }
-    _meshes.clear();
     glengine::destroy_context(_context);
     return true;
 }

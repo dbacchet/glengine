@@ -104,6 +104,16 @@ Texture *ResourceManager::create_texture_from_file(const char *filename) {
     return t;
 }
 
+Texture *ResourceManager::create_texture_from_data(uint32_t width, uint32_t height, uint8_t channels, const uint8_t *data) {
+    Texture *t = create_texture();
+    if (t && data) {
+        t->init(width, height, data, GL_SRGB_ALPHA, channels < 4 ? GL_RGB : GL_RGBA);
+    } else {
+        printf("Failed to generate/load texture\n");
+    }
+    return t;
+}
+
 Mesh *ResourceManager::create_mesh() {
     ID id = _next_mesh_id++;
     Mesh *t = new Mesh(id);
