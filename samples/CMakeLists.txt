@@ -1,2 +1,2 @@
 add_subdirectory(glfw)
-add_subdirectory(gltf)
+add_subdirectory(glengine)
