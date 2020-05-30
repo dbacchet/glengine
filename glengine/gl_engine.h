@@ -76,7 +76,7 @@ class GLEngine {
     Mesh *_ss_quad = nullptr;
     std::vector<ID> _id_buffer; // buffer containing the id of the object in every pixel
 
-    RenderObject _root;
+    RenderObject *_root = nullptr;
 
     std::vector<std::function<void(void)>> _ui_functions;
 
