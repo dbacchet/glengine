@@ -11,17 +11,6 @@
 
 namespace glengine {
 
-// class Resource {
-//   public:
-//     ID id = NULL_ID;
-//     std::string name = "";
-//
-//   protected:
-//     Resource(ID id_, const std::string &name_)
-//     : id(id_)
-//     , name(name_) {}
-// };
-
 class ResourceManager {
   public:
     virtual ~ResourceManager();

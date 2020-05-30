@@ -315,6 +315,10 @@ ID GLEngine::object_at_screen_coord(const math::Vector2i &cursor_pos) const {
     return _id_buffer[idx];
 }
 
+void GLEngine::save_screenshot(const char *filename) {
+    saveScreenshot(filename);
+}
+
 void GLEngine::resize_buffers() {
     // const auto &win_size = _context.window_state.window_size;
     const auto &fb_size = _context.window_state.framebuffer_size;

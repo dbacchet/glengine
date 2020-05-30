@@ -12,9 +12,5 @@
 #   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
 # endif()
 
-# catch
-add_subdirectory(catch2)
-# c11 threads implementation
-add_subdirectory(c11threads)
 # GLFW
 add_subdirectory(glfw-3.3.2)

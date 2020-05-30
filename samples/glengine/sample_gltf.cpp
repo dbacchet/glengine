@@ -1,7 +1,6 @@
 #include "math/vmath.h"
 
 #include "gl_types.h"
-#include "gl_prefabs.h"
 #include "gl_engine.h"
 
 #include <cstdlib>
@@ -24,6 +23,8 @@ int main(int argc, char *argv[]) {
     auto &axis = *eng.create_renderobject(110, axis_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
     auto &model = *eng.create_renderobject(201, model_meshes, rm.get_stock_shader(glengine::StockShader::DiffuseTextured));
     model.set_scale({0.2,0.2,0.2}).set_color({200,200,200,255});
+
+    (void)grid; // unused var
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f).set_distance(50.0f);
 

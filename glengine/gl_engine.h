@@ -3,8 +3,6 @@
 #include "gl_context.h"
 #include "gl_camera.h"
 #include "gl_camera_manipulator.h"
-#include "gl_stock_shaders.h"
-#include "gl_prefabs.h"
 #include "gl_renderobject.h"
 #include "gl_resource_manager.h"
 #include "imgui/imgui.h"
@@ -66,6 +64,8 @@ class GLEngine {
     /// get the id of the object at the given (screen) coordinates.
     /// \return object id or NULL_ID if none
     ID object_at_screen_coord(const math::Vector2i &cursor_pos) const;
+
+    void save_screenshot(const char *filename);
 
     // protected:
     Context _context;

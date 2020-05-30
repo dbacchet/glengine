@@ -95,11 +95,11 @@ class GltfLoader {
             glengine::MeshData md;
             auto rot = tf;
             math::set_translation(rot, {0, 0, 0});
-            for (int vi = 0; vi < pos_accessor.count; vi++) {
+            for (uint32_t vi = 0; vi < pos_accessor.count; vi++) {
                 md.vertices.push_back(
                     {tf * positions[vi], {150, 150, 150, 255}, rot * normals[vi], {texcoords[vi].s, texcoords[vi].t}});
             }
-            for (int ii = 0; ii < indexAccessor.count; ii++) {
+            for (uint32_t ii = 0; ii < indexAccessor.count; ii++) {
                 md.indices.push_back(indices[ii]);
             }
             // material
@@ -115,12 +115,12 @@ class GltfLoader {
 
     void load_node(const tinygltf::Model &model, const tinygltf::Node &node, const math::Matrix4f &parent_tf) {
         math::Matrix4f tf = extract_transform(node);
-        if ((node.mesh >= 0) && (node.mesh < model.meshes.size())) {
+        if ((node.mesh >= 0) && (node.mesh < int(model.meshes.size()))) {
             load_mesh(model, model.meshes[node.mesh], parent_tf * tf);
         }
 
         for (size_t i = 0; i < node.children.size(); i++) {
-            assert((node.children[i] >= 0) && (node.children[i] < model.nodes.size()));
+            assert((node.children[i] >= 0) && (node.children[i] < int(model.nodes.size())));
             load_node(model, model.nodes[node.children[i]], parent_tf * tf);
         }
     }
@@ -178,8 +178,7 @@ std::vector<Mesh *> create_from_gltf(ResourceManager &rm, const char *filename) 
     root_tf = math::create_transformation(
         {0, 0, 0}, math::quat_from_euler_321<float>(M_PI_2, 0, 0)); // because by default gltf are y-up
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        assert((scene.nodes[i] >= 0) && (scene.nodes[i] < model.nodes.size()));
-        auto &node = model.nodes[scene.nodes[i]];
+        assert((scene.nodes[i] >= 0) && (scene.nodes[i] < int(model.nodes.size())));
         ml.load_node(model, model.nodes[scene.nodes[i]], root_tf);
     }
     return ml.meshes();
