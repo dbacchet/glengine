@@ -262,10 +262,10 @@ bool GLEngine::render() {
 
 bool GLEngine::terminate() {
     // deallocate all resources
-    for (auto &c : _root.children()) {
-        delete c;
+    while (_root.children().size()>0) { // have to iterate this way because a regulare iterator gets invalidated when deleting
+        auto c = _root.children().begin();
+        delete *c;
     }
-    _root.children().clear();
     glengine::destroy_context(_context);
     return true;
 }
