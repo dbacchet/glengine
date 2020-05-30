@@ -48,24 +48,16 @@ int main(void) {
     triangle_mesh->init(triangle_vertices, GL_TRIANGLES);
 
     // render objects
-    auto &grid =
-        *eng.create_renderobject(grid_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 101);
-    auto &polyline =
-        *eng.create_renderobject(polyline_mesh, rm.get_stock_shader(glengine::StockShader::Flat), nullptr, 102);
-    auto &triangle =
-        *eng.create_renderobject(triangle_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 103);
+    auto &grid = *eng.create_renderobject(grid_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 101);
+    auto &polyline = *eng.create_renderobject(polyline_mesh, rm.get_stock_shader(glengine::StockShader::Flat), nullptr, 102);
+    auto &triangle = *eng.create_renderobject(triangle_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 103);
     auto &box0 = *eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::Diffuse), nullptr, 104);
     auto &box1 = *eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::Phong), nullptr, 105);
-    auto &box2 =
-        *eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::DiffuseTextured), nullptr, 106);
-    auto &box3 =
-        *eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 107);
-    auto &box_dyn =
-        *eng.create_renderobject(box_dyn_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 108);
-    auto &axis =
-        *eng.create_renderobject(axis_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 109);
-    auto &sphere =
-        *eng.create_renderobject(sphere_mesh, rm.get_stock_shader(glengine::StockShader::Phong), nullptr, 110);
+    auto &box2 = *eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::DiffuseTextured), nullptr, 106);
+    auto &box3 = *eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 107);
+    auto &box_dyn = *eng.create_renderobject(box_dyn_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 108);
+    auto &axis = *eng.create_renderobject(axis_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor), nullptr, 109);
+    auto &sphere = *eng.create_renderobject(sphere_mesh, rm.get_stock_shader(glengine::StockShader::Phong), nullptr, 110);
 
     // basic object hierarchy
     auto sg0 = eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::Diffuse), nullptr, 120);
@@ -105,25 +97,19 @@ int main(void) {
         // polyline
         polyline.set_color({k2, 0, k1, 255});
         // triangle
-        triangle
-            .set_transform(
-                math::create_transformation({0.0f, 0.0f, 0.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
+        triangle.set_transform(math::create_transformation({0.0f, 0.0f, 0.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
             .set_scale({1.0f + 0.5f * std::sin(2 * t), 1.0f, 1.0f});
         // box (static)
-        box0.set_transform(
-                math::create_transformation({-1.0f, 0.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
+        box0.set_transform(math::create_transformation({-1.0f, 0.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
             .set_color({k1, k2, 0, 255});
         // another box using the same mesh
-        box1.set_transform(
-                math::create_transformation({1.0f, 0.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
+        box1.set_transform(math::create_transformation({1.0f, 0.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
             .set_color({k1, 0, k2, 255});
         // third box
-        box2.set_transform(
-                math::create_transformation({2.0f, 0.0f, 0.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)))
+        box2.set_transform(math::create_transformation({2.0f, 0.0f, 0.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)))
             .set_scale({1.5f, 1.5f, 1.5f});
         // fourth box
-        box3.set_transform(
-                math::create_transformation({-2.0f, -1.5f, 0.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)))
+        box3.set_transform(math::create_transformation({-2.0f, -1.5f, 0.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)))
             .set_scale({0.5f, 0.5f, 0.5f});
         // box (update and draw)
         auto &bm = *box_dyn._meshes[0];
@@ -140,14 +126,11 @@ int main(void) {
             bm.vertices.push_back({{-2.0f, 0.0f, zoffs}, {100, 100, 100, 255}});
         }
         bm.update();
-        box_dyn.set_transform(
-            math::create_transformation({0.0f, 0.0f, 3.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)));
+        box_dyn.set_transform(math::create_transformation({0.0f, 0.0f, 3.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)));
         // axis
-        axis.set_transform(
-            math::create_transformation({0.0f, -1.0f, 2.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 2.1f)));
+        axis.set_transform(math::create_transformation({0.0f, -1.0f, 2.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 2.1f)));
         // sphere
-        sphere
-            .set_transform(math::create_transformation({0.0f, 3.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)))
+        sphere.set_transform(math::create_transformation({0.0f, 3.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)))
             .set_color({0, k1, k2, 255});
 
         // scenegraph
