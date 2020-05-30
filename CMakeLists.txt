@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(JobSystem VERSION 0.0.1
-                  DESCRIPTION "Minimal Job System based on fibers"
-                  LANGUAGES C CXX ASM)
+project(GLEngine VERSION 0.0.1
+                  DESCRIPTION "minimal openlgl engine/framework"
+                  LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)

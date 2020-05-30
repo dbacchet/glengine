@@ -33,3 +33,16 @@ target_link_libraries(glengine PUBLIC glfw
                                       common
                      )
 
+# install
+# file(GLOB_RECURSE GLENGINE_PUBLIC_HEADERS "*.h*")
+# set_target_properties(glengine PROPERTIES
+#     PUBLIC_HEADER "${GLENGINE_PUBLIC_HEADERS}"
+# )
+install(TARGETS glengine
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    PUBLIC_HEADER DESTINATION include
+          )
+install(DIRECTORY . DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+            FILES_MATCHING PATTERN *.h)
+

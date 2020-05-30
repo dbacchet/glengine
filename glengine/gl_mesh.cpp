@@ -98,7 +98,7 @@ void Mesh::update_mesh_data() {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     GLint size = 0;
     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    if (size > vertices.size() * sizeof(Vertex)) { // reuse existing memory
+    if (size > int(vertices.size() * sizeof(Vertex))) { // reuse existing memory
         glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), &vertices[0]);
     } else { // reallocate the memory
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
@@ -107,7 +107,7 @@ void Mesh::update_mesh_data() {
     if (indices.size() > 0) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-        if (size > indices.size() * sizeof(uint32_t)) { // reuse existing memory
+        if (size > int(indices.size() * sizeof(uint32_t))) { // reuse existing memory
             glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(uint32_t), &indices[0]);
         } else { // reallocate the memory
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);

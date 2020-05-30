@@ -61,6 +61,8 @@ int main(void) {
     auto &axis     = *eng.create_renderobject(110, axis_mesh,     rm.get_stock_shader(glengine::StockShader::VertexColor));
     auto &sphere   = *eng.create_renderobject(111, sphere_mesh,   rm.get_stock_shader(glengine::StockShader::Phong));
 
+    (void)grid; // unused var
+
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f);
 
     // load texture
@@ -74,7 +76,7 @@ int main(void) {
             ImGui::End();
             });
 
-    int width = 0, height = 0, cnt = 0;
+    int cnt = 0;
     while (eng.render()) {
         float t = glfwGetTime();
         uint8_t k1 = uint8_t(cnt % 255);

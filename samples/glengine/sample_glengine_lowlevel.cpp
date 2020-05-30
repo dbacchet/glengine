@@ -175,8 +175,6 @@ int main(void) {
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        math::Matrix4f pv = eng._camera.projection() * eng._camera.inverse_transform();
-
         // grid
         grid.draw(eng._camera);
         // polyline
