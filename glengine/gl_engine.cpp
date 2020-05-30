@@ -218,9 +218,6 @@ bool GLEngine::render() {
     // "clear" the id buffer setting NULL_ID as clear value
     glClearBufferuiv(GL_COLOR, 1, &NULL_ID);
 
-    // for (auto &ro : _renderobjects) {
-    //     ro.second->draw(_camera);
-    // }
     _root.draw(_camera);
 
     // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
@@ -265,35 +262,31 @@ bool GLEngine::render() {
 
 bool GLEngine::terminate() {
     // deallocate all resources
+    for (auto &c : _root.children()) {
+        delete c;
+    }
+    _root.children().clear();
     glengine::destroy_context(_context);
     return true;
 }
 
-RenderObject *GLEngine::create_renderobject(ID id) {
-    RenderObject *ro = new RenderObject(id);
+RenderObject *GLEngine::create_renderobject(RenderObject *parent, ID id) {
+    parent = parent ? parent : &_root;
+    RenderObject *ro = new RenderObject(parent, id);
     // _renderobjects[id] = ro;
-    _root.add_child(ro);
     return ro;
 }
 
-RenderObject *GLEngine::create_renderobject(ID id, Mesh *mesh, Shader *shader) {
-    RenderObject *ro = create_renderobject(id);
+RenderObject *GLEngine::create_renderobject(Mesh *mesh, Shader *shader, RenderObject *parent, ID id) {
+    RenderObject *ro = create_renderobject(parent, id);
     ro->init(mesh, shader);
     return ro;
 }
 
-RenderObject *GLEngine::create_renderobject(ID id, const std::vector<Mesh*> &meshes, Shader *shader) {
-    RenderObject *ro = create_renderobject(id);
+RenderObject *GLEngine::create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, RenderObject *parent, ID id) {
+    RenderObject *ro = create_renderobject(parent, id);
     ro->init(meshes, shader);
     return ro;
-}
-
-RenderObject *GLEngine::get_renderobject(ID id) {
-    return _renderobjects[id];
-}
-
-bool GLEngine::has_renderobject(ID id) const {
-    return _renderobjects.count(id) > 0;
 }
 
 void GLEngine::add_ui_function(std::function<void(void)> fun) {

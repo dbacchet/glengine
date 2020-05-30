@@ -3,21 +3,27 @@
 #include "gl_mesh.h"
 #include "gl_shader.h"
 
-#include <algorithm>
+#include <vector>
+#include <set>
 
 namespace glengine {
 
-RenderObject::RenderObject(ID id)
-: _id(id) {}
+RenderObject::RenderObject(RenderObject *parent, ID id)
+: _parent(parent)
+, _id(id) {
+    if (_parent) {
+        parent->add_child(this);
+    }
+}
 
 RenderObject::~RenderObject() {
     if (_parent) {
-        _parent->detach_child_by_id(_id);
+        _parent->detach_child(this);
     }
-    for (auto c: _children) {
+    for (auto c : _children) {
         delete c;
+        c = nullptr;
     }
-    printf("deleted renderobject %u\n", (uint32_t)_id);
 }
 
 bool RenderObject::init(Mesh *mesh, Shader *shader) {
@@ -42,21 +48,23 @@ void RenderObject::add_child(RenderObject *ro) {
     if (!ro) {
         return;
     }
+    // update previous parent
+    if (ro->parent()) {
+        ro->parent()->detach_child(ro);
+    }
     ro->_parent = this;
-    _children.push_back(ro);
+    _children.insert(ro);
 }
 
-RenderObject *RenderObject::detach_child_by_id(ID id) {
-    auto it = std::find_if(_children.begin(), _children.end(), [id](const RenderObject* ro){ return ro->_id==id; });
+RenderObject *RenderObject::detach_child(RenderObject *ro) {
+    auto it = _children.find(ro);
     if (it != _children.end()) {
-        return *it;
+        RenderObject *orphan = *it;
+        orphan->_parent = nullptr;
+        _children.erase(it);
+        return orphan;
     }
     return nullptr;
-}
-
-
-bool RenderObject::draw(const Camera &cam) {
-    return draw(cam, math::matrix4_identity<float>());
 }
 
 bool RenderObject::draw(const Camera &cam, const math::Matrix4f &parent_tf) {
@@ -74,9 +82,9 @@ bool RenderObject::draw(const Camera &cam, const math::Matrix4f &parent_tf) {
                 m->draw(*_shader);
             }
         }
-    }
-    for (auto &c:_children) {
-        c->draw(cam, curr_tf);
+        for (auto &c : _children) {
+            c->draw(cam, curr_tf);
+        }
     }
     return true;
 }

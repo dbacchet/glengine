@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/samples/gltf/sample_gltf",
+            "program": "${workspaceFolder}/build/samples/glengine/sample_glengine",
             "args": ["../resources/models/the_mill/scene.gltf"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
