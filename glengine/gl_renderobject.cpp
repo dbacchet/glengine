@@ -20,9 +20,8 @@ RenderObject::~RenderObject() {
     if (_parent) {
         _parent->detach_child(this);
     }
-    for (auto c : _children) {
-        delete c;
-        c = nullptr;
+    while (_children.size()>0) { // have to iterate this way because a regulare iterator gets invalidated when deleting
+        delete *_children.begin();
     }
 }
 

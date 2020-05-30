@@ -152,6 +152,8 @@ bool GLEngine::init(const Config &config) {
 
     // initialize the resource manager (creates default resources)
     _resource_manager.init();
+    // create root of the scene
+    _root = new RenderObject();
 
     // configure g-buffer framebuffer
     glGenFramebuffers(1, &_g_buffer);
@@ -218,7 +220,9 @@ bool GLEngine::render() {
     // "clear" the id buffer setting NULL_ID as clear value
     glClearBufferuiv(GL_COLOR, 1, &NULL_ID);
 
-    _root.draw(_camera);
+    if (_root) {
+        _root->draw(_camera);
+    }
 
     // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
     glEnable(GL_FRAMEBUFFER_SRGB); 
@@ -262,18 +266,14 @@ bool GLEngine::render() {
 
 bool GLEngine::terminate() {
     // deallocate all resources
-    while (_root.children().size()>0) { // have to iterate this way because a regulare iterator gets invalidated when deleting
-        auto c = _root.children().begin();
-        delete *c;
-    }
+    delete _root;
+    _root = nullptr;
     glengine::destroy_context(_context);
     return true;
 }
 
 RenderObject *GLEngine::create_renderobject(RenderObject *parent, ID id) {
-    parent = parent ? parent : &_root;
-    RenderObject *ro = new RenderObject(parent, id);
-    // _renderobjects[id] = ro;
+    RenderObject *ro = new RenderObject(parent ? parent : _root, id);
     return ro;
 }
 

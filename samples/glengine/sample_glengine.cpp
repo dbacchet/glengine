@@ -89,8 +89,6 @@ int main(void) {
     box_mesh->textures.diffuse = rm.create_texture_from_file("uv_grid_256.png");
     // box_mesh->textures.diffuse = rm.create_texture_from_file("Material_109_baseColor.png");
 
-    eng._root.add_child(sg0);
-
     eng.add_ui_function([&]() {
         ImGui::Begin("Object Info");
         auto id = eng.object_at_screen_coord(eng.cursor_pos());
