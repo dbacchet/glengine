@@ -30,6 +30,7 @@ int saveScreenshot(const char *filename)
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
 
+    stbi_flip_vertically_on_write(true);
     int saved = stbi_write_png(filename, width, height, 3, data, 0);
 
     free(data);

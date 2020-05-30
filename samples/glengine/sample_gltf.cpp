@@ -32,6 +32,9 @@ int main(int argc, char *argv[]) {
         ImGui::Begin("Object Info");
         auto id = eng.object_at_screen_coord(eng.cursor_pos());
         ImGui::Text("Object id: %d", id);
+        if (ImGui::Button("take screenshot")) {
+            eng.save_screenshot("screenshot.png");
+        }
         ImGui::End();
     });
 
