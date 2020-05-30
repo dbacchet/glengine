@@ -2,49 +2,35 @@
 
 #include "math/vmath.h"
 #include "gl_types.h"
-#include "gl_mesh.h"
-#include "gl_shader.h"
+#include "gl_camera.h"
+
+#include <vector>
 
 namespace glengine {
 
-class RenderObject {
+class Mesh;
+class Shader;
+
+class RenderObject final {
   public:
-    RenderObject(ID id = NULL_ID)
-    : _id(id) {}
+    RenderObject(ID id = NULL_ID);
+    ~RenderObject();
 
-    bool init(Mesh *mesh, Shader *shader) {
-        if (!mesh || !shader) {
-            return false;
-        }
-        _meshes.push_back(mesh);
-        _shader = shader;
-        return true;
-    }
+    bool init(Mesh *mesh, Shader *shader);
+    bool init(std::vector<Mesh *> meshes, Shader *shader);
 
-    bool init(std::vector<Mesh *> meshes, Shader *shader) {
-        if (!shader) {
-            return false;
-        }
-        _meshes = meshes;
-        _shader = shader;
-        return true;
-    }
+    bool draw(const Camera &cam);
+    bool draw(const Camera &cam, const math::Matrix4f &parent_tf);
 
-    bool draw(const Camera &cam) {
-        if (_visible) {
-            _shader->activate();
-            _shader->set_uniform_id(_id);
-            _shader->set_uniform_model(_transform * _scale);
-            _shader->set_uniform_view(cam.inverse_transform());
-            _shader->set_uniform_projection(cam.projection());
-            _shader->set_uniform_color(_color);
-            _shader->set_uniform_light0_pos(math::Vector3f(100, 100, 100));
-            for (auto m : _meshes) {
-                m->draw(*_shader);
-            }
-        }
-        return true;
-    }
+    // ////////// //
+    // scenegraph //
+    // ////////// //
+
+    RenderObject *parent() { return _parent; }
+    std::vector<RenderObject *> &children() { return _children; }
+    void add_child(RenderObject *ro);
+    RenderObject *detach_child_by_id(ID id);
+
     // ////////// //
     // attributes //
     // ////////// //
@@ -53,30 +39,19 @@ class RenderObject {
     glengine::Color color() const { return _color; }
     bool visible() const { return _visible; }
 
-    RenderObject &set_transform(const math::Matrix4f &tf) {
-        _transform = tf;
-        _attr_dirty = true; // mark the attributes as changed
-        return *this;
-    }
-    RenderObject &set_scale(const math::Vector3f &scl) {
-        _scale(0, 0) = scl[0];
-        _scale(1, 1) = scl[1];
-        _scale(2, 2) = scl[2];
-        _attr_dirty = true; // mark the attributes as changed
-        return *this;
-    }
-    RenderObject &set_color(const glengine::Color &color) {
-        _color = color;
-        _attr_dirty = true; // mark the attributes as changed
-        return *this;
-    }
-    RenderObject &set_visible(bool flag) {
-        _visible = flag;
-        _attr_dirty = true; // mark the attributes as changed
-        return *this;
-    }
+    RenderObject &set_transform(const math::Matrix4f &tf);
+    RenderObject &set_scale(const math::Vector3f &scl);
+    RenderObject &set_color(const glengine::Color &color);
+    RenderObject &set_visible(bool flag);
+
+    // //// //
+    // data //
+    // //// //
 
     ID _id = NULL_ID;
+    RenderObject *_parent = nullptr;
+    std::vector<RenderObject *> _children;
+
     std::vector<Mesh *> _meshes;
     Shader *_shader = nullptr;
 
@@ -84,9 +59,6 @@ class RenderObject {
     math::Matrix4f _scale = math::matrix4_identity<float>();
     glengine::Color _color = {100, 100, 100, 255};
     bool _visible = true; ///< visibility flag
-
-    bool _data_dirty = true; ///< flag to mark the data (vertices and indices) as out-of-date
-    bool _attr_dirty = true; ///< flag to mark the attributes (transform etc) as out-of-date
 };
 
 } // namespace glengine

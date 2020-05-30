@@ -218,9 +218,10 @@ bool GLEngine::render() {
     // "clear" the id buffer setting NULL_ID as clear value
     glClearBufferuiv(GL_COLOR, 1, &NULL_ID);
 
-    for (auto &ro : _renderobjects) {
-        ro.second->draw(_camera);
-    }
+    // for (auto &ro : _renderobjects) {
+    //     ro.second->draw(_camera);
+    // }
+    _root.draw(_camera);
 
     // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
     glEnable(GL_FRAMEBUFFER_SRGB); 
@@ -270,7 +271,8 @@ bool GLEngine::terminate() {
 
 RenderObject *GLEngine::create_renderobject(ID id) {
     RenderObject *ro = new RenderObject(id);
-    _renderobjects[id] = ro;
+    // _renderobjects[id] = ro;
+    _root.add_child(ro);
     return ro;
 }
 
