@@ -5,6 +5,7 @@
 #include "gl_camera.h"
 
 #include <vector>
+#include <set>
 
 namespace glengine {
 
@@ -13,23 +14,23 @@ class Shader;
 
 class RenderObject final {
   public:
-    RenderObject(ID id = NULL_ID);
+    RenderObject(RenderObject *parent = nullptr, ID id = NULL_ID);
     ~RenderObject();
 
     bool init(Mesh *mesh, Shader *shader);
     bool init(std::vector<Mesh *> meshes, Shader *shader);
 
-    bool draw(const Camera &cam);
-    bool draw(const Camera &cam, const math::Matrix4f &parent_tf);
+    bool draw(const Camera &cam, const math::Matrix4f &parent_tf=math::matrix4_identity<float>());
 
     // ////////// //
     // scenegraph //
     // ////////// //
 
     RenderObject *parent() { return _parent; }
-    std::vector<RenderObject *> &children() { return _children; }
+    std::set<RenderObject *> &children() { return _children; }
     void add_child(RenderObject *ro);
-    RenderObject *detach_child_by_id(ID id);
+    /// detach the given child and return a pointer to the orphan renderobject
+    RenderObject *detach_child(RenderObject *child);
 
     // ////////// //
     // attributes //
@@ -50,7 +51,7 @@ class RenderObject final {
 
     ID _id = NULL_ID;
     RenderObject *_parent = nullptr;
-    std::vector<RenderObject *> _children;
+    std::set<RenderObject *> _children;
 
     std::vector<Mesh *> _meshes;
     Shader *_shader = nullptr;

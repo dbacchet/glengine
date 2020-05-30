@@ -40,15 +40,11 @@ class GLEngine {
     // renderobjects //
     // ///////////// //
     /// create a new (uninitialized) renderobject
-    RenderObject *create_renderobject(ID id);
+    RenderObject *create_renderobject(RenderObject *parent=nullptr, ID id=NULL_ID);
     /// create a new renderobject, given a mesh and a shader
-    RenderObject *create_renderobject(ID id, Mesh *mesh, Shader *shader);
+    RenderObject *create_renderobject(Mesh *mesh, Shader *shader, RenderObject *parent=nullptr, ID id=NULL_ID);
     /// create a new renderobject, given an array of meshes and a shader
-    RenderObject *create_renderobject(ID id, const std::vector<Mesh*> &meshes, Shader *shader);
-    /// get renderobject by id
-    RenderObject *get_renderobject(ID id);
-    /// check if the renderobject with the given id exists
-    bool has_renderobject(ID id) const;
+    RenderObject *create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, RenderObject *parent=nullptr, ID id=NULL_ID);
 
     // // //
     // UI //
@@ -80,7 +76,6 @@ class GLEngine {
     Mesh *_ss_quad = nullptr;
     std::vector<ID> _id_buffer; // buffer containing the id of the object in every pixel
 
-    std::unordered_map<ID, RenderObject *> _renderobjects;
     RenderObject _root;
 
     std::vector<std::function<void(void)>> _ui_functions;
