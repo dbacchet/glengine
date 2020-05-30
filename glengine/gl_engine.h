@@ -81,6 +81,7 @@ class GLEngine {
     std::vector<ID> _id_buffer; // buffer containing the id of the object in every pixel
 
     std::unordered_map<ID, RenderObject *> _renderobjects;
+    RenderObject _root;
 
     std::vector<std::function<void(void)>> _ui_functions;
 

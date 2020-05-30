@@ -61,13 +61,29 @@ int main(void) {
     auto &axis     = *eng.create_renderobject(110, axis_mesh,     rm.get_stock_shader(glengine::StockShader::VertexColor));
     auto &sphere   = *eng.create_renderobject(111, sphere_mesh,   rm.get_stock_shader(glengine::StockShader::Phong));
 
+    // basic object hierarchy
+    auto sg0     = eng.create_renderobject(120, box_mesh,      rm.get_stock_shader(glengine::StockShader::Diffuse));
+    auto sg1     = eng.create_renderobject(121, box_mesh,      rm.get_stock_shader(glengine::StockShader::Diffuse));
+    auto sg2     = eng.create_renderobject(122, box_mesh,      rm.get_stock_shader(glengine::StockShader::Diffuse));
+    auto sg3     = eng.create_renderobject(123, box_mesh,      rm.get_stock_shader(glengine::StockShader::Diffuse));
+    sg0->add_child(sg1);
+    sg1->add_child(sg2);
+    sg1->add_child(sg3);
+    sg0->set_transform(math::create_transformation<float>({1,0,0}, math::quat_from_euler_321<float>(0,0,0.5)));
+    sg1->set_transform(math::create_transformation<float>({2,0,0}, math::quat_from_euler_321<float>(0,0,0)));
+    sg1->set_scale({0.5f,0.5f,0.5f});
+    sg2->set_transform(math::create_transformation<float>({2,1,0}, math::quat_from_euler_321<float>(0.3,0,0)));
+    sg3->set_transform(math::create_transformation<float>({2,-1,0}, math::quat_from_euler_321<float>(0.7,0,0)));
+
     (void)grid; // unused var
 
     eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f);
 
     // load texture
-    // box_mesh->textures.diffuse = rm.create_texture_from_file("uv_grid_256.png");
-    box_mesh->textures.diffuse = rm.create_texture_from_file("Material_109_baseColor.png");
+    box_mesh->textures.diffuse = rm.create_texture_from_file("uv_grid_256.png");
+    // box_mesh->textures.diffuse = rm.create_texture_from_file("Material_109_baseColor.png");
+
+    eng._root.add_child(sg0);
 
     eng.add_ui_function([&](){
             ImGui::Begin("Object Info");
@@ -121,6 +137,10 @@ int main(void) {
         // sphere
         sphere.set_transform( math::create_transformation({0.0f, 3.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)))
             .set_color({0, k1, k2, 255});
+
+        // scenegraph
+        sg0->set_transform(math::create_transformation({2.0f, 0.0f, -1.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)));
+        sg1->set_transform(math::create_transformation({2.0f + std::sin(t), 0.0f, 0.0f}, math::quat_from_euler_321(3*t, 0.0f, 0.0f)));
 
         cnt++;
     }
