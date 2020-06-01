@@ -14,6 +14,9 @@ struct Config {
     uint32_t window_width = 1280;
     uint32_t window_height = 720;
     bool vsync = true;
+    // debug flags
+    bool show_framebuffer_texture = false;
+    bool show_imgui_statistics = false;
 };
 
 

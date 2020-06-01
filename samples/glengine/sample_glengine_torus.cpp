@@ -23,8 +23,15 @@ template <typename T> T rand_range(T v1, T v2) {
 int main(void) {
     srand(12345678);
 
+    glengine::Config config;
+    config.window_width = 1280;
+    config.window_height = 720;
+    config.vsync = true;
+    config.show_framebuffer_texture = false;
+    config.show_imgui_statistics = true;
+
     glengine::GLEngine eng;
-    eng.init({1280, 720, true});
+    eng.init(config);
     auto &rm = eng.resource_manager();
 
     uint32_t N = 40;

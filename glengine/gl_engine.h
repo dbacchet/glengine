@@ -64,6 +64,7 @@ class GLEngine {
     void save_screenshot(const char *filename);
 
     // protected:
+    Config _config;
     Context _context;
     Camera _camera;
     CameraManipulator _camera_manipulator;
