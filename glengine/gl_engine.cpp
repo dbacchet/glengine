@@ -136,6 +136,7 @@ namespace glengine {
 GLEngine::~GLEngine() {}
 
 bool GLEngine::init(const Config &config) {
+    _config = config;
     _context = glengine::init_context(config, "GLEngine sample app", (void *)this,
                                       {
                                           scroll_callback,          // scroll_fun_callback
@@ -247,15 +248,19 @@ bool GLEngine::render() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::ShowMetricsWindow();
+    if (_config.show_imgui_statistics) {
+        ImGui::ShowMetricsWindow();
+    }
+    if (_config.show_framebuffer_texture) {
+        ImGui::Begin("fb image");
+        ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(300,300*(float)fbsize.y/fbsize.x),ImVec2(0,1),ImVec2(1,0));
+        ImGui::End();
+    }
 
     for (auto& fun: _ui_functions) {
         fun();
     }
 
-    ImGui::Begin("fb image");
-    ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(300,300*(float)fbsize.y/fbsize.x),ImVec2(0,1),ImVec2(1,0));
-    ImGui::End();
     // render ImGui
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -304,8 +309,8 @@ ID GLEngine::object_at_screen_coord(const math::Vector2i &cursor_pos) const {
     float scale_y = float(_context.window_state.framebuffer_size.y)/_context.window_state.window_size.y;
     int32_t px = int32_t(scale_x * cursor_pos.x + 0.5f);
     int32_t py = int32_t(scale_y * (_context.window_state.window_size.y -1 - cursor_pos.y) + 0.5f);
-    uint32_t idx = py*_context.window_state.framebuffer_size.x+px;
-    if (idx<0 || idx>=_id_buffer.size()) {
+    int32_t idx = py*_context.window_state.framebuffer_size.x+px;
+    if (idx<0 || idx>=(int32_t)_id_buffer.size()) {
         return NULL_ID;
     }
     return _id_buffer[idx];

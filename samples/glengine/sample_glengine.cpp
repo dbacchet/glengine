@@ -32,8 +32,15 @@ std::vector<glengine::Vertex> create_polyline() {
 
 int main(void) {
 
+    glengine::Config config;
+    config.window_width = 1280;
+    config.window_height = 720;
+    config.vsync = true;
+    config.show_framebuffer_texture = true;
+    config.show_imgui_statistics = true;
+
     glengine::GLEngine eng;
-    eng.init({1280, 720, true});
+    eng.init(config);
     auto &rm = eng.resource_manager();
 
     // meshes
@@ -69,9 +76,9 @@ int main(void) {
     sg1->set_transform(math::create_transformation<float>({2, 0, 0}, math::quat_from_euler_321<float>(0, 0, 0)))
         .set_scale({0.5f, 0.5f, 0.5f});
     sg2->set_transform(math::create_transformation<float>({2, 1, 0}, math::quat_from_euler_321<float>(0.3, 0, 0)))
-        .set_color({255, 100, 255, 255});
+        .set_color({255, 0, 255, 255});
     sg3->set_transform(math::create_transformation<float>({2, -1, 0}, math::quat_from_euler_321<float>(0.7, 0, 0)))
-        .set_color({100, 255, 100, 255});
+        .set_color({0, 255, 0, 255});
 
     (void)grid; // unused var
 
