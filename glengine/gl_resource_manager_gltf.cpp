@@ -49,64 +49,88 @@ class GltfLoader {
     bool load_mesh(const tinygltf::Model &model, const tinygltf::Mesh &mesh, const math::Matrix4f &tf) {
         for (size_t pi = 0; pi < mesh.primitives.size(); ++pi) {
             tinygltf::Primitive primitive = mesh.primitives[pi];
-            if (primitive.mode != TINYGLTF_MODE_TRIANGLES || primitive.attributes.count("POSITION") == 0 ||
-                primitive.attributes.count("NORMAL") == 0 || primitive.attributes.count("TEXCOORD_0") == 0) {
-                printf("         SKIP (only triangles with pos, normal and texcoord0 are supported for now)!\n");
-                continue;
-            }
-            // accessors
-            const tinygltf::Accessor &pos_accessor = model.accessors[primitive.attributes["POSITION"]];
-            const tinygltf::Accessor &norm_accessor = model.accessors[primitive.attributes["NORMAL"]];
-            const tinygltf::Accessor &tc0_accessor = model.accessors[primitive.attributes["TEXCOORD_0"]];
-            const tinygltf::Accessor &indexAccessor = model.accessors[primitive.indices];
-            if (pos_accessor.type != TINYGLTF_TYPE_VEC3 ||
-                pos_accessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT ||
-                norm_accessor.type != TINYGLTF_TYPE_VEC3 ||
-                norm_accessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT ||
-                tc0_accessor.type != TINYGLTF_TYPE_VEC2 ||
-                tc0_accessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT ||
-                indexAccessor.type != TINYGLTF_TYPE_SCALAR ||
-                indexAccessor.componentType != TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
-                printf("SKIP: vertex/index data format not supported yet\n");
+            if (primitive.mode != TINYGLTF_MODE_TRIANGLES || primitive.attributes.count("POSITION") == 0) {
+                printf("         SKIP (only triangles are supported for now)!\n");
                 continue;
             }
             // position
+            const tinygltf::Accessor &pos_accessor = model.accessors[primitive.attributes["POSITION"]];
+            if (pos_accessor.type != TINYGLTF_TYPE_VEC3 ||
+                pos_accessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT) {
+                printf("SKIP: position vertex/index data format not supported yet\n");
+                continue;
+            }
             const tinygltf::BufferView &pos_bufferView = model.bufferViews[pos_accessor.bufferView];
             const tinygltf::Buffer &pos_buffer = model.buffers[pos_bufferView.buffer];
             math::Vector3f *positions =
                 (math::Vector3f *)(pos_buffer.data.data() + pos_bufferView.byteOffset + pos_accessor.byteOffset);
             // normal
-            const tinygltf::BufferView &norm_bufferView = model.bufferViews[norm_accessor.bufferView];
-            const tinygltf::Buffer &norm_buffer = model.buffers[norm_bufferView.buffer];
-            math::Vector3f *normals =
-                (math::Vector3f *)(norm_buffer.data.data() + norm_bufferView.byteOffset + norm_accessor.byteOffset);
+            math::Vector3f *normals = nullptr;
+            if (primitive.attributes.count("NORMAL") != 0) {
+                const tinygltf::Accessor &norm_accessor = model.accessors[primitive.attributes["NORMAL"]];
+                if (norm_accessor.type == TINYGLTF_TYPE_VEC3 ||
+                    norm_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT) {
+                    const tinygltf::BufferView &norm_bufferView = model.bufferViews[norm_accessor.bufferView];
+                    const tinygltf::Buffer &norm_buffer = model.buffers[norm_bufferView.buffer];
+                    normals = (math::Vector3f *)(norm_buffer.data.data() + norm_bufferView.byteOffset +
+                                                 norm_accessor.byteOffset);
+                }
+            }
             // texcoord
-            const tinygltf::BufferView &tc0_bufferView = model.bufferViews[tc0_accessor.bufferView];
-            const tinygltf::Buffer &tc0_buffer = model.buffers[tc0_bufferView.buffer];
-            math::Vector2f *texcoords =
-                (math::Vector2f *)(tc0_buffer.data.data() + tc0_bufferView.byteOffset + tc0_accessor.byteOffset);
+            math::Vector2f *texcoords = nullptr;
+            if (primitive.attributes.count("TEXCOORD_0") != 0) {
+                const tinygltf::Accessor &tc0_accessor = model.accessors[primitive.attributes["TEXCOORD_0"]];
+                if (tc0_accessor.type == TINYGLTF_TYPE_VEC2 ||
+                    tc0_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT) {
+                    const tinygltf::BufferView &tc0_bufferView = model.bufferViews[tc0_accessor.bufferView];
+                    const tinygltf::Buffer &tc0_buffer = model.buffers[tc0_bufferView.buffer];
+                    texcoords = (math::Vector2f *)(tc0_buffer.data.data() + tc0_bufferView.byteOffset +
+                                                   tc0_accessor.byteOffset);
+                }
+            }
             // indices
-            const tinygltf::BufferView &indexbufferView = model.bufferViews[indexAccessor.bufferView];
-            const tinygltf::Buffer &indexbuffer = model.buffers[indexbufferView.buffer];
-            uint32_t *indices =
-                (uint32_t *)(indexbuffer.data.data() + indexbufferView.byteOffset + indexAccessor.byteOffset);
+                uint32_t *indices_int = nullptr;
+                uint16_t *indices_short = nullptr;
+            const tinygltf::Accessor &indexAccessor = model.accessors[primitive.indices];
+            if (indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT ||
+                 indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
+                const tinygltf::BufferView &indexbufferView = model.bufferViews[indexAccessor.bufferView];
+                const tinygltf::Buffer &indexbuffer = model.buffers[indexbufferView.buffer];
+                indices_int =
+                    (uint32_t *)(indexbuffer.data.data() + indexbufferView.byteOffset + indexAccessor.byteOffset);
+                indices_short =
+                    (uint16_t *)(indexbuffer.data.data() + indexbufferView.byteOffset + indexAccessor.byteOffset);
+            } else {
+                printf("SKIP indices: index data format not supported yet\n");
+            }
             // create vertices
             Mesh *mesh = _rm.create_mesh();
             glengine::MeshData md;
             auto rot = tf;
             math::set_translation(rot, {0, 0, 0});
             for (uint32_t vi = 0; vi < pos_accessor.count; vi++) {
+                auto pos = tf * positions[vi];
+                auto norm = normals ? rot * normals[vi] : math::Vector3f{0.0f,0.0f,0.0f};
+                auto tc0 = texcoords ? math::Vector2f{texcoords[vi].s, texcoords[vi].t} : math::Vector2f{0.0f,0.0f};
                 md.vertices.push_back(
-                    {tf * positions[vi], {150, 150, 150, 255}, rot * normals[vi], {texcoords[vi].s, texcoords[vi].t}});
+                    {pos, {150, 150, 150, 255}, norm, tc0});
             }
-            for (uint32_t ii = 0; ii < indexAccessor.count; ii++) {
-                md.indices.push_back(indices[ii]);
+            if (indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
+                for (uint32_t ii = 0; ii < indexAccessor.count; ii++) {
+                    md.indices.push_back(indices_int[ii]);
+                }
+            } else {
+                for (uint32_t ii = 0; ii < indexAccessor.count; ii++) {
+                    md.indices.push_back(indices_short[ii]);
+                }
             }
             // material
-            const tinygltf::Material &material = model.materials[primitive.material];
             mesh->init(md.vertices, md.indices, GL_TRIANGLES);
-            if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
-                mesh->textures.diffuse = _tx_map[material.pbrMetallicRoughness.baseColorTexture.index];
+            if (primitive.material >= 0) {
+                const tinygltf::Material &material = model.materials[primitive.material];
+                if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
+                    mesh->textures.diffuse = _tx_map[material.pbrMetallicRoughness.baseColorTexture.index];
+                }
             }
             _meshes.push_back(mesh);
         }
