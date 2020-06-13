@@ -11,3 +11,6 @@ target_link_libraries(sample_glengine_lowlevel glengine)
 add_executable(sample_gltf sample_gltf.cpp)
 target_link_libraries(sample_gltf glengine)
 
+add_executable(sample_ssao sample_ssao.cpp)
+target_link_libraries(sample_ssao glengine)
+
