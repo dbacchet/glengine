@@ -160,7 +160,7 @@ bool GLEngine::init(const Config &config) {
     // configure g-buffer framebuffer
     glGenFramebuffers(1, &_g_buffer);
     glBindFramebuffer(GL_FRAMEBUFFER, _g_buffer);
-    // position color buffer
+    // color buffer
     glGenTextures(1, &_gb_color);
     glBindTexture(GL_TEXTURE_2D, _gb_color);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -174,9 +174,34 @@ bool GLEngine::init(const Config &config) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _gb_id, 0);
+// - position buffer
+glGenTextures(1, &_gb_position);
+glBindTexture(GL_TEXTURE_2D, _gb_position);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_FLOAT, NULL);
+// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _gb_position, 0);
+  
+// - normal buffer
+glGenTextures(1, &_gb_normal);
+glBindTexture(GL_TEXTURE_2D, _gb_normal);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_FLOAT, NULL);
+// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, _gb_normal, 0);
+  
+// - albedo + specular buffer
+glGenTextures(1, &_gb_albedo);
+glBindTexture(GL_TEXTURE_2D, _gb_albedo);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, _gb_albedo, 0);
     // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-    glDrawBuffers(2, attachments);
+    unsigned int attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+    glDrawBuffers(5, attachments);
     // create and attach depth buffer (renderbuffer)
     glGenRenderbuffers(1, &_gb_depth);
     glBindRenderbuffer(GL_RENDERBUFFER, _gb_depth);
@@ -231,11 +256,22 @@ bool GLEngine::render() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
+    static bool use_deferred = false;
     glViewport(0, 0, fbsize.x, fbsize.y);
-    Shader *quad_shader = _resource_manager.get_stock_shader(StockShader::Quad);
+    Shader *quad_shader = use_deferred ? _resource_manager.get_stock_shader(StockShader::QuadDeferred) : _resource_manager.get_stock_shader(StockShader::Quad);
     quad_shader->activate();
-    // glUniform1i(glGetUniformLocation(quad_shader->program_id, "screen_texture"), 0); 
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _gb_color);	// use the color attachment texture as the texture of the quad plane
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, _gb_position);	// use the color attachment texture as the texture of the quad plane
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, _gb_normal);	// use the color attachment texture as the texture of the quad plane
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, _gb_albedo);	// use the color attachment texture as the texture of the quad plane
+    glUniform1i(glGetUniformLocation(quad_shader->program_id, "screen_texture"), 0); 
+    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_position_texture"), 1); 
+    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_normal_texture"), 2); 
+    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_albedospec_texture"), 3); 
     _ss_quad->draw(*quad_shader);
     glDisable(GL_FRAMEBUFFER_SRGB); 
 
@@ -252,8 +288,14 @@ bool GLEngine::render() {
         ImGui::ShowMetricsWindow();
     }
     if (_config.show_framebuffer_texture) {
-        ImGui::Begin("fb image");
-        ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(300,300*(float)fbsize.y/fbsize.x),ImVec2(0,1),ImVec2(1,0));
+        int img_width = 250;
+        int img_height = img_width*(float)fbsize.y/fbsize.x;
+        ImGui::Begin("fb images");
+        ImGui::Checkbox("Deferred Rendering", &use_deferred);
+        ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
+        ImGui::Image((void*)(intptr_t)_gb_position, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
+        ImGui::Image((void*)(intptr_t)_gb_normal, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
+        ImGui::Image((void*)(intptr_t)_gb_albedo, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
         ImGui::End();
     }
 
@@ -331,6 +373,18 @@ void GLEngine::resize_buffers() {
     if (_gb_id!=INVALID_BUFFER) {
         glBindTexture(GL_TEXTURE_2D, _gb_id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, fb_size.x, fb_size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    }
+    if (_gb_position!=INVALID_BUFFER) {
+        glBindTexture(GL_TEXTURE_2D, _gb_position);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, fb_size.x, fb_size.y, 0, GL_RGBA, GL_FLOAT, NULL);
+    }
+    if (_gb_normal!=INVALID_BUFFER) {
+        glBindTexture(GL_TEXTURE_2D, _gb_normal);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, fb_size.x, fb_size.y, 0, GL_RGBA, GL_FLOAT, NULL);
+    }
+    if (_gb_albedo!=INVALID_BUFFER) {
+        glBindTexture(GL_TEXTURE_2D, _gb_albedo);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fb_size.x, fb_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     }
     if (_gb_depth!=INVALID_BUFFER) {
         glBindRenderbuffer(GL_RENDERBUFFER, _gb_depth);

@@ -8,6 +8,7 @@ enum class StockShader {
     Phong,
     VertexColor,
     Quad,
+    QuadDeferred,
     NumStockShader
 };
 

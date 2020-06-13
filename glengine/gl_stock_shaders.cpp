@@ -111,6 +111,9 @@ in vec3 light_pos;
 // output
 layout (location = 0) out vec4 fragment_color;
 layout (location = 1) out uint object_id;  
+layout (location = 2) out vec4 g_position;  
+layout (location = 3) out vec4 g_normal;  
+layout (location = 4) out vec4 g_albedospec;  
 
 void main() {
     // params
@@ -126,8 +129,13 @@ void main() {
     vec3 diffuse = diff * light_color;
     
     vec3 result = (ambient + diffuse) * u_color.xyz;//vcolor.xyz;
+    // output
     fragment_color = vec4(result, u_color.a);
     object_id = u_id;
+    g_position = vec4(frag_pos,1.0);
+    g_normal = vec4(norm,1.0);
+    g_albedospec.rgb = u_color.rgb;
+    g_albedospec.a = u_color.a;
 })";
 
 // //////////////// //
@@ -176,6 +184,9 @@ in vec2 tex_coord;
 // output
 layout (location = 0) out vec4 fragment_color;
 layout (location = 1) out uint object_id;  
+layout (location = 2) out vec4 g_position;  
+layout (location = 3) out vec4 g_normal;  
+layout (location = 4) out vec4 g_albedospec;  
 
 void main() {
     // params
@@ -195,8 +206,13 @@ void main() {
     if(color.a < 0.1)
         discard;
     vec3 result = (ambient + diffuse) * color.xyz;//vcolor.xyz;
+    // output
     fragment_color = vec4(result, color.a);
     object_id = u_id;
+    g_position = vec4(frag_pos,1.0);
+    g_normal = vec4(norm,1.0);
+    g_albedospec.rgb = color.rgb;
+    g_albedospec.a = color.a;
 })";
 
 // ///// //
@@ -277,6 +293,56 @@ void main()
     fragment_color = vec4(col, 1.0);
 })";
 
+const char *quad_deferred_vs_src =
+    R"(#version 330
+// vertex attributes
+layout (location=0) in vec3 v_position;
+layout (location=1) in vec4 v_color;
+layout (location=2) in vec3 v_normal;
+layout (location=3) in vec2 v_texcoord0;
+// outputs
+out vec2 texcoord;
+
+void main()
+{
+    texcoord = v_texcoord0;
+    gl_Position = vec4(v_position.x, v_position.y, 0.0, 1.0); 
+})";
+
+const char *quad_deferred_fs_src =
+    R"(#version 330
+// uniforms
+uniform sampler2D screen_texture;
+uniform sampler2D g_position_texture;
+uniform sampler2D g_normal_texture;
+uniform sampler2D g_albedospec_texture;
+// inputs
+in vec2 texcoord;
+// outputs
+out vec4 fragment_color;
+
+void main()
+{
+    vec3 col = texture(g_albedospec_texture, texcoord).rgb;
+    fragment_color = vec4(col, 1.0);
+    // retrieve data from G-buffer
+    vec3 frag_pos = texture(g_position_texture, texcoord).rgb;
+    vec3 normal = texture(g_normal_texture, texcoord).rgb;
+    vec3 albedo = texture(g_albedospec_texture, texcoord).rgb;
+    float specular = texture(g_albedospec_texture, texcoord).a;
+    
+    // then calculate lighting as usual
+    vec3 lighting = albedo * 0.1; // hard-coded ambient component
+    vec3 viewDir = normalize(-frag_pos);
+        // diffuse
+        vec3 lightDir = normalize(vec3(0,0,0) - frag_pos);
+        vec3 lightColor = vec3(1.0,1.0,1.0);
+        vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lightColor;
+        lighting += diffuse;
+    
+    fragment_color = vec4(lighting, 1.0);
+})";
+
 
 } // namespace
 
@@ -294,6 +360,8 @@ ShaderSrc get_stock_shader_source(StockShader type) {
         return {phong_vs_src, phong_fs_src};
     case StockShader::Quad:
         return {quad_vs_src, quad_fs_src};
+    case StockShader::QuadDeferred:
+        return {quad_deferred_vs_src, quad_deferred_fs_src};
     default: // use vertexcolor by default
         return {vertexcolor_vs_src, vertexcolor_fs_src};
     }
