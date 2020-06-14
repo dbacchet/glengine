@@ -201,10 +201,10 @@ void main() {
     float diff = (dot(norm, light_dir) + 1.0)/2.0; // modified (non-physically correct) approach: consider all 180deg
     vec3 diffuse = diff * light_color;
 
-    // vec4 color = vec4(tex_coord.x,0.0,tex_coord.y,1.0);//texture(texture_diffuse, tex_coord);
     vec4 color = texture(texture_diffuse, tex_coord);
     if(color.a < 0.1)
         discard;
+    color = vec4(1,1,1,1);
     vec3 result = (ambient + diffuse) * color.xyz;//vcolor.xyz;
     // output
     fragment_color = vec4(result, color.a);
@@ -259,10 +259,10 @@ void main() {
 })";
 
 // //// //
-// quad //
+// ssao //
 // //// //
 
-const char *quad_vs_src =
+const char *ssao_vs_src =
     R"(#version 330
 // vertex attributes
 layout (location=0) in vec3 v_position;
@@ -277,6 +277,71 @@ void main()
     texcoord = v_texcoord0;
     gl_Position = vec4(v_position.x, v_position.y, 0.0, 1.0); 
 })";
+
+const char *ssao_fs_src =
+    R"(#version 330
+// uniforms
+uniform sampler2D g_position_texture;
+uniform sampler2D g_normal_texture;
+uniform sampler2D noise_texture;
+uniform mat4 u_projection;
+uniform vec3 samples[64];
+// inputs
+in vec2 texcoord;
+// outputs
+// out float fragment_color;
+// parameters
+int kernelSize = 64;
+float radius = 1.5;
+float bias = 0.025;
+// tile noise texture over screen based on screen dimensions divided by noise size
+const vec2 noise_scale = vec2(1280.0/4.0, 720.0/4.0); 
+
+layout (location = 0) out vec4 fragment_color;
+
+void main()
+{
+    // get input for SSAO algorithm
+    vec3 frag_pos = texture(g_position_texture, texcoord).xyz;
+    vec3 normal = normalize(texture(g_normal_texture, texcoord).rgb);
+    vec3 random_vec = normalize(texture(noise_texture, texcoord * noise_scale).xyz);
+    // create TBN change-of-basis matrix: from tangent-space to view-space
+    vec3 tangent = normalize(random_vec - normal * dot(random_vec, normal));
+    vec3 bitangent = cross(normal, tangent);
+    mat3 TBN = mat3(tangent, bitangent, normal);
+    // iterate over the sample kernel and calculate occlusion factor
+    float occlusion = 0.0;
+    for(int i = 0; i < kernelSize; ++i)
+    {
+        // get sample position
+        vec3 sample = TBN * samples[i]; // from tangent to view-space
+        sample = frag_pos + sample * radius; 
+        
+        // project sample position (to sample texture) (to get position on screen/texture)
+        vec4 offset = vec4(sample, 1.0);
+        offset = u_projection * offset; // from view to clip-space
+        offset.xyz /= offset.w; // perspective divide
+        offset.xyz = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0
+        
+        // get sample depth
+        float sample_depth = texture(g_position_texture, offset.xy).z; // get depth value of kernel sample
+        
+        // range check & accumulate
+        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(frag_pos.z - sample_depth));
+        occlusion += (sample_depth >= sample.z + bias ? 1.0 : 0.0) * rangeCheck;           
+    }
+    occlusion = 1.0 - (occlusion / kernelSize);
+    
+    fragment_color = vec4(occlusion,occlusion,occlusion,1);
+})";
+
+
+
+// //// //
+// quad //
+// //// //
+
+const char *quad_vs_src = ssao_vs_src;
 
 const char *quad_fs_src =
     R"(#version 330
@@ -312,10 +377,12 @@ void main()
 const char *quad_deferred_fs_src =
     R"(#version 330
 // uniforms
+uniform mat4 u_view;
 uniform sampler2D screen_texture;
 uniform sampler2D g_position_texture;
 uniform sampler2D g_normal_texture;
 uniform sampler2D g_albedospec_texture;
+uniform sampler2D ssao_texture;
 // inputs
 in vec2 texcoord;
 // outputs
@@ -332,15 +399,19 @@ void main()
     float specular = texture(g_albedospec_texture, texcoord).a;
     
     // then calculate lighting as usual
-    vec3 lighting = albedo * 0.1; // hard-coded ambient component
+    vec3 lighting = albedo * 0.01; // hard-coded ambient component
     vec3 viewDir = normalize(-frag_pos);
         // diffuse
-        vec3 lightDir = normalize(vec3(0,0,0) - frag_pos);
+        vec3 light_pos = vec3(u_view * vec4(100.0,100.0,100.0, 1.0));
+        vec3 lightDir = normalize(light_pos - frag_pos);
         vec3 lightColor = vec3(1.0,1.0,1.0);
-        vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lightColor;
+        // vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lightColor;
+        vec3 diffuse = (dot(normal, lightDir)+1.0)/2.0 * albedo * lightColor;
         lighting += diffuse;
     
     fragment_color = vec4(lighting, 1.0);
+    float ssao = texture(ssao_texture, texcoord).r;
+    fragment_color = vec4(lighting*ssao, 1.0);
 })";
 
 
@@ -358,6 +429,8 @@ ShaderSrc get_stock_shader_source(StockShader type) {
         return {diffuse_textured_vs_src, diffuse_textured_fs_src};
     case StockShader::Phong:
         return {phong_vs_src, phong_fs_src};
+    case StockShader::Ssao:
+        return {ssao_vs_src, ssao_fs_src};
     case StockShader::Quad:
         return {quad_vs_src, quad_fs_src};
     case StockShader::QuadDeferred:

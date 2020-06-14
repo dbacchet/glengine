@@ -20,7 +20,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/samples/glengine/sample_glengine",
+            "program": "${workspaceFolder}/build/samples/glengine/sample_ssao",
             "args": ["../resources/models/the_mill/scene.gltf"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
