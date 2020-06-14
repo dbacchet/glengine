@@ -204,7 +204,6 @@ void main() {
     vec4 color = texture(texture_diffuse, tex_coord);
     if(color.a < 0.1)
         discard;
-    color = vec4(1,1,1,1);
     vec3 result = (ambient + diffuse) * color.xyz;//vcolor.xyz;
     // output
     fragment_color = vec4(result, color.a);
@@ -286,6 +285,7 @@ uniform sampler2D g_normal_texture;
 uniform sampler2D noise_texture;
 uniform mat4 u_projection;
 uniform vec3 samples[64];
+uniform vec2 noise_scale; // shuold be (fbsize.w/noise_tex.w, fbsize.h/noise_tex.h) to have perfect tex lookup with textures of same scale
 // inputs
 in vec2 texcoord;
 // outputs
@@ -295,7 +295,6 @@ int kernelSize = 64;
 float radius = 1.5;
 float bias = 0.025;
 // tile noise texture over screen based on screen dimensions divided by noise size
-const vec2 noise_scale = vec2(1280.0/4.0, 720.0/4.0); 
 
 layout (location = 0) out vec4 fragment_color;
 

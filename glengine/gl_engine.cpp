@@ -12,103 +12,6 @@
 
 #include <random>
 
-GLuint myFBO = 0;
-GLuint myTex = 0;
-
-const char *myshader_vs =
-    R"(#version 330
-// vertex attributes
-layout (location=0) in vec3 v_position;
-layout (location=1) in vec4 v_color;
-layout (location=2) in vec3 v_normal;
-layout (location=3) in vec2 v_texcoord0;
-// outputs
-out vec2 texcoord;
-
-void main()
-{
-    texcoord = v_texcoord0;
-    gl_Position = vec4(v_position.x, v_position.y, 0.0, 1.0); 
-})";
-
-const char *myshader_fs =
-    R"(#version 330
-// uniforms
-uniform sampler2D g_position_texture;
-uniform sampler2D g_normal_texture;
-uniform sampler2D noise_texture;
-uniform mat4 u_projection;
-uniform vec3 samples[64];
-// inputs
-in vec2 texcoord;
-// outputs
-out vec4 fragment_color;
-
-int kernelSize = 64;
-float radius = 1.5;
-float bias = 0.025;
-const vec2 noise_scale = vec2(1280.0/4.0, 720.0/4.0); 
-
-void main()
-{
-    // get inputs
-    vec3 frag_pos = texture(g_position_texture, texcoord).xyz;
-    vec3 normal = normalize(texture(g_normal_texture, texcoord).rgb);
-    vec3 random_vec = normalize(texture(noise_texture, texcoord * noise_scale).xyz);
-    // create TBN change-of-basis matrix: from tangent-space to view-space
-    vec3 tangent = normalize(random_vec - normal * dot(random_vec, normal));
-    vec3 bitangent = cross(normal, tangent);
-    mat3 TBN = mat3(tangent, bitangent, normal);
-    // iterate over the sample kernel and calculate occlusion factor
-    float occlusion = 0.0;
-    for(int i = 0; i < kernelSize; ++i)
-    {
-        // get sample position
-        vec3 sample = TBN * samples[i]; // from tangent to view-space
-        sample = frag_pos + sample * radius; 
-        
-        // project sample position (to sample texture) (to get position on screen/texture)
-        vec4 offset = vec4(sample, 1.0);
-        offset = u_projection * offset; // from view to clip-space
-        offset.xyz /= offset.w; // perspective divide
-        offset.xyz = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0
-        
-        // get sample depth
-        float sample_depth = texture(g_position_texture, offset.xy).z; // get depth value of kernel sample
-        
-        // range check & accumulate
-        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(frag_pos.z - sample_depth));
-        occlusion += (sample_depth >= sample.z + bias ? 1.0 : 0.0) * rangeCheck;           
-    }
-    occlusion = 1.0 - (occlusion / kernelSize);
-
-
-    if (false) {
-        // if (texcoord.x<0.5) {
-        //     if (texcoord.y<0.5) {
-        //         // bottom left
-        //         fragment_color = vec4(frag_pos, 1.0);
-        //     } else {
-        //         // top left
-        //         fragment_color = vec4(occlusion, occlusion, occlusion, 1.0);
-        //     }
-        // } else {
-        //     if (texcoord.y<0.5) {
-        //         // bottom right
-        //         fragment_color = vec4(random_vec, 1.0);
-        //     } else {
-        //         // top right
-        //         fragment_color = vec4(normal, 1.0);
-        //     }
-        // }
-    } else {
-        fragment_color = vec4(occlusion, occlusion, occlusion, 1.0);
-        // fragment_color = occlusion;
-    }
-})";
-
-glengine::Shader *myshader = new glengine::Shader();
-
 
 namespace {
 
@@ -314,28 +217,6 @@ bool GLEngine::init(const Config &config) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // ///////////////// //
-    // framebuffer: tEST //
-    // ///////////////// //
-    glGenFramebuffers(1, &myFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, myFBO);
-    // ssao color buffer
-    glGenTextures(1, &myTex);
-    glBindTexture(GL_TEXTURE_2D, myTex);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RED, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, myTex, 0);
-    glObjectLabel(GL_TEXTURE, myTex, -1, "mytex");
-    // finally check if framebuffer is complete
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        printf("Error: framebuffer not complete!\n");
-        return false;
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    myshader->init(myshader_vs, myshader_fs);
-
-    // ///////////////// //
     // framebuffer: SSAO //
     // ///////////////// //
     glGenFramebuffers(1, &_ssao_framebuffer);
@@ -348,7 +229,6 @@ bool GLEngine::init(const Config &config) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _ssao_color_texture, 0);
-    glObjectLabel(GL_TEXTURE, _ssao_color_texture, -1, "ssao color1");
     // finally check if framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         printf("Error: framebuffer not complete!\n");
@@ -389,14 +269,14 @@ bool GLEngine::init(const Config &config) {
         ssaoKernel[i] = sample;
     }
     // ssao noise texture
-    std::vector<math::Vector3d> ssaoNoise;
+    std::vector<math::Vector3d> ssao_noise;
     for (unsigned int i = 0; i < 16; i++) {
         math::Vector3d noise(randomFloats(gen) * 2.0 - 1.0, randomFloats(gen) * 2.0 - 1.0, 0.0f); // rotate around z-axis (in tangent space)
-        ssaoNoise.push_back(noise);
+        ssao_noise.push_back(noise);
     }
     glGenTextures(1, &_ssao_noise_texture);
     glBindTexture(GL_TEXTURE_2D, _ssao_noise_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssao_noise[0]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -434,7 +314,7 @@ bool GLEngine::render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // "clear" the id buffer setting NULL_ID as clear value
     glClearBufferuiv(GL_COLOR, 1, &NULL_ID);
-
+    // draw scene
     if (_root) {
         _root->draw(_camera);
     }
@@ -454,32 +334,13 @@ bool GLEngine::render() {
     glUniform1i(glGetUniformLocation(ssao_shader->program_id, "g_position_texture"), 0); 
     glUniform1i(glGetUniformLocation(ssao_shader->program_id, "g_normal_texture"), 1); 
     glUniform1i(glGetUniformLocation(ssao_shader->program_id, "noise_texture"), 2); 
-    GLint samples_array_base = glGetUniformLocation(myshader->program_id, "samples[0]");
+    ssao_shader->set_vec2("noise_scale",math::Vector2f(fbsize.x/4.0f,fbsize.y/4.0f)); // noise texture is 4x4
+    GLint samples_array_base = glGetUniformLocation(ssao_shader->program_id, "samples[0]");
     for (uint32_t i=0; i<num_ssao_kernel_samples; i++) { // all the elements in the array have contiguous unifor ids
         glUniform3fv(samples_array_base+i, 1, ssaoKernel[i]);
     }
     ssao_shader->set_uniform_projection(_camera.projection());
     _ss_quad->draw(*ssao_shader);
-
-    // test stage
-    glBindFramebuffer(GL_FRAMEBUFFER, myFBO);
-    glViewport(0, 0, fbsize.x, fbsize.y);
-    myshader->activate();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _gb_position);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, _gb_normal);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, _ssao_noise_texture);
-    glUniform1i(glGetUniformLocation(myshader->program_id, "g_position_texture"), 0); 
-    glUniform1i(glGetUniformLocation(myshader->program_id, "g_normal_texture"), 1); 
-    glUniform1i(glGetUniformLocation(myshader->program_id, "noise_texture"), 2); 
-    samples_array_base = glGetUniformLocation(myshader->program_id, "samples[0]");
-    for (uint32_t i=0; i<num_ssao_kernel_samples; i++) {
-        glUniform3fv(samples_array_base+i, 1, ssaoKernel[i]);
-    }
-    myshader->set_uniform_projection(_camera.projection());
-    _ss_quad->draw(*myshader);
 
     // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
     glEnable(GL_FRAMEBUFFER_SRGB); 
@@ -522,16 +383,20 @@ bool GLEngine::render() {
         ImGui::ShowMetricsWindow();
     }
     if (_config.show_framebuffer_texture) {
-        int img_width = 250;
+        int img_width = 200;
         int img_height = img_width*(float)fbsize.y/fbsize.x;
         ImGui::Begin("fb images");
         ImGui::Checkbox("Deferred Rendering", &use_deferred);
+        ImGui::Text("Color");
         ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
-        // ImGui::Image((void*)(intptr_t)_gb_position, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
-        // ImGui::Image((void*)(intptr_t)_gb_normal, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
-        // ImGui::Image((void*)(intptr_t)_gb_albedo, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
+        ImGui::Text("Position");
+        ImGui::Image((void*)(intptr_t)_gb_position, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
+        ImGui::Text("Normal");
+        ImGui::Image((void*)(intptr_t)_gb_normal, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
+        ImGui::Text("Albedo");
+        ImGui::Image((void*)(intptr_t)_gb_albedo, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
+        ImGui::Text("SSAO");
         ImGui::Image((void*)(intptr_t)_ssao_color_texture, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
-        ImGui::Image((void*)(intptr_t)myTex, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
         ImGui::End();
     }
 
@@ -601,7 +466,7 @@ void GLEngine::save_screenshot(const char *filename) {
 void GLEngine::resize_buffers() {
     // const auto &win_size = _context.window_state.window_size;
     const auto &fb_size = _context.window_state.framebuffer_size;
-    // align opengl buffers to the size of the framebuffer
+    // keep opengl buffers aligned with the size of the framebuffer
     if (_gb_color!=INVALID_BUFFER) {
         glBindTexture(GL_TEXTURE_2D, _gb_color);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fb_size.x, fb_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -625,6 +490,10 @@ void GLEngine::resize_buffers() {
     if (_gb_depth!=INVALID_BUFFER) {
         glBindRenderbuffer(GL_RENDERBUFFER, _gb_depth);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fb_size.x, fb_size.y);
+    }
+    if (_ssao_color_texture!=INVALID_BUFFER) {
+        glBindTexture(GL_TEXTURE_2D, _ssao_color_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fb_size.x, fb_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     }
     _id_buffer.resize(fb_size.x*fb_size.y, NULL_ID);
 }
