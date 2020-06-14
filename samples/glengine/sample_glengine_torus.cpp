@@ -27,7 +27,7 @@ int main(void) {
     config.window_width = 1280;
     config.window_height = 720;
     config.vsync = true;
-    config.show_framebuffer_texture = false;
+    config.show_framebuffer_texture = true;
     config.show_imgui_statistics = true;
 
     glengine::GLEngine eng;

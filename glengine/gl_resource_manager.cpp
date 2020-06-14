@@ -48,34 +48,19 @@ Shader *ResourceManager::get_stock_shader(StockShader type) {
 }
 
 void ResourceManager::create_stock_shaders() {
-    Shader *shader_flat = new Shader(NULL_ID, "Flat");
-    Shader *shader_diffuse = new Shader(NULL_ID, "Diffuse");
-    Shader *shader_diffuse_textured = new Shader(NULL_ID, "DiffuseTextured");
-    Shader *shader_phong = new Shader(NULL_ID, "Phong");
-    Shader *shader_vertexcolor = new Shader(NULL_ID, "VertexColor");
-    Shader *shader_quad = new Shader(NULL_ID, "ScreenQuad");
-    Shader *shader_quad_deferred = new Shader(NULL_ID, "ScreenQuadDeferred");
-    ShaderSrc flat_src = get_stock_shader_source(StockShader::Flat);
-    ShaderSrc diffuse_src = get_stock_shader_source(StockShader::Diffuse);
-    ShaderSrc diffuse_textured_src = get_stock_shader_source(StockShader::DiffuseTextured);
-    ShaderSrc phong_src = get_stock_shader_source(StockShader::Phong);
-    ShaderSrc vertexcolor_src = get_stock_shader_source(StockShader::VertexColor);
-    ShaderSrc quad_src = get_stock_shader_source(StockShader::Quad);
-    ShaderSrc quad_deferred_src = get_stock_shader_source(StockShader::QuadDeferred);
-    shader_flat->init(flat_src.vertex_shader, flat_src.fragment_shader);
-    shader_diffuse->init(diffuse_src.vertex_shader, diffuse_src.fragment_shader);
-    shader_diffuse_textured->init(diffuse_textured_src.vertex_shader, diffuse_textured_src.fragment_shader);
-    shader_phong->init(phong_src.vertex_shader, phong_src.fragment_shader);
-    shader_vertexcolor->init(vertexcolor_src.vertex_shader, vertexcolor_src.fragment_shader);
-    shader_quad->init(quad_src.vertex_shader, quad_src.fragment_shader);
-    shader_quad_deferred->init(quad_deferred_src.vertex_shader, quad_deferred_src.fragment_shader);
-    _stock_shaders[StockShader::Flat] = shader_flat;
-    _stock_shaders[StockShader::Diffuse] = shader_diffuse;
-    _stock_shaders[StockShader::DiffuseTextured] = shader_diffuse_textured;
-    _stock_shaders[StockShader::Phong] = shader_phong;
-    _stock_shaders[StockShader::VertexColor] = shader_vertexcolor;
-    _stock_shaders[StockShader::Quad] = shader_quad;
-    _stock_shaders[StockShader::QuadDeferred] = shader_quad_deferred;
+    auto create_shader = [](const ShaderSrc &src, const char *shader_name) {
+        Shader *shader = new Shader(NULL_ID, shader_name);
+        shader->init(src.vertex_shader, src.fragment_shader);
+        return shader;
+    };
+    _stock_shaders[StockShader::Flat]            = create_shader(get_stock_shader_source(StockShader::Flat), "Flat");
+    _stock_shaders[StockShader::Diffuse]         = create_shader(get_stock_shader_source(StockShader::Diffuse), "Diffuse");
+    _stock_shaders[StockShader::DiffuseTextured] = create_shader(get_stock_shader_source(StockShader::DiffuseTextured), "DiffuseTextured");
+    _stock_shaders[StockShader::Phong]           = create_shader(get_stock_shader_source(StockShader::Phong), "Phong");
+    _stock_shaders[StockShader::VertexColor]     = create_shader(get_stock_shader_source(StockShader::VertexColor), "VertexColor");
+    _stock_shaders[StockShader::Ssao]            = create_shader(get_stock_shader_source(StockShader::Ssao), "Ssao");
+    _stock_shaders[StockShader::Quad]            = create_shader(get_stock_shader_source(StockShader::Quad), "Quad");
+    _stock_shaders[StockShader::QuadDeferred]    = create_shader(get_stock_shader_source(StockShader::QuadDeferred), "QuadDeferred");
 }
 
 Texture *ResourceManager::create_texture() {
