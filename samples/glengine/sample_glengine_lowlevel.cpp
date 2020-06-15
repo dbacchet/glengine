@@ -121,10 +121,10 @@ int main(void) {
     glengine::Shader *shader_diffuse = rm.create_shader();
     glengine::Shader *shader_phong = rm.create_shader();
     glengine::Shader *shader_vertexcolor = rm.create_shader();
-    shader_flat->init(flat_src.vertex_shader, flat_src.fragment_shader);
-    shader_diffuse->init(diffuse_src.vertex_shader, diffuse_src.fragment_shader);
-    shader_phong->init(phong_src.vertex_shader, phong_src.fragment_shader);
-    shader_vertexcolor->init(vertexcolor_src.vertex_shader, vertexcolor_src.fragment_shader);
+    shader_flat->init(flat_src.vertex_shader_srcs, flat_src.fragment_shader_srcs);
+    shader_diffuse->init(diffuse_src.vertex_shader_srcs, diffuse_src.fragment_shader_srcs);
+    shader_phong->init(phong_src.vertex_shader_srcs, phong_src.fragment_shader_srcs);
+    shader_vertexcolor->init(vertexcolor_src.vertex_shader_srcs, vertexcolor_src.fragment_shader_srcs);
 
     // meshes
     glengine::Mesh *grid_mesh = rm.create_mesh();

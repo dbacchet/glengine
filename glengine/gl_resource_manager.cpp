@@ -50,7 +50,7 @@ Shader *ResourceManager::get_stock_shader(StockShader type) {
 void ResourceManager::create_stock_shaders() {
     auto create_shader = [](const ShaderSrc &src, const char *shader_name) {
         Shader *shader = new Shader(NULL_ID, shader_name);
-        shader->init(src.vertex_shader, src.fragment_shader);
+        shader->init(src.vertex_shader_srcs, src.fragment_shader_srcs);
         return shader;
     };
     _stock_shaders[StockShader::Flat]            = create_shader(get_stock_shader_source(StockShader::Flat), "Flat");

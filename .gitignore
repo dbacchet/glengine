@@ -1,7 +1,8 @@
 # build
-build/
+build*/
 bazel-*
 
 compile_commands.json
+imgui.ini
 
 .DS_Store

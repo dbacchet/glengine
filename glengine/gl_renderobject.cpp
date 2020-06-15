@@ -3,6 +3,8 @@
 #include "gl_mesh.h"
 #include "gl_shader.h"
 
+#include "microprofile/microprofile.h"
+
 #include <vector>
 #include <set>
 
@@ -67,10 +69,13 @@ RenderObject *RenderObject::detach_child(RenderObject *ro) {
 }
 
 bool RenderObject::draw(const Camera &cam, const math::Matrix4f &parent_tf) {
+    MICROPROFILE_SCOPEI("renderobject","draw",MP_AUTO);
     math::Matrix4f curr_tf = parent_tf * _transform * _scale;
     if (_visible) {
         if (_shader) {
+            MICROPROFILE_ENTERI("renderobject","activate_shader",MP_AUTO);
             _shader->activate();
+            MICROPROFILE_LEAVE();
             _shader->set_uniform_id(_id);
             _shader->set_uniform_model(curr_tf);
             _shader->set_uniform_view(cam.inverse_transform());
@@ -78,6 +83,7 @@ bool RenderObject::draw(const Camera &cam, const math::Matrix4f &parent_tf) {
             _shader->set_uniform_color(_color);
             _shader->set_uniform_light0_pos(math::Vector3f(100, 100, 100));
             for (auto m : _meshes) {
+                MICROPROFILE_SCOPEI("renderobject","render_mesh",MP_AUTO);
                 m->draw(*_shader);
             }
         }

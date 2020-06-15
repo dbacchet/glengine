@@ -42,22 +42,32 @@ default:
 namespace glengine {
 
 void Shader::init(const char *vs_src, const char *fs_src) {
-    vertex_shader_id = create_shader(vs_src, GL_VERTEX_SHADER);
-    fragment_shader_id = create_shader(fs_src, GL_FRAGMENT_SHADER);
+    std::vector<char const*> vs_srcs(1,vs_src);
+    std::vector<char const*> fs_srcs(1,fs_src);
+    init(vs_srcs, fs_srcs);
+}
+
+void Shader::init(const std::vector<char const*> &vs_srcs, const std::vector<char const*> &fs_srcs) {
+    vertex_shader_id = create_shader(vs_srcs, GL_VERTEX_SHADER);
+    fragment_shader_id = create_shader(fs_srcs, GL_FRAGMENT_SHADER);
     program_id = create_program();
     extract_uniforms();
     update_uniforms();
 }
 
-GLuint Shader::create_shader(const char *source, GLenum shader_type) {
+GLuint Shader::create_shader(const std::vector<char const*> &source, GLenum shader_type) {
     GLuint shader_id = glCreateShader(shader_type);
-    glShaderSource(shader_id, 1, &source, NULL);
+    glShaderSource(shader_id, source.size(), source.data(), NULL);
     glCompileShader(shader_id);
     GLint ret = 0;
     glGetShaderiv(shader_id, GL_COMPILE_STATUS, &ret);
     if (ret == GL_FALSE) {
         printf("%s: error compiling shader\n", shader_type_map[shader_type].c_str());
         print_shader_info_log(shader_id);
+        printf("shader source:\n---------------\n");
+        for (auto s: source) {
+            printf("%s\n--------------\n",s);
+        }
         return 0;
     }
     return shader_id;
