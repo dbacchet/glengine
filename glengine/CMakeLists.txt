@@ -12,7 +12,11 @@ set(imgui_files imgui/imconfig.h
                 imgui/imstb_rectpack.h
                 imgui/imstb_textedit.h
                 imgui/imstb_truetype.h
-      )
+)
+set(microprofile_files microprofile/microprofile.h
+                       microprofile/microprofile.cpp
+                       microprofile/microprofile_html.h
+)
 add_library(glengine STATIC gl_context.cpp
                             gl_camera_manipulator.cpp
                             gl_engine.cpp
@@ -28,11 +32,12 @@ add_library(glengine STATIC gl_context.cpp
                             stb/stb_image.cpp
                             tinygltf/tiny_gltf.cpp
                             ${imgui_files}
-           )
+                            ${microprofile_files}
+)
 target_include_directories(glengine PUBLIC .)
 target_link_libraries(glengine PUBLIC glfw
                                       common
-                     )
+)
 
 # install
 # file(GLOB_RECURSE GLENGINE_PUBLIC_HEADERS "*.h*")

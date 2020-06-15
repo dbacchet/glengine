@@ -5,6 +5,7 @@
 #include "math/vmath.h"
 
 #include <string>
+#include <vector>
 #include <unordered_map>
 
 namespace glengine {
@@ -40,6 +41,7 @@ class Shader {
     }
 
     void init(const char *vs_src, const char *fs_src);
+    void init(const std::vector<char const*> &vs_srcs, const std::vector<char const*> &fs_srcs);
 
     void activate();
     void deactivate();
@@ -64,7 +66,7 @@ class Shader {
     void set_sampler(const char *name, int value) const;
 
   private:
-    GLuint create_shader(const char *source, GLenum shader_type);
+    GLuint create_shader(const std::vector<char const*> &source, GLenum shader_type);
     GLuint create_program();
     void print_shader_info_log(GLuint shader);
     void print_program_info_log(GLuint program);
