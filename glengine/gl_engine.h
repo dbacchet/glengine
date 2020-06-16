@@ -75,7 +75,6 @@ class GLEngine {
     GLuint _gb_position = INVALID_BUFFER; // framebuffer position attachment handle
     GLuint _gb_normal = INVALID_BUFFER; // framebuffer normal attachment handle
     GLuint _gb_albedo = INVALID_BUFFER; // framebuffer albedo attachment handle
-    GLuint _gb_color = INVALID_BUFFER; // framebuffer color attachment handle
     GLuint _gb_id = INVALID_BUFFER;    // framebuffer object_id attachment handle
     GLuint _gb_depth = INVALID_BUFFER; // framebuffer depth+stencil attachment handle
     GLuint _ssao_color_texture = INVALID_BUFFER; // ssao framebuffer color attachment handle

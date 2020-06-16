@@ -23,7 +23,6 @@ void main() {
     
     vec3 result = (ambient + diffuse) * u_color.xyz;//vcolor.xyz;
     // output
-    fragment_color = vec4(result, u_color.a);
     object_id = u_id;
     g_position = vec4(frag_pos,1.0);
     g_normal = vec4(norm,1.0);
@@ -55,7 +54,6 @@ void main() {
         discard;
     vec3 result = (ambient + diffuse) * color.xyz;//vcolor.xyz;
     // output
-    fragment_color = vec4(result, color.a);
     object_id = u_id;
     g_position = vec4(frag_pos,1.0);
     g_normal = vec4(norm,1.0);
