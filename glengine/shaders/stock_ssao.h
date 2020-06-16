@@ -47,14 +47,14 @@ uniform vec2 noise_scale; // shuold be (fbsize.w/noise_tex.w, fbsize.h/noise_tex
 // inputs
 in vec2 texcoord;
 // outputs
-// out float fragment_color;
+// out float ssao_occlusion;
 // parameters
 int kernelSize = 64;
-float radius = 1.5;
-float bias = 0.025;
+uniform float radius = 0.75;
+uniform float bias = 0.025;
 // tile noise texture over screen based on screen dimensions divided by noise size
 
-layout (location = 0) out vec4 fragment_color;
+layout (location = 0) out vec4 ssao_occlusion;
 
 // samples used to test occlusions
 const vec3 samples_[64] = vec3[](
@@ -109,7 +109,7 @@ void main()
     }
     occlusion = 1.0 - (occlusion / kernelSize);
     
-    fragment_color = vec4(occlusion,occlusion,occlusion,1);
+    ssao_occlusion = vec4(occlusion,occlusion,occlusion,1);
 })";
 
 

@@ -9,7 +9,6 @@ namespace {
 const char *flat_fs_src =
     R"(
 void main() {
-    fragment_color = u_color;
     object_id = u_id;
     // for deferred rendering
     g_position = vec4(frag_pos,1.0);

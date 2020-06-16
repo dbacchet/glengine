@@ -56,6 +56,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT) {
         ctx.input_state.alt_key_pressed = action == GLFW_PRESS;
     }
+    // statistics
+    if (key == GLFW_KEY_F5 && action == GLFW_RELEASE) {
+        app._config.show_imgui_statistics = !app._config.show_imgui_statistics;
+    }
+    // buffers and tuning
+    if (key == GLFW_KEY_F6 && action == GLFW_RELEASE) {
+        app._config.show_framebuffer_texture = !app._config.show_framebuffer_texture;
+    }
 }
 
 void scroll_callback(GLFWwindow *window, double xoffs, double yoffs) {
@@ -172,43 +180,36 @@ bool GLEngine::init(const Config &config) {
     // ///////////////////// //
     glGenFramebuffers(1, &_g_buffer);
     glBindFramebuffer(GL_FRAMEBUFFER, _g_buffer);
-    // color buffer
-    glGenTextures(1, &_gb_color);
-    glBindTexture(GL_TEXTURE_2D, _gb_color);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _gb_color, 0);
     // object id buffer
     glGenTextures(1, &_gb_id);
     glBindTexture(GL_TEXTURE_2D, _gb_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _gb_id, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _gb_id, 0);
     // deferrend rendering - position buffer
     glGenTextures(1, &_gb_position);
     glBindTexture(GL_TEXTURE_2D, _gb_position);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _gb_position, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _gb_position, 0);
     // deferrend rendering - normal buffer
     glGenTextures(1, &_gb_normal);
     glBindTexture(GL_TEXTURE_2D, _gb_normal);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, _gb_normal, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _gb_normal, 0);
     // deferrend rendering - albedo + specular buffer
     glGenTextures(1, &_gb_albedo);
     glBindTexture(GL_TEXTURE_2D, _gb_albedo);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, _gb_albedo, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, _gb_albedo, 0);
     // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-    unsigned int attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+    unsigned int attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
     glDrawBuffers(5, attachments);
     // create and attach depth buffer (renderbuffer)
     glGenRenderbuffers(1, &_gb_depth);
@@ -292,9 +293,9 @@ bool GLEngine::render() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // set background color on the albedo (equivalent to the glClearColor in forward rendering)
-    glClearBufferfv(GL_COLOR, 4, clear_color);
+    glClearBufferfv(GL_COLOR, 3, clear_color);
     // "clear" the id buffer setting NULL_ID as clear value
-    glClearBufferuiv(GL_COLOR, 1, &NULL_ID);
+    glClearBufferuiv(GL_COLOR, 0, &NULL_ID);
     // draw scene
     if (_root) {
         _root->draw(_camera);
@@ -302,6 +303,8 @@ bool GLEngine::render() {
     MICROPROFILE_LEAVE();
 
     // calculate ssao
+    static float ssao_radius = 0.5f;
+    static float ssao_bias = 0.025f;
     MICROPROFILE_ENTERI("glengine","ssao",MP_AUTO);
     glBindFramebuffer(GL_FRAMEBUFFER, _ssao_framebuffer);
     glViewport(0, 0, fbsize.x, fbsize.y);
@@ -319,6 +322,8 @@ bool GLEngine::render() {
     glUniform1i(glGetUniformLocation(ssao_shader->program_id, "noise_texture"), 2); 
     ssao_shader->set_vec2("noise_scale",math::Vector2f(fbsize.x/4.0f,fbsize.y/4.0f)); // noise texture is 4x4
     ssao_shader->set_uniform_projection(_camera.projection());
+    ssao_shader->set_float("radius",ssao_radius);
+    ssao_shader->set_float("bias",ssao_bias);
     _ss_quad->draw(*ssao_shader);
     MICROPROFILE_LEAVE();
 
@@ -330,24 +335,22 @@ bool GLEngine::render() {
 
     static bool debug_view = false;
     glViewport(0, 0, fbsize.x, fbsize.y);
-    Shader *quad_shader = debug_view ? _resource_manager.get_stock_shader(StockShader::Quad) : _resource_manager.get_stock_shader(StockShader::QuadDeferred);
+    Shader *quad_shader = debug_view ? _resource_manager.get_stock_shader(StockShader::QuadDebug) : _resource_manager.get_stock_shader(StockShader::QuadDeferred);
     quad_shader->activate();
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _gb_color);
-    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, _gb_position);
-    glActiveTexture(GL_TEXTURE2);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, _gb_normal);
-    glActiveTexture(GL_TEXTURE3);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, _gb_albedo);
-    glActiveTexture(GL_TEXTURE4);
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, _ssao_color_texture);	// use the color attachment texture as the texture of the quad plane
-    glUniform1i(glGetUniformLocation(quad_shader->program_id, "screen_texture"), 0); 
-    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_position_texture"), 1); 
-    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_normal_texture"), 2); 
-    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_albedospec_texture"), 3); 
-    glUniform1i(glGetUniformLocation(quad_shader->program_id, "ssao_texture"), 4); 
+    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_position_texture"), 0); 
+    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_normal_texture"), 1); 
+    glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_albedospec_texture"), 2); 
+    glUniform1i(glGetUniformLocation(quad_shader->program_id, "ssao_texture"), 3); 
     quad_shader->set_uniform_view(_camera.inverse_transform());
+    quad_shader->set_uniform_light0_pos(math::Vector3f(100, 100, 100));
     _ss_quad->draw(*quad_shader);
     glDisable(GL_FRAMEBUFFER_SRGB); 
     MICROPROFILE_LEAVE();
@@ -370,8 +373,6 @@ bool GLEngine::render() {
         int img_height = img_width*(float)fbsize.y/fbsize.x;
         ImGui::Begin("fb images");
         ImGui::Checkbox("Debug View", &debug_view);
-        ImGui::Text("Color");
-        ImGui::Image((void*)(intptr_t)_gb_color, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
         ImGui::Text("Position");
         ImGui::Image((void*)(intptr_t)_gb_position, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
         ImGui::Text("Normal");
@@ -379,6 +380,8 @@ bool GLEngine::render() {
         ImGui::Text("Albedo");
         ImGui::Image((void*)(intptr_t)_gb_albedo, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
         ImGui::Text("SSAO");
+        ImGui::DragFloat("radius", &ssao_radius, 0.01);
+        ImGui::DragFloat("bias", &ssao_bias, 0.001);
         ImGui::Image((void*)(intptr_t)_ssao_color_texture, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
         ImGui::End();
     }
@@ -453,10 +456,6 @@ void GLEngine::resize_buffers() {
     // const auto &win_size = _context.window_state.window_size;
     const auto &fb_size = _context.window_state.framebuffer_size;
     // keep opengl buffers aligned with the size of the framebuffer
-    if (_gb_color!=INVALID_BUFFER) {
-        glBindTexture(GL_TEXTURE_2D, _gb_color);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fb_size.x, fb_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    }
     if (_gb_id!=INVALID_BUFFER) {
         glBindTexture(GL_TEXTURE_2D, _gb_id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, fb_size.x, fb_size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);

@@ -50,11 +50,10 @@ in vec3 light_pos;
 in vec2 tex_coord;
 in vec4 vcolor;
 // output
-layout (location = 0) out vec4 fragment_color;
-layout (location = 1) out uint object_id;  
-layout (location = 2) out vec4 g_position;  
-layout (location = 3) out vec4 g_normal;  
-layout (location = 4) out vec4 g_albedospec;  
+layout (location = 0) out uint object_id;  
+layout (location = 1) out vec4 g_position;  
+layout (location = 2) out vec4 g_normal;  
+layout (location = 3) out vec4 g_albedospec;  
 )";
 
 } //

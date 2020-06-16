@@ -9,8 +9,6 @@ namespace {
 const char *vertexcolor_fs_src =
     R"(
 void main() {
-    fragment_color = vec4(normalize(vec3(light_pos)),1);//vcolor;
-    fragment_color = vcolor;
     object_id = u_id;
     // for deferred rendering
     g_position = vec4(frag_pos,1.0);

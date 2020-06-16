@@ -59,7 +59,7 @@ void ResourceManager::create_stock_shaders() {
     _stock_shaders[StockShader::Phong]           = create_shader(get_stock_shader_source(StockShader::Phong), "Phong");
     _stock_shaders[StockShader::VertexColor]     = create_shader(get_stock_shader_source(StockShader::VertexColor), "VertexColor");
     _stock_shaders[StockShader::Ssao]            = create_shader(get_stock_shader_source(StockShader::Ssao), "Ssao");
-    _stock_shaders[StockShader::Quad]            = create_shader(get_stock_shader_source(StockShader::Quad), "Quad");
+    _stock_shaders[StockShader::QuadDebug]       = create_shader(get_stock_shader_source(StockShader::QuadDebug), "Quad");
     _stock_shaders[StockShader::QuadDeferred]    = create_shader(get_stock_shader_source(StockShader::QuadDeferred), "QuadDeferred");
 }
 

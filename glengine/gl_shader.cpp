@@ -77,7 +77,7 @@ GLuint Shader::create_program() {
     GLuint program_id = glCreateProgram();
     glAttachShader(program_id, vertex_shader_id);
     glAttachShader(program_id, fragment_shader_id);
-    glBindFragDataLocation(program_id, 0, "fragment_color");
+    // glBindFragDataLocation(program_id, 0, "fragment_color");
     glLinkProgram(program_id);
     GLint ret = 0;
     glGetProgramiv(program_id, GL_LINK_STATUS, &ret);

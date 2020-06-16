@@ -23,8 +23,8 @@ ShaderSrc get_stock_shader_source(StockShader type) {
         return {stock_shaders::phong_vs_srcs, stock_shaders::phong_fs_srcs};
     case StockShader::Ssao:
         return {stock_shaders::ssao_vs_srcs, stock_shaders::ssao_fs_srcs};
-    case StockShader::Quad:
-        return {stock_shaders::quad_vs_srcs, stock_shaders::quad_fs_srcs};
+    case StockShader::QuadDebug:
+        return {stock_shaders::quad_debug_vs_srcs, stock_shaders::quad_debug_fs_srcs};
     case StockShader::QuadDeferred:
         return {stock_shaders::quad_deferred_vs_srcs, stock_shaders::quad_deferred_fs_srcs};
     default: // use vertexcolor by default
