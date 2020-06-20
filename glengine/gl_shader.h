@@ -18,7 +18,6 @@ class Shader {
     };
 
   public:
-    ID id = NULL_ID; ///< id used in the engine
     std::string name = "";
     GLuint vertex_shader_id = 0;
     GLuint fragment_shader_id = 0;
@@ -33,10 +32,10 @@ class Shader {
 
     std::unordered_map<std::string, Uniform> _uniforms;
 
-    Shader(ID id_ = NULL_ID, const std::string &name_="_unnamed_")
-    : id(id_), name(name_) {}
-    Shader(ID id_, const char *vs, const char *fs)
-    : id(id_) {
+    Shader(const std::string &name_)
+    : name(name_) {}
+    Shader(const std::string &name_, const char *vs, const char *fs)
+    : name(name_) {
         init(vs, fs);
     }
 

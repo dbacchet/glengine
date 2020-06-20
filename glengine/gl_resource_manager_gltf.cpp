@@ -11,6 +11,12 @@ using namespace glengine;
 
 namespace {
 
+std::string get_file_extension(const std::string& filename) {
+    if(filename.find_last_of(".") != std::string::npos)
+        return filename.substr(filename.find_last_of(".")+1);
+    return "";
+}
+
 math::Matrix4f extract_transform(const tinygltf::Node &node) {
     math::Matrix4f tf = math::matrix4_identity<float>();
     const auto &m = node.matrix;
@@ -43,8 +49,8 @@ math::Matrix4f extract_transform(const tinygltf::Node &node) {
 
 class GltfLoader {
   public:
-    GltfLoader(ResourceManager &rm)
-    : _rm(rm) {}
+    GltfLoader(const std::string &filename, ResourceManager &rm)
+    : _filename(filename), _rm(rm) {}
 
     bool load_mesh(const tinygltf::Model &model, const tinygltf::Mesh &mesh, const math::Matrix4f &tf) {
         for (size_t pi = 0; pi < mesh.primitives.size(); ++pi) {
@@ -104,7 +110,11 @@ class GltfLoader {
                 printf("SKIP indices: index data format not supported yet\n");
             }
             // create vertices
-            Mesh *mesh = _rm.create_mesh();
+            if (pos_accessor.count <3) {
+                printf("empty mesh\n");
+                continue;
+            }
+            Mesh *glmesh = _rm.create_mesh((_filename + std::string("_") + mesh.name).c_str());
             glengine::MeshData md;
             auto rot = tf;
             math::set_translation(rot, {0, 0, 0});
@@ -125,14 +135,14 @@ class GltfLoader {
                 }
             }
             // material
-            mesh->init(md.vertices, md.indices, GL_TRIANGLES);
+            glmesh->init(md.vertices, md.indices, GL_TRIANGLES);
             if (primitive.material >= 0) {
                 const tinygltf::Material &material = model.materials[primitive.material];
                 if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
-                    mesh->textures.diffuse = _tx_map[material.pbrMetallicRoughness.baseColorTexture.index];
+                    glmesh->textures.diffuse = _tx_map[material.pbrMetallicRoughness.baseColorTexture.index];
                 }
             }
-            _meshes.push_back(mesh);
+            _meshes.push_back(glmesh);
         }
         return true;
     }
@@ -152,13 +162,15 @@ class GltfLoader {
     bool load_textures(const tinygltf::Model &model) {
         for (uint32_t i = 0; i < model.images.size(); i++) {
             const tinygltf::Image &img = model.images[i];
-            _tx_map[i] = _rm.create_texture_from_data(img.width, img.height, img.component, img.image.data());
+            printf("gltf loader: texture with index %d, name '%s', and uri '%s'\n", i, img.name.c_str(), img.uri.c_str());
+            _tx_map[i] = _rm.create_texture_from_data(img.name.c_str(), img.width, img.height, img.component, img.image.data());
         }
         return true;
     }
 
     std::vector<Mesh *> &meshes() { return _meshes; }
 
+    std::string _filename = "";
     ResourceManager &_rm;
     std::unordered_map<uint32_t, Texture *> _tx_map;
     std::vector<Mesh *> _meshes;
@@ -176,8 +188,12 @@ std::vector<Mesh *> create_from_gltf(ResourceManager &rm, const char *filename) 
     std::string warn;
 
     printf("loading gltf model: %s\n", filename);
-    bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, filename);
-    // bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, filename); // for binary glTF(.glb)
+    bool ret = false;
+    if (get_file_extension(filename)=="gltf") {
+        ret = loader.LoadASCIIFromFile(&model, &err, &warn, filename);
+    } else { // assume binary gltf (usually .glb)
+        ret = loader.LoadBinaryFromFile(&model, &err, &warn, filename);
+    }
 
     if (!warn.empty()) {
         printf("Warn: %s\n", warn.c_str());
@@ -194,7 +210,7 @@ std::vector<Mesh *> create_from_gltf(ResourceManager &rm, const char *filename) 
     printf("the model has %d textures\n", (int)model.images.size());
     const tinygltf::Scene &scene = model.scenes[model.defaultScene];
     printf("the scene has %d nodes\n", (int)scene.nodes.size());
-    GltfLoader ml(rm);
+    GltfLoader ml(filename, rm);
     ml.load_textures(model);
     printf("loaded %d textures\n", (int)ml._tx_map.size());
     // this loader makes the assumption that the entire scene is a single model, rendered with the same shader

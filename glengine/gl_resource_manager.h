@@ -24,11 +24,11 @@ class ResourceManager {
     // /////// //
 
     /// create a new (uninitialized) shader
-    Shader *create_shader();
+    Shader *create_shader(const char *name);
     /// get shader by id
-    Shader *get_shader(ID id);
+    Shader *get_shader(const char *name);
     /// check if the shader with the given id exists
-    bool has_shader(ID id) const;
+    bool has_shader(const char *name) const;
     /// get stock shader
     Shader *get_stock_shader(StockShader type);
 
@@ -37,39 +37,39 @@ class ResourceManager {
     // //////// //
 
     /// create a new (uninitialized) texture
-    Texture *create_texture();
+    Texture *create_texture(const char *name);
     /// get texture by id
-    Texture *get_texture(ID id);
+    Texture *get_texture(const char *name);
     /// check if the texture with the given id exists
-    bool has_texture(ID id) const;
+    bool has_texture(const char *name) const;
     /// create a texture from file
     Texture *create_texture_from_file(const char *filename);
-    Texture *create_texture_from_data(uint32_t width, uint32_t height, uint8_t channels, const uint8_t *data);
+    Texture *create_texture_from_data(const char *name, uint32_t width, uint32_t height, uint8_t channels, const uint8_t *data);
 
     // ////// //
     // meshes //
     // ////// //
 
     /// create a new (empty) mesh
-    Mesh *create_mesh();
+    Mesh *create_mesh(const char *name);
     /// get mesh by id
-    Mesh *get_mesh(ID id);
+    Mesh *get_mesh(const char *name);
     /// check if the mesh with the given id exists
-    bool has_mesh(ID id) const;
+    bool has_mesh(const char *name) const;
     /// create a mesh from file
     std::vector<Mesh *> create_mesh_from_file(const char *filename);
 
     // prefab meshes
     /// axis gizmo
-    Mesh *create_axis_mesh();
+    Mesh *create_axis_mesh(const char *name = "axis_gizmo");
     /// quad that extends -1..1
-    Mesh *create_quad_mesh();
+    Mesh *create_quad_mesh(const char *name = "quad");
     /// solid box
-    Mesh *create_box_mesh(const math::Vector3f &size = {1.0f, 1.0f, 1.0f});
+    Mesh *create_box_mesh(const char *name = "box", const math::Vector3f &size = {1.0f, 1.0f, 1.0f});
     /// sphere
-    Mesh *create_sphere_mesh(float radius = 1.0f, uint32_t subdiv = 10);
+    Mesh *create_sphere_mesh(const char *name = "sphere", float radius = 1.0f, uint32_t subdiv = 10);
     /// grid
-    Mesh *create_grid_mesh(float len, float step);
+    Mesh *create_grid_mesh(const char *name = "grid", float len = 100.0f, float step = 5.0f);
 
   protected:
     std::unordered_map<ID, Shader *> _shaders;
@@ -77,7 +77,6 @@ class ResourceManager {
     std::unordered_map<ID, Texture *> _textures;
     std::unordered_map<ID, Mesh *> _meshes;
 
-    ID _next_shader_id = 1;
     ID _next_texture_id = 1;
     ID _next_mesh_id = 1;
 

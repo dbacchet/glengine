@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl_context.h" // this is needed for the GLhalf type
+#include "gl_context.h" // this is needed for OpenGL types
 
 #include "math/vmath.h"
 #include <cstdint>
@@ -28,5 +28,9 @@ struct Vertex {
     math::Vector3f bitangent = {0, 1, 0};
     uint8_t padding[4] = {}; // padding to have a multiple of 16bytes
 };
+
+/// murmur hash function, 32bit, based on the code made by Austin Appleby (http://code.google.com/p/smhasher/)
+uint32_t murmur_hash2_32(const void *key, int len, uint32_t seed = 0);
+uint32_t murmur_hash2_32(const char *str, uint32_t seed = 0);
 
 } // namespace glengine

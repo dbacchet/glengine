@@ -209,8 +209,8 @@ bool GLEngine::init(const Config &config) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, _gb_albedo, 0);
     // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-    unsigned int attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-    glDrawBuffers(5, attachments);
+    unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    glDrawBuffers(4, attachments);
     // create and attach depth buffer (renderbuffer)
     glGenRenderbuffers(1, &_gb_depth);
     glBindRenderbuffer(GL_RENDERBUFFER, _gb_depth);
