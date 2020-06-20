@@ -178,9 +178,44 @@ class GltfLoader {
             log_info("  Alpha Mode '%s'", mtl.alphaMode.c_str());
             log_info("  Alpha cutoff '%f'", mtl.alphaCutoff);
             log_info("  double-sided '%d'", (int)mtl.doubleSided);
+            auto &pbr = mtl.pbrMetallicRoughness;
+            log_info("  PBR:");
+            log_info("    base color factor %f %f %f", pbr.baseColorFactor[0], pbr.baseColorFactor[1], pbr.baseColorFactor[2]);
+            log_info("    base color texture idx %d coords %d", pbr.baseColorTexture.index, pbr.baseColorTexture.texCoord);
+            log_info("    metallic factor %f", pbr.metallicFactor);
+            log_info("    roughness factor %f", pbr.roughnessFactor);
+            log_info("    metallicroughness texture");
+            log_info("    metallic roughness texture idx %d coords %d", pbr.metallicRoughnessTexture.index, pbr.metallicRoughnessTexture.texCoord);
             // _tx_map[i] = _rm.create_texture_from_data(img.name.c_str(), img.width, img.height, img.component, img.image.data());
+            get_or_create_material(mtl);
         }
         return true;
+    }
+
+    std::string material_fullname(const tinygltf::Material &mtl) {
+        return _filename + std::string("_") + mtl.name;
+    }
+
+    glengine::Material *get_or_create_material(const tinygltf::Material &mtl) {
+        std::string mtl_name = material_fullname(mtl);
+        if (_rm.has_material(mtl_name.c_str())) {
+            return _rm.get_material(mtl_name.c_str());
+        }
+        auto m = _rm.create_material(mtl_name.c_str());
+        auto &pbr = mtl.pbrMetallicRoughness;
+        m->color = {(uint8_t)(pbr.baseColorFactor[0]*255+0.5), (uint8_t)(pbr.baseColorFactor[1]*255+0.5), (uint8_t)(pbr.baseColorFactor[2]*255+0.5), 255};
+        m->base_color_factor = {(float)pbr.baseColorFactor[0], (float)pbr.baseColorFactor[1], (float)pbr.baseColorFactor[2], 1.0};
+        m->emissive_factor = {(float)mtl.emissiveFactor[0], (float)mtl.emissiveFactor[1], (float)mtl.emissiveFactor[2]};
+        m->metallic_factor = pbr.metallicFactor;
+        m->roughness_factor = pbr.roughnessFactor;
+        // set diffuse texture and select shader
+        if (pbr.baseColorTexture.index>=0) {
+            m->_textures[(uint8_t)Material::TextureType::BaseColor] = _tx_map[pbr.baseColorTexture.index];
+            m->_shader = _rm.get_stock_shader(glengine::StockShader::DiffuseTextured);
+        } else {
+            m->_shader = _rm.get_stock_shader(glengine::StockShader::Diffuse);
+        }
+        return m;
     }
 
     std::vector<Mesh *> &meshes() { return _meshes; }
