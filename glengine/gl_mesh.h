@@ -3,6 +3,7 @@
 #include "gl_types.h"
 #include "gl_shader.h"
 #include "gl_texture.h"
+#include "gl_material.h"
 
 #include <vector>
 
@@ -21,6 +22,8 @@ class Mesh {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     GLenum primitive = GL_TRIANGLES;
+
+    Material *material = nullptr;
 
     Textures textures;
 

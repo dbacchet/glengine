@@ -1,4 +1,5 @@
 #include "gl_shader.h"
+#include "gl_logger.h"
 
 #include <unordered_map>
 #include <iostream>
@@ -62,11 +63,11 @@ GLuint Shader::create_shader(const std::vector<char const*> &source, GLenum shad
     GLint ret = 0;
     glGetShaderiv(shader_id, GL_COMPILE_STATUS, &ret);
     if (ret == GL_FALSE) {
-        printf("%s: error compiling shader\n", shader_type_map[shader_type].c_str());
+        log_error("%s: error compiling shader", shader_type_map[shader_type].c_str());
         print_shader_info_log(shader_id);
-        printf("shader source:\n---------------\n");
+        log_message("shader source:\n---------------");
         for (auto s: source) {
-            printf("%s\n--------------\n",s);
+            log_message("%s\n--------------",s);
         }
         return 0;
     }
@@ -82,7 +83,7 @@ GLuint Shader::create_program() {
     GLint ret = 0;
     glGetProgramiv(program_id, GL_LINK_STATUS, &ret);
     if (ret == GL_FALSE) {
-        printf("error linking shader program\n");
+        log_error("error linking shader program");
         print_program_info_log(program_id);
     }
     return program_id;
@@ -91,7 +92,7 @@ GLuint Shader::create_program() {
 void Shader::extract_uniforms() {
     int num_uniforms = -1;
     glGetProgramiv(program_id, GL_ACTIVE_UNIFORMS, &num_uniforms);
-    printf(" --- Shader '%s' (%d) uniforms ---\n", name.c_str(), program_id);
+    log_info(" --- Shader '%s' (%d) uniforms ---", name.c_str(), program_id);
     for (int i = 0; i < num_uniforms; ++i) {
         int size = -1;
         GLenum type = GL_ZERO;
@@ -99,7 +100,7 @@ void Shader::extract_uniforms() {
         glGetActiveUniform(program_id, GLuint(i), sizeof(name), NULL, &size, &type, name);
         GLint location = glGetUniformLocation(program_id, name);
         _uniforms[name] = {location, type};
-        printf("%20s | %12s | %d\n", name, to_string(type), location);
+        log_info("%20s | %12s | %d", name, to_string(type), location);
     }
 }
 
@@ -198,28 +199,28 @@ void Shader::print_shader_info_log(GLuint shader) {
     int max_length = 2048;
     char log[2048];
     glGetShaderInfoLog(shader, max_length, NULL, log);
-    printf("shader info log for GL index %u:\n%s", shader, log);
+    log_info("shader info log for GL index %u:\n%s", shader, log);
 }
 
 void Shader::print_program_info_log(GLuint program) {
     int max_length = 2048;
     char log[2048];
     glGetProgramInfoLog(program, max_length, NULL, log);
-    printf("program info log for GL index %u:\n%s", program, log);
+    log_message("program info log for GL index %u:\n%s", program, log);
 }
 
 bool Shader::validate_set_uniform_call(const char *name, GLenum type) const {
     if (!has_uniform(name)) {
-        printf("uniform name '%s' not found in shader %d\n",name, program_id);
+        log_error("uniform name '%s' not found in shader %d",name, program_id);
         return false;
     }
     const Uniform &u = _uniforms.at(name);
     if (u.type != type) {
-        printf("uniform type '%s' does not match call ('%s')\n", to_string(u.type), to_string(type));
+        log_error("uniform type '%s' does not match call ('%s')", to_string(u.type), to_string(type));
         return false;
     }
     if (u.location <0) {
-        printf("invalid uniform location (%d)\n", u.location);
+        log_error("invalid uniform location (%d)", u.location);
         return false;
     }
     return true;

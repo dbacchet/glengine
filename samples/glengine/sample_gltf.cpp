@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     // render objects
     auto &grid = *eng.create_renderobject(grid_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
     auto &axis = *eng.create_renderobject(axis_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
-    auto &model = *eng.create_renderobject(model_meshes, rm.get_stock_shader(glengine::StockShader::DiffuseTextured), nullptr, 101);
+    auto &model = *eng.create_renderobject(model_meshes, rm.get_stock_shader(glengine::StockShader::Diffuse), nullptr, 101);
     model.set_scale({0.2,0.2,0.2}).set_color({200,200,200,255});
 
     (void)grid; // unused var
