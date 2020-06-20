@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 
     // return 0;
     // meshes
-    glengine::Mesh *grid_mesh = rm.create_grid_mesh(50.0f, 1.0f);
+    glengine::Mesh *grid_mesh = rm.create_grid_mesh("grid", 50.0f, 1.0f);
     glengine::Mesh *axis_mesh = rm.create_axis_mesh();
     std::vector<glengine::Mesh*> model_meshes = rm.create_mesh_from_file(argv[1]);
     

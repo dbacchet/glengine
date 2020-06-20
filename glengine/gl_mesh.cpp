@@ -10,8 +10,8 @@
 
 namespace glengine {
 
-Mesh::Mesh(ID id_)
-: id(id_) {}
+Mesh::Mesh(const std::string &name_)
+: name(name_) {}
 
 bool Mesh::init(const std::vector<Vertex> &vertices_, GLenum primitive_) {
     return init(vertices_, std::vector<uint32_t>(), primitive_);

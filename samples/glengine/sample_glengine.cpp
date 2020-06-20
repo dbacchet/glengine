@@ -44,14 +44,14 @@ int main(void) {
     auto &rm = eng.resource_manager();
 
     // meshes
-    glengine::Mesh *grid_mesh = rm.create_grid_mesh(50.0f, 1.0f);
-    glengine::Mesh *box_mesh = rm.create_box_mesh({1, 1, 1});
-    glengine::Mesh *box_dyn_mesh = rm.create_box_mesh({1, 1, 1});
-    glengine::Mesh *axis_mesh = rm.create_axis_mesh();
-    glengine::Mesh *sphere_mesh = rm.create_sphere_mesh(0.7);
-    glengine::Mesh *polyline_mesh = rm.create_mesh();
+    glengine::Mesh *grid_mesh = rm.create_grid_mesh("grid", 50.0f, 1.0f);
+    glengine::Mesh *box_mesh = rm.create_box_mesh("box", {1, 1, 1});
+    glengine::Mesh *box_dyn_mesh = rm.create_box_mesh("box_dyn", {1, 1, 1});
+    glengine::Mesh *axis_mesh = rm.create_axis_mesh("axis");
+    glengine::Mesh *sphere_mesh = rm.create_sphere_mesh("sphere", 0.7);
+    glengine::Mesh *polyline_mesh = rm.create_mesh("polyline");
     polyline_mesh->init(create_polyline(), GL_LINES);
-    glengine::Mesh *triangle_mesh = rm.create_mesh();
+    glengine::Mesh *triangle_mesh = rm.create_mesh("triangle");
     triangle_mesh->init(triangle_vertices, GL_TRIANGLES);
 
     // render objects

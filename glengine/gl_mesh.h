@@ -16,7 +16,7 @@ class Mesh {
         Texture *diffuse = nullptr;
     };
   public:
-    ID id = NULL_ID;
+    std::string name = "";
     // mesh data
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
@@ -24,7 +24,7 @@ class Mesh {
 
     Textures textures;
 
-    Mesh(ID id_=NULL_ID);
+    Mesh(const std::string &name_);
 
     bool init(const std::vector<Vertex> &vertices_, GLenum primitive_);
     bool init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_, GLenum primitive_);

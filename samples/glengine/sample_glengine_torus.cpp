@@ -50,7 +50,7 @@ int main(void) {
     std::vector<Obj> cubes(M * N);
 
     // meshes
-    glengine::Mesh *box_mesh = rm.create_box_mesh({l, l, l});
+    glengine::Mesh *box_mesh = rm.create_box_mesh("box_mesh", {l, l, l});
     // render objects
     for (uint32_t i = 0; i < M; i++) {
         float alpha = 2 * M_PI * i / M;
@@ -69,12 +69,11 @@ int main(void) {
             obj.tf = t1 * t2 * t3 * t4;
             obj.ro = eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::Diffuse), nullptr, i * N + j);
             obj.ro->set_transform(obj.tf);
-            obj.ro->set_color(
-                {rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), 255});
+            obj.ro->set_color( {rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), 255});
         }
     }
 
-    auto grid_mesh = rm.create_grid_mesh(R, 1.0f);
+    auto grid_mesh = rm.create_grid_mesh("grid_mesh", R, 1.0f);
     eng.create_renderobject(grid_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
 
     eng._camera_manipulator.set_center({-18.33f, 1.01f, 0.0f})
