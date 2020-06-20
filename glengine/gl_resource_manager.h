@@ -46,6 +46,17 @@ class ResourceManager {
     Texture *create_texture_from_file(const char *filename);
     Texture *create_texture_from_data(const char *name, uint32_t width, uint32_t height, uint8_t channels, const uint8_t *data);
 
+    // ///////// //
+    // materials //
+    // ///////// //
+
+    /// create a new (default) material
+    Material *create_material(const char *name);
+    /// get material by id
+    Material *get_material(const char *name);
+    /// check if the material with the given id exists
+    bool has_material(const char *name) const;
+
     // ////// //
     // meshes //
     // ////// //
@@ -75,10 +86,8 @@ class ResourceManager {
     std::unordered_map<ID, Shader *> _shaders;
     std::unordered_map<StockShader, Shader *> _stock_shaders;
     std::unordered_map<ID, Texture *> _textures;
+    std::unordered_map<ID, Material *> _materials;
     std::unordered_map<ID, Mesh *> _meshes;
-
-    ID _next_texture_id = 1;
-    ID _next_mesh_id = 1;
 
     void create_stock_shaders();
 };

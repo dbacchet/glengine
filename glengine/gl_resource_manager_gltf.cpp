@@ -1,5 +1,6 @@
 #include "gl_resource_manager.h"
 #include "gl_prefabs.h"
+#include "gl_logger.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -168,6 +169,20 @@ class GltfLoader {
         return true;
     }
 
+    bool parse_materials(const tinygltf::Model &model) {
+        for (uint32_t i = 0; i < model.materials.size(); i++) {
+            const tinygltf::Material &mtl = model.materials[i];
+            printf("gltf loader: material with index %d, name '%s'\n", i, mtl.name.c_str());
+            log_info("Material '%s'", mtl.name.c_str());
+            log_info("  Emissive factor %f %f %f", mtl.emissiveFactor[0], mtl.emissiveFactor[1], mtl.emissiveFactor[2]);
+            log_info("  Alpha Mode '%s'", mtl.alphaMode.c_str());
+            log_info("  Alpha cutoff '%f'", mtl.alphaCutoff);
+            log_info("  double-sided '%d'", (int)mtl.doubleSided);
+            // _tx_map[i] = _rm.create_texture_from_data(img.name.c_str(), img.width, img.height, img.component, img.image.data());
+        }
+        return true;
+    }
+
     std::vector<Mesh *> &meshes() { return _meshes; }
 
     std::string _filename = "";
@@ -213,6 +228,7 @@ std::vector<Mesh *> create_from_gltf(ResourceManager &rm, const char *filename) 
     GltfLoader ml(filename, rm);
     ml.load_textures(model);
     printf("loaded %d textures\n", (int)ml._tx_map.size());
+    ml.parse_materials(model);
     // this loader makes the assumption that the entire scene is a single model, rendered with the same shader
     math::Matrix4f root_tf = math::matrix4_identity<float>();
     root_tf = math::create_transformation(

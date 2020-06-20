@@ -1,5 +1,8 @@
 #include "gl_resource_manager.h"
 #include "gl_prefabs.h"
+#include "gl_material.h"
+#include "gl_mesh.h"
+#include "gl_texture.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -112,6 +115,26 @@ Texture *ResourceManager::create_texture_from_data(const char *name, uint32_t wi
     }
     return t;
 }
+
+Material *ResourceManager::create_material(const char *name) {
+    ID id = murmur_hash2_32(name);
+    if (_materials.count(id)>0) {
+        printf("*** Error Creating Material ***\nMaterial with name '%s' already exists\n", name);
+        return nullptr;
+    }
+    Material *t = new Material(name);
+    _materials[id] = t;
+    return t;
+}
+
+Material *ResourceManager::get_material(const char *name) {
+    return _materials[murmur_hash2_32(name)];
+}
+
+bool ResourceManager::has_material(const char *name) const {
+    return _materials.count(murmur_hash2_32(name)) > 0;
+}
+
 
 Mesh *ResourceManager::create_mesh(const char *name) {
     ID id = murmur_hash2_32(name);

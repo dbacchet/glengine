@@ -5,6 +5,8 @@
 #include "gl_shader.h"
 #include "gl_texture.h"
 
+#include <string>
+
 namespace glengine {
 
 class Shader;
@@ -27,12 +29,16 @@ struct Material {
         "tex_emissive"   ///< standard uniform for the emissive color
     };
 
+    Material(const std::string &name_) 
+    : name(name_) {}
+
     bool init(Shader *shader);
 
+    std::string name = "";
     Shader *_shader = nullptr;
     Texture *_textures[(uint8_t)TextureType::TextureTypeNum] = {nullptr};
 
-    glengine::Color color = {100, 100, 100, 255};
+    glengine::Color color = {200, 100, 100, 255};
     math::Vector4f base_color_factor = {1.0f, 1.0f, 1.0f, 1.0f};
     math::Vector3f emissive_factor = {1.0f, 1.0f, 1.0f};
     float metallic_factor = 0.0f;
