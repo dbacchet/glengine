@@ -24,6 +24,7 @@ add_library(glengine STATIC gl_context.cpp
                             gl_shader.cpp
                             gl_stock_shaders.cpp
                             gl_prefabs.cpp
+                            gl_renderer.cpp
                             gl_renderobject.cpp
                             gl_resource_manager.cpp
                             gl_resource_manager_gltf.cpp

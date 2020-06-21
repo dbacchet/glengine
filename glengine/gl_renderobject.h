@@ -3,6 +3,7 @@
 #include "math/vmath.h"
 #include "gl_types.h"
 #include "gl_camera.h"
+#include "gl_renderer.h"
 
 #include <vector>
 #include <set>
@@ -20,7 +21,7 @@ class RenderObject final {
     bool init(Mesh *mesh, Shader *shader);
     bool init(std::vector<Mesh *> meshes, Shader *shader);
 
-    bool draw(const Camera &cam, const math::Matrix4f &parent_tf=math::matrix4_identity<float>());
+    bool draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &parent_tf=math::matrix4_identity<float>());
 
     // ////////// //
     // scenegraph //

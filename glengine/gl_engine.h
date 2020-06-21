@@ -3,6 +3,7 @@
 #include "gl_context.h"
 #include "gl_camera.h"
 #include "gl_camera_manipulator.h"
+#include "gl_renderer.h"
 #include "gl_renderobject.h"
 #include "gl_resource_manager.h"
 #include "imgui/imgui.h"
@@ -69,6 +70,7 @@ class GLEngine {
     Camera _camera;
     CameraManipulator _camera_manipulator;
     ResourceManager _resource_manager;
+    Renderer _renderer;
 
     GLuint _g_buffer = 0;              // framebuffer id
     GLuint _ssao_framebuffer = 0;      // SSAO framebuffer id

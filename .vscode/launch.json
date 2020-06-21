@@ -21,7 +21,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/build/samples/glengine/sample_gltf",
-        "args": ["/home/davide/models/suv_lod1.gltf"],
+        "args": ["../resources/models/the_mill/scene.gltf"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/build",
         "environment": [],

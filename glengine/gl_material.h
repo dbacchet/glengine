@@ -23,7 +23,8 @@ struct Material {
         TextureTypeNum
     };
     static constexpr char const *uniform_names[] = {
-        "tex_basecolor", ///< standard uniform for the base color
+        // "tex_basecolor", ///< standard uniform for the base color
+        "texture_diffuse", ///< standard uniform for the base color
         "tex_ORM",       ///< standard uniform for occlusion/roughness/metallic
         "tex_normal",    ///< standard uniform for the tangent space normals
         "tex_emissive"   ///< standard uniform for the emissive color

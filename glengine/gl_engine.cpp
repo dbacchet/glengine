@@ -298,8 +298,15 @@ bool GLEngine::render() {
     glClearBufferuiv(GL_COLOR, 0, &NULL_ID);
     // draw scene
     if (_root) {
-        _root->draw(_camera);
+        _root->draw(_renderer, _camera);
     }
+    MICROPROFILE_LEAVE();
+
+    MICROPROFILE_ENTERI("glengine","render",MP_AUTO);
+    printf("%lu ",_renderer.render_items.size());
+    _renderer.render();
+    _renderer.render_items.clear();
+    printf("%lu\n",_renderer.render_items.size());
     MICROPROFILE_LEAVE();
 
     // calculate ssao

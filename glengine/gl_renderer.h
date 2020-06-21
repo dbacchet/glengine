@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gl_types.h"
+
 #include "math/vmath.h"
 
 #include <vector>
@@ -12,10 +14,11 @@ class Shader;
 class Mesh;
 
 struct RenderItem {
-    Camera *camera = nullptr;
+    const Camera *camera = nullptr;
     // Material *material = nullptr;
-    Mesh *mesh = nullptr;
+    const Mesh *mesh = nullptr;
     math::Matrix4f model_tf;
+    ID id = NULL_ID;
 };
 
 class Renderer {

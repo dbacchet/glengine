@@ -36,11 +36,11 @@ class Mesh {
 
     void draw(Shader &shader);
 
-  private:
     GLuint vao = 0;
     GLuint vbo = 0;
     GLuint ebo = 0;
 
+  private:
     void setup_mesh();
     // update the data in the buffers. buffers have to be already allocated
     void update_mesh_data();

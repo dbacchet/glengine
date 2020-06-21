@@ -142,6 +142,7 @@ class GltfLoader {
                 if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
                     glmesh->textures.diffuse = _tx_map[material.pbrMetallicRoughness.baseColorTexture.index];
                 }
+                glmesh->material = get_or_create_material(material);
             }
             _meshes.push_back(glmesh);
         }
@@ -164,7 +165,7 @@ class GltfLoader {
         for (uint32_t i = 0; i < model.images.size(); i++) {
             const tinygltf::Image &img = model.images[i];
             printf("gltf loader: texture with index %d, name '%s', and uri '%s'\n", i, img.name.c_str(), img.uri.c_str());
-            _tx_map[i] = _rm.create_texture_from_data(img.name.c_str(), img.width, img.height, img.component, img.image.data());
+            _tx_map[i] = _rm.create_texture_from_data((img.name+std::string("_")+img.uri).c_str(), img.width, img.height, img.component, img.image.data());
         }
         return true;
     }
@@ -173,19 +174,22 @@ class GltfLoader {
         for (uint32_t i = 0; i < model.materials.size(); i++) {
             const tinygltf::Material &mtl = model.materials[i];
             printf("gltf loader: material with index %d, name '%s'\n", i, mtl.name.c_str());
-            log_info("Material '%s'", mtl.name.c_str());
-            log_info("  Emissive factor %f %f %f", mtl.emissiveFactor[0], mtl.emissiveFactor[1], mtl.emissiveFactor[2]);
-            log_info("  Alpha Mode '%s'", mtl.alphaMode.c_str());
-            log_info("  Alpha cutoff '%f'", mtl.alphaCutoff);
-            log_info("  double-sided '%d'", (int)mtl.doubleSided);
-            auto &pbr = mtl.pbrMetallicRoughness;
-            log_info("  PBR:");
-            log_info("    base color factor %f %f %f", pbr.baseColorFactor[0], pbr.baseColorFactor[1], pbr.baseColorFactor[2]);
-            log_info("    base color texture idx %d coords %d", pbr.baseColorTexture.index, pbr.baseColorTexture.texCoord);
-            log_info("    metallic factor %f", pbr.metallicFactor);
-            log_info("    roughness factor %f", pbr.roughnessFactor);
-            log_info("    metallicroughness texture");
-            log_info("    metallic roughness texture idx %d coords %d", pbr.metallicRoughnessTexture.index, pbr.metallicRoughnessTexture.texCoord);
+            bool verbose = true;
+            if (verbose) {
+                log_info("Material '%s'", mtl.name.c_str());
+                log_info("  Emissive factor %f %f %f", mtl.emissiveFactor[0], mtl.emissiveFactor[1], mtl.emissiveFactor[2]);
+                log_info("  Alpha Mode '%s'", mtl.alphaMode.c_str());
+                log_info("  Alpha cutoff '%f'", mtl.alphaCutoff);
+                log_info("  double-sided '%d'", (int)mtl.doubleSided);
+                auto &pbr = mtl.pbrMetallicRoughness;
+                log_info("  PBR:");
+                log_info("    base color factor %f %f %f", pbr.baseColorFactor[0], pbr.baseColorFactor[1], pbr.baseColorFactor[2]);
+                log_info("    base color texture idx %d coords %d", pbr.baseColorTexture.index, pbr.baseColorTexture.texCoord);
+                log_info("    metallic factor %f", pbr.metallicFactor);
+                log_info("    roughness factor %f", pbr.roughnessFactor);
+                log_info("    metallicroughness texture");
+                log_info("    metallic roughness texture idx %d coords %d", pbr.metallicRoughnessTexture.index, pbr.metallicRoughnessTexture.texCoord);
+            }
             // _tx_map[i] = _rm.create_texture_from_data(img.name.c_str(), img.width, img.height, img.component, img.image.data());
             get_or_create_material(mtl);
         }
