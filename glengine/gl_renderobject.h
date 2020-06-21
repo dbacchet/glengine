@@ -12,6 +12,12 @@ namespace glengine {
 
 class Mesh;
 class Shader;
+class Material;
+
+struct GfxObject {
+    Mesh *mesh = nullptr;
+    Material *material = nullptr;
+};
 
 class RenderObject final {
   public:
@@ -38,12 +44,10 @@ class RenderObject final {
     // ////////// //
     math::Matrix4f transform() const { return _transform; }
     math::Vector3f scale() const { return {_transform(0, 0), _transform(1, 1), _transform(2, 2)}; }
-    glengine::Color color() const { return _color; }
     bool visible() const { return _visible; }
 
     RenderObject &set_transform(const math::Matrix4f &tf);
     RenderObject &set_scale(const math::Vector3f &scl);
-    RenderObject &set_color(const glengine::Color &color);
     RenderObject &set_visible(bool flag);
 
     // //// //
@@ -56,10 +60,10 @@ class RenderObject final {
 
     std::vector<Mesh *> _meshes;
     Shader *_shader = nullptr;
+    std::vector<GfxObject *> _gfxobjects;
 
     math::Matrix4f _transform = math::matrix4_identity<float>();
     math::Matrix4f _scale = math::matrix4_identity<float>();
-    glengine::Color _color = {100, 100, 100, 255};
     bool _visible = true; ///< visibility flag
 };
 

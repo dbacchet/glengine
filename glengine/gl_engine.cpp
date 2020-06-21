@@ -1,5 +1,6 @@
 #include "gl_engine.h"
 #include "gl_renderobject.h"
+#include "gl_logger.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
@@ -303,10 +304,9 @@ bool GLEngine::render() {
     MICROPROFILE_LEAVE();
 
     MICROPROFILE_ENTERI("glengine","render",MP_AUTO);
-    printf("%lu ",_renderer.render_items.size());
+    log_debug("render items %lu",_renderer.render_items.size());
     _renderer.render();
     _renderer.render_items.clear();
-    printf("%lu\n",_renderer.render_items.size());
     MICROPROFILE_LEAVE();
 
     // calculate ssao

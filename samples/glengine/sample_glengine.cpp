@@ -76,9 +76,11 @@ int main(void) {
     sg1->set_transform(math::create_transformation<float>({2, 0, 0}, math::quat_from_euler_321<float>(0, 0, 0)))
         .set_scale({0.5f, 0.5f, 0.5f});
     sg2->set_transform(math::create_transformation<float>({2, 1, 0}, math::quat_from_euler_321<float>(0.3, 0, 0)))
-        .set_color({255, 0, 255, 255});
+        // .set_color({255, 0, 255, 255})
+        ;
     sg3->set_transform(math::create_transformation<float>({2, -1, 0}, math::quat_from_euler_321<float>(0.7, 0, 0)))
-        .set_color({0, 255, 0, 255});
+        // .set_color({0, 255, 0, 255})
+        ;
 
     (void)grid; // unused var
 
@@ -102,16 +104,18 @@ int main(void) {
         uint8_t k2 = uint8_t(255 - cnt % 255);
 
         // polyline
-        polyline.set_color({k2, 0, k1, 255});
+        // polyline.set_color({k2, 0, k1, 255});
         // triangle
         triangle.set_transform(math::create_transformation({0.0f, 0.0f, 0.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
             .set_scale({1.0f + 0.5f * std::sin(2 * t), 1.0f, 1.0f});
         // box (static)
         box0.set_transform(math::create_transformation({-1.0f, 0.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
-            .set_color({k1, k2, 0, 255});
+            // .set_color({k1, k2, 0, 255})
+            ;
         // another box using the same mesh
         box1.set_transform(math::create_transformation({1.0f, 0.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
-            .set_color({k1, 0, k2, 255});
+            // .set_color({k1, 0, k2, 255})
+            ;
         // third box
         box2.set_transform(math::create_transformation({2.0f, 0.0f, 0.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)))
             .set_scale({1.5f, 1.5f, 1.5f});
@@ -138,7 +142,8 @@ int main(void) {
         axis.set_transform(math::create_transformation({0.0f, -1.0f, 2.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 2.1f)));
         // sphere
         sphere.set_transform(math::create_transformation({0.0f, 3.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)))
-            .set_color({0, k1, k2, 255});
+            // .set_color({0, k1, k2, 255})
+            ;
 
         // scenegraph
         sg0->set_transform(

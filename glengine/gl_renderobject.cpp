@@ -79,7 +79,6 @@ bool RenderObject::draw(Renderer &renderer, const Camera &cam, const math::Matri
             _shader->set_uniform_model(curr_tf);
             _shader->set_uniform_view(cam.inverse_transform());
             _shader->set_uniform_projection(cam.projection());
-            _shader->set_uniform_color(_color);
             _shader->set_uniform_light0_pos(math::Vector3f(100, 100, 100));
             for (auto m : _meshes) {
                 MICROPROFILE_SCOPEI("renderobject","render_mesh",MP_AUTO);
@@ -102,10 +101,6 @@ RenderObject &RenderObject::set_scale(const math::Vector3f &scl) {
     _scale(0, 0) = scl[0];
     _scale(1, 1) = scl[1];
     _scale(2, 2) = scl[2];
-    return *this;
-}
-RenderObject &RenderObject::set_color(const glengine::Color &color) {
-    _color = color;
     return *this;
 }
 RenderObject &RenderObject::set_visible(bool flag) {
