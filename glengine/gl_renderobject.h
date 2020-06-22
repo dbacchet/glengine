@@ -3,7 +3,7 @@
 #include "math/vmath.h"
 #include "gl_types.h"
 #include "gl_camera.h"
-#include "gl_renderer.h"
+#include "gl_renderable.h"
 
 #include <vector>
 #include <set>
@@ -13,11 +13,7 @@ namespace glengine {
 class Mesh;
 class Shader;
 class Material;
-
-struct GfxObject {
-    Mesh *mesh = nullptr;
-    Material *material = nullptr;
-};
+class Renderer;
 
 class RenderObject final {
   public:
@@ -26,6 +22,7 @@ class RenderObject final {
 
     bool init(Mesh *mesh, Shader *shader);
     bool init(std::vector<Mesh *> meshes, Shader *shader);
+    bool init(const std::vector<Renderable> &renderables);
 
     bool draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &parent_tf=math::matrix4_identity<float>());
 
@@ -60,7 +57,7 @@ class RenderObject final {
 
     std::vector<Mesh *> _meshes;
     Shader *_shader = nullptr;
-    std::vector<GfxObject *> _gfxobjects;
+    std::vector<Renderable> _renderables;
 
     math::Matrix4f _transform = math::matrix4_identity<float>();
     math::Matrix4f _scale = math::matrix4_identity<float>();

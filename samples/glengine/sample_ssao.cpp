@@ -22,12 +22,12 @@ int main(int argc, char *argv[]) {
     // meshes
     glengine::Mesh *grid_mesh = rm.create_grid_mesh("grid_mesh", 50.0f, 1.0f);
     glengine::Mesh *axis_mesh = rm.create_axis_mesh();
-    std::vector<glengine::Mesh*> model_meshes = rm.create_mesh_from_file(argv[1]);
+    std::vector<glengine::Renderable> model_renderables = rm.create_mesh_from_file(argv[1]);
     
     // render objects
     auto &grid = *eng.create_renderobject(grid_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
     // auto &model = *eng.create_renderobject(model_meshes, rm.get_stock_shader(glengine::StockShader::DiffuseTextured), nullptr, 101);
-    auto &model = *eng.create_renderobject(model_meshes, rm.get_stock_shader(glengine::StockShader::Diffuse), nullptr, 101);
+    auto &model = *eng.create_renderobject(model_renderables, nullptr, 101);
     model.set_scale({0.2,0.2,0.2})
         // .set_color({200,200,200,255})
         ;

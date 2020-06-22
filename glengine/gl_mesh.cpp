@@ -6,7 +6,7 @@
 #include "gl_shader.h"
 #include "gl_texture.h"
 
-#include "gl_renderobject.h"
+// #include "gl_renderobject.h"
 
 #include <vector>
 
@@ -43,9 +43,6 @@ bool Mesh::update() {
 void Mesh::draw(Shader &shader) {
     // draw mesh
     glBindVertexArray(vao);
-    if (material) {
-        return; // managed by the renderer
-    }
     bind_textures(shader);
     if (indices.size() > 0) {
         glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);

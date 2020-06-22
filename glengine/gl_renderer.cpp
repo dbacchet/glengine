@@ -2,6 +2,7 @@
 #include "gl_camera.h"
 #include "gl_mesh.h"
 #include "gl_material.h"
+#include "gl_renderable.h"
 
 #include <vector>
 
@@ -16,11 +17,11 @@ namespace glengine {
 
 bool Renderer::render() {
     for (auto &ri : render_items) {
-        if (!ri.mesh || !ri.mesh->material || !ri.camera) {
+        if (!ri.renderable || !ri.renderable->mesh || !ri.renderable->material || !ri.camera) {
             continue;
         }
-        auto &mesh = *ri.mesh;
-        auto &material = *ri.mesh->material;
+        auto &mesh = *ri.renderable->mesh;
+        auto &material = *ri.renderable->material;
         auto &camera = *ri.camera;
         // draw mesh
         glBindVertexArray(mesh.vao);

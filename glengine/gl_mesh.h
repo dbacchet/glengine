@@ -23,8 +23,6 @@ class Mesh {
     std::vector<uint32_t> indices;
     GLenum primitive = GL_TRIANGLES;
 
-    Material *material = nullptr;
-
     Textures textures;
 
     Mesh(const std::string &name_);

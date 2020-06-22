@@ -434,6 +434,12 @@ RenderObject *GLEngine::create_renderobject(const std::vector<Mesh*> &meshes, Sh
     return ro;
 }
 
+RenderObject *GLEngine::create_renderobject(const std::vector<Renderable> &renderables, RenderObject *parent, ID id) {
+    RenderObject *ro = create_renderobject(parent, id);
+    ro->init(renderables);
+    return ro;
+}
+
 void GLEngine::add_ui_function(std::function<void(void)> fun) {
     _ui_functions.push_back(fun);
 }

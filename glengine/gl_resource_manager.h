@@ -5,6 +5,7 @@
 #include "gl_shader.h"
 #include "gl_stock_shaders.h"
 #include "gl_texture.h"
+#include "gl_renderobject.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -68,7 +69,7 @@ class ResourceManager {
     /// check if the mesh with the given id exists
     bool has_mesh(const char *name) const;
     /// create a mesh from file
-    std::vector<Mesh *> create_mesh_from_file(const char *filename);
+    std::vector<Renderable> create_mesh_from_file(const char *filename);
 
     // prefab meshes
     /// axis gizmo

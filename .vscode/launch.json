@@ -21,7 +21,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/build/samples/glengine/sample_gltf",
-        "args": ["../resources/models/the_mill/scene.gltf"],
+        "args": ["~/models/fiat_500_body.gltf"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/build",
         "environment": [],

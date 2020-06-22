@@ -9,24 +9,20 @@
 namespace glengine {
 
 class Camera;
-class Shader;
-// class Material;
-class Mesh;
+struct Renderable;
 
 struct RenderItem {
     const Camera *camera = nullptr;
-    // Material *material = nullptr;
-    const Mesh *mesh = nullptr;
+    const Renderable *renderable = nullptr;
     math::Matrix4f model_tf;
     ID id = NULL_ID;
 };
 
 class Renderer {
-public:
-
+  public:
     bool render();
 
     std::vector<RenderItem> render_items;
 };
 
-}
+} // namespace glengine

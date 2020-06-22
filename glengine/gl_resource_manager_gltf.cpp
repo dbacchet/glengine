@@ -1,6 +1,7 @@
 #include "gl_resource_manager.h"
 #include "gl_prefabs.h"
 #include "gl_logger.h"
+#include "gl_renderobject.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -115,7 +116,6 @@ class GltfLoader {
                 printf("empty mesh\n");
                 continue;
             }
-            Mesh *glmesh = _rm.create_mesh((_filename + std::string("_") + mesh.name).c_str());
             glengine::MeshData md;
             auto rot = tf;
             math::set_translation(rot, {0, 0, 0});
@@ -135,16 +135,19 @@ class GltfLoader {
                     md.indices.push_back(indices_short[ii]);
                 }
             }
+            Renderable go;
+            go.mesh = _rm.create_mesh((_filename + std::string("_") + mesh.name).c_str());
+            go.mesh->init(md.vertices, md.indices, GL_TRIANGLES);
             // material
-            glmesh->init(md.vertices, md.indices, GL_TRIANGLES);
+            Material *mtl = nullptr;
             if (primitive.material >= 0) {
                 const tinygltf::Material &material = model.materials[primitive.material];
-                if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
-                    glmesh->textures.diffuse = _tx_map[material.pbrMetallicRoughness.baseColorTexture.index];
-                }
-                glmesh->material = get_or_create_material(material);
+                // if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
+                //     glmesh->textures.diffuse = _tx_map[material.pbrMetallicRoughness.baseColorTexture.index];
+                // }
+                go.material = get_or_create_material(material);
             }
-            _meshes.push_back(glmesh);
+            _renderables.push_back(go);
         }
         return true;
     }
@@ -223,18 +226,20 @@ class GltfLoader {
     }
 
     std::vector<Mesh *> &meshes() { return _meshes; }
+    std::vector<Renderable> &renderables() { return _renderables; }
 
     std::string _filename = "";
     ResourceManager &_rm;
     std::unordered_map<uint32_t, Texture *> _tx_map;
     std::vector<Mesh *> _meshes;
+    std::vector<Renderable> _renderables;
 };
 
 } // namespace
 
 namespace glengine {
 
-std::vector<Mesh *> create_from_gltf(ResourceManager &rm, const char *filename) {
+std::vector<Renderable> create_from_gltf(ResourceManager &rm, const char *filename) {
     MeshData md;
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
@@ -257,7 +262,7 @@ std::vector<Mesh *> create_from_gltf(ResourceManager &rm, const char *filename) 
     }
     if (!ret) {
         printf("Failed to parse glTF\n");
-        return std::vector<Mesh *>();
+        return std::vector<Renderable>();
     }
 
     printf("the model has %d buffers\n", (int)model.buffers.size());
@@ -276,10 +281,10 @@ std::vector<Mesh *> create_from_gltf(ResourceManager &rm, const char *filename) 
         assert((scene.nodes[i] >= 0) && (scene.nodes[i] < int(model.nodes.size())));
         ml.load_node(model, model.nodes[scene.nodes[i]], root_tf);
     }
-    return ml.meshes();
+    return ml.renderables();
 }
 
-std::vector<Mesh *> ResourceManager::create_mesh_from_file(const char *filename) {
+std::vector<Renderable> ResourceManager::create_mesh_from_file(const char *filename) {
     return create_from_gltf(*this, filename);
 }
 

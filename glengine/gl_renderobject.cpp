@@ -46,6 +46,12 @@ bool RenderObject::init(std::vector<Mesh *> meshes, Shader *shader) {
     return true;
 }
 
+bool RenderObject::init(const std::vector<Renderable> &renderables) {
+    _renderables = renderables;
+    _shader = nullptr;
+    return true;
+}
+
 void RenderObject::add_child(RenderObject *ro) {
     if (!ro) {
         return;
@@ -73,6 +79,10 @@ bool RenderObject::draw(Renderer &renderer, const Camera &cam, const math::Matri
     MICROPROFILE_SCOPEI("renderobject","draw",MP_AUTO);
     math::Matrix4f curr_tf = parent_tf * _transform * _scale;
     if (_visible) {
+        for (auto &go : _renderables) {
+            MICROPROFILE_SCOPEI("renderobject","render_renderables",MP_AUTO);
+            renderer.render_items.push_back({&cam, &go, curr_tf, _id});
+        }
         if (_shader) {
             _shader->activate();
             _shader->set_uniform_id(_id);
@@ -82,7 +92,6 @@ bool RenderObject::draw(Renderer &renderer, const Camera &cam, const math::Matri
             _shader->set_uniform_light0_pos(math::Vector3f(100, 100, 100));
             for (auto m : _meshes) {
                 MICROPROFILE_SCOPEI("renderobject","render_mesh",MP_AUTO);
-                renderer.render_items.push_back({&cam, m, curr_tf, _id});
                 m->draw(*_shader);
             }
         }

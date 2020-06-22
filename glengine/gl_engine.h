@@ -46,6 +46,7 @@ class GLEngine {
     RenderObject *create_renderobject(Mesh *mesh, Shader *shader, RenderObject *parent=nullptr, ID id=NULL_ID);
     /// create a new renderobject, given an array of meshes and a shader
     RenderObject *create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, RenderObject *parent=nullptr, ID id=NULL_ID);
+    RenderObject *create_renderobject(const std::vector<Renderable> &renderables, RenderObject *parent=nullptr, ID id=NULL_ID);
 
     // // //
     // UI //
