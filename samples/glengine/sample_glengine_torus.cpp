@@ -13,7 +13,7 @@ struct Obj {
     float beta = 0.0f;
     math::Matrix4f tf;
     float vlen = 0.0f; // length of the random radial speed
-    glengine::RenderObject *ro;
+    glengine::Object *ro;
 };
 
 template <typename T> T rand_range(T v1, T v2) {

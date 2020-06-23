@@ -3,6 +3,8 @@
 #include "math/vmath.h"
 #include "gl_types.h"
 
+#include <memory>
+
 namespace glengine {
 
 class Mesh;

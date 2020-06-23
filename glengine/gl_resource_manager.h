@@ -5,9 +5,10 @@
 #include "gl_shader.h"
 #include "gl_stock_shaders.h"
 #include "gl_texture.h"
-#include "gl_renderobject.h"
+#include "gl_object.h"
 
 #include <cstdint>
+#include <set>
 #include <unordered_map>
 
 namespace glengine {
@@ -26,9 +27,13 @@ class ResourceManager {
 
     /// create a new (uninitialized) shader
     Shader *create_shader(const char *name);
-    /// get shader by id
-    Shader *get_shader(const char *name);
+    /// get shader by id (1:1 mapping)
+    Shader *get_shader(ID id);
+    /// get shader by name (1:N mapping)
+    std::set<Shader*> get_shader(const char *name);
     /// check if the shader with the given id exists
+    bool has_shader(ID id) const;
+    /// check if the shader with the given name exists
     bool has_shader(const char *name) const;
     /// get stock shader
     Shader *get_stock_shader(StockShader type);
@@ -40,8 +45,12 @@ class ResourceManager {
     /// create a new (uninitialized) texture
     Texture *create_texture(const char *name);
     /// get texture by id
-    Texture *get_texture(const char *name);
+    Texture *get_texture(ID id);
+    /// get texture by name
+    std::set<Texture*> get_texture(const char *name);
     /// check if the texture with the given id exists
+    bool has_texture(ID id) const;
+    /// check if the texture with the given name exists
     bool has_texture(const char *name) const;
     /// create a texture from file
     Texture *create_texture_from_file(const char *filename);
@@ -52,10 +61,15 @@ class ResourceManager {
     // ///////// //
 
     /// create a new (default) material
-    Material *create_material(const char *name);
+    Material *create_material(const char *name, Shader *shader);
+    Material *create_material(const char *name, StockShader type);
     /// get material by id
-    Material *get_material(const char *name);
+    Material *get_material(ID id);
+    /// get material by name
+    std::set<Material*> get_material(const char *name);
     /// check if the material with the given id exists
+    bool has_material(ID) const;
+    /// check if the material with the given name exists
     bool has_material(const char *name) const;
 
     // ////// //
@@ -65,8 +79,12 @@ class ResourceManager {
     /// create a new (empty) mesh
     Mesh *create_mesh(const char *name);
     /// get mesh by id
-    Mesh *get_mesh(const char *name);
+    Mesh *get_mesh(ID id);
+    /// get mesh by name
+    std::set<Mesh*> get_mesh(const char *name);
     /// check if the mesh with the given id exists
+    bool has_mesh(ID id) const;
+    /// check if the mesh with the given name exists
     bool has_mesh(const char *name) const;
     /// create a mesh from file
     std::vector<Renderable> create_mesh_from_file(const char *filename);
@@ -89,6 +107,16 @@ class ResourceManager {
     std::unordered_map<ID, Texture *> _textures;
     std::unordered_map<ID, Material *> _materials;
     std::unordered_map<ID, Mesh *> _meshes;
+
+    std::unordered_map<std::string, std::set<Shader*>> _shader_lookup;
+    std::unordered_map<std::string, std::set<Texture*>> _texture_lookup;
+    std::unordered_map<std::string, std::set<Material*>> _material_lookup;
+    std::unordered_map<std::string, std::set<Mesh*>> _mesh_lookup;
+
+    ID _next_shader_id = 0;
+    ID _next_texture_id = 0;
+    ID _next_material_id = 0;
+    ID _next_mesh_id = 0;
 
     void create_stock_shaders();
 };

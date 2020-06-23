@@ -8,7 +8,7 @@
 #include "gl_shader.h"
 #include "gl_mesh.h"
 #include "gl_engine.h"
-#include "gl_renderobject.h"
+#include "gl_object.h"
 
 #include <stdlib.h>
 #include <stdio.h>

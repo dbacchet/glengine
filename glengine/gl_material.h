@@ -12,7 +12,7 @@ namespace glengine {
 class Shader;
 class Texture;
 
-struct Material {
+struct Material: public Resource {
     /// "standard" textures, modeled after the GLTF specs for PBR Materials:
     /// [here](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#metallic-roughness-material)
     enum class TextureType {
@@ -23,19 +23,20 @@ struct Material {
         TextureTypeNum
     };
     static constexpr char const *uniform_names[] = {
-        // "tex_basecolor", ///< standard uniform for the base color
-        "texture_diffuse", ///< standard uniform for the base color
+        "tex_basecolor", ///< standard uniform for the base color
         "tex_ORM",       ///< standard uniform for occlusion/roughness/metallic
         "tex_normal",    ///< standard uniform for the tangent space normals
         "tex_emissive"   ///< standard uniform for the emissive color
     };
 
-    Material(const std::string &name_) 
-    : name(name_) {}
+    Material(ID id, const std::string &name, Shader *shader) 
+    : Resource(id, name), _shader(shader){}
 
-    bool init(Shader *shader);
+    bool init(Shader *shader) {
+        _shader = shader;
+        return _shader;
+    }
 
-    std::string name = "";
     Shader *_shader = nullptr;
     Texture *_textures[(uint8_t)TextureType::TextureTypeNum] = {nullptr};
 

@@ -34,7 +34,7 @@ void main() {
 const char *diffuse_textured_fs_src =
     R"(
 // additional uniforms not defined in the common part
-uniform sampler2D texture_diffuse;
+uniform sampler2D tex_basecolor;
 
 void main() {
     // params
@@ -49,7 +49,7 @@ void main() {
     float diff = (dot(norm, light_dir) + 1.0)/2.0; // modified (non-physically correct) approach: consider all 180deg
     vec3 diffuse = diff * light_color;
 
-    vec4 color = texture(texture_diffuse, tex_coord);
+    vec4 color = texture(tex_basecolor, tex_coord);
     if(color.a < 0.1)
         discard;
     vec3 result = (ambient + diffuse) * color.xyz;//vcolor.xyz;

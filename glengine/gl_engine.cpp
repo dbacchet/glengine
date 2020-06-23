@@ -1,5 +1,5 @@
 #include "gl_engine.h"
-#include "gl_renderobject.h"
+#include "gl_object.h"
 #include "gl_logger.h"
 
 #include "imgui/imgui.h"
@@ -174,7 +174,7 @@ bool GLEngine::init(const Config &config) {
     // initialize the resource manager (creates default resources)
     _resource_manager.init();
     // create root of the scene
-    _root = new RenderObject();
+    _root = new Object();
 
     // ///////////////////// //
     // framebuffer: g-buffer //
@@ -417,25 +417,31 @@ bool GLEngine::terminate() {
     return true;
 }
 
-RenderObject *GLEngine::create_renderobject(RenderObject *parent, ID id) {
-    RenderObject *ro = new RenderObject(parent ? parent : _root, id);
+Object *GLEngine::create_renderobject(Object *parent, ID id) {
+    Object *ro = new Object(parent ? parent : _root, id);
     return ro;
 }
 
-RenderObject *GLEngine::create_renderobject(Mesh *mesh, Shader *shader, RenderObject *parent, ID id) {
-    RenderObject *ro = create_renderobject(parent, id);
+Object *GLEngine::create_renderobject(Mesh *mesh, Shader *shader, Object *parent, ID id) {
+    Object *ro = create_renderobject(parent, id);
     ro->init(mesh, shader);
     return ro;
 }
 
-RenderObject *GLEngine::create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, RenderObject *parent, ID id) {
-    RenderObject *ro = create_renderobject(parent, id);
+Object *GLEngine::create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, Object *parent, ID id) {
+    Object *ro = create_renderobject(parent, id);
     ro->init(meshes, shader);
     return ro;
 }
 
-RenderObject *GLEngine::create_renderobject(const std::vector<Renderable> &renderables, RenderObject *parent, ID id) {
-    RenderObject *ro = create_renderobject(parent, id);
+Object *GLEngine::create_renderobject(const Renderable &renderable, Object *parent, ID id) {
+    Object *ro = create_renderobject(parent, id);
+    ro->add_renderable(&renderable, 1);
+    return ro;
+}
+
+Object *GLEngine::create_renderobject(const std::vector<Renderable> &renderables, Object *parent, ID id) {
+    Object *ro = create_renderobject(parent, id);
     ro->init(renderables);
     return ro;
 }

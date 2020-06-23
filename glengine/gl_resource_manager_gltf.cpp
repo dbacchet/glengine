@@ -1,7 +1,7 @@
 #include "gl_resource_manager.h"
 #include "gl_prefabs.h"
 #include "gl_logger.h"
-#include "gl_renderobject.h"
+#include "gl_object.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -206,9 +206,9 @@ class GltfLoader {
     glengine::Material *get_or_create_material(const tinygltf::Material &mtl) {
         std::string mtl_name = material_fullname(mtl);
         if (_rm.has_material(mtl_name.c_str())) {
-            return _rm.get_material(mtl_name.c_str());
+            return *_rm.get_material(mtl_name.c_str()).begin();
         }
-        auto m = _rm.create_material(mtl_name.c_str());
+        auto m = _rm.create_material(mtl_name.c_str(), _rm.get_stock_shader(glengine::StockShader::Diffuse));
         auto &pbr = mtl.pbrMetallicRoughness;
         m->color = {(uint8_t)(pbr.baseColorFactor[0]*255+0.5), (uint8_t)(pbr.baseColorFactor[1]*255+0.5), (uint8_t)(pbr.baseColorFactor[2]*255+0.5), 255};
         m->base_color_factor = {(float)pbr.baseColorFactor[0], (float)pbr.baseColorFactor[1], (float)pbr.baseColorFactor[2], 1.0};
@@ -219,8 +219,6 @@ class GltfLoader {
         if (pbr.baseColorTexture.index>=0) {
             m->_textures[(uint8_t)Material::TextureType::BaseColor] = _tx_map[pbr.baseColorTexture.index];
             m->_shader = _rm.get_stock_shader(glengine::StockShader::DiffuseTextured);
-        } else {
-            m->_shader = _rm.get_stock_shader(glengine::StockShader::Diffuse);
         }
         return m;
     }

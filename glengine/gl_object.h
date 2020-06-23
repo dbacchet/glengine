@@ -15,14 +15,15 @@ class Shader;
 class Material;
 class Renderer;
 
-class RenderObject final {
+class Object final {
   public:
-    RenderObject(RenderObject *parent = nullptr, ID id = NULL_ID);
-    ~RenderObject();
+    Object(Object *parent = nullptr, ID id = NULL_ID);
+    ~Object();
 
     bool init(Mesh *mesh, Shader *shader);
     bool init(std::vector<Mesh *> meshes, Shader *shader);
     bool init(const std::vector<Renderable> &renderables);
+    bool add_renderable(const Renderable *r, uint32_t num);
 
     bool draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &parent_tf=math::matrix4_identity<float>());
 
@@ -30,11 +31,11 @@ class RenderObject final {
     // scenegraph //
     // ////////// //
 
-    RenderObject *parent() { return _parent; }
-    std::set<RenderObject *> &children() { return _children; }
-    void add_child(RenderObject *ro);
+    Object *parent() { return _parent; }
+    std::set<Object *> &children() { return _children; }
+    void add_child(Object *ro);
     /// detach the given child and return a pointer to the orphan renderobject
-    RenderObject *detach_child(RenderObject *child);
+    Object *detach_child(Object *child);
 
     // ////////// //
     // attributes //
@@ -43,17 +44,17 @@ class RenderObject final {
     math::Vector3f scale() const { return {_transform(0, 0), _transform(1, 1), _transform(2, 2)}; }
     bool visible() const { return _visible; }
 
-    RenderObject &set_transform(const math::Matrix4f &tf);
-    RenderObject &set_scale(const math::Vector3f &scl);
-    RenderObject &set_visible(bool flag);
+    Object &set_transform(const math::Matrix4f &tf);
+    Object &set_scale(const math::Vector3f &scl);
+    Object &set_visible(bool flag);
 
     // //// //
     // data //
     // //// //
 
     ID _id = NULL_ID;
-    RenderObject *_parent = nullptr;
-    std::set<RenderObject *> _children;
+    Object *_parent = nullptr;
+    std::set<Object *> _children;
 
     std::vector<Mesh *> _meshes;
     Shader *_shader = nullptr;

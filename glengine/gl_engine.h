@@ -4,7 +4,7 @@
 #include "gl_camera.h"
 #include "gl_camera_manipulator.h"
 #include "gl_renderer.h"
-#include "gl_renderobject.h"
+#include "gl_object.h"
 #include "gl_resource_manager.h"
 #include "imgui/imgui.h"
 
@@ -40,13 +40,15 @@ class GLEngine {
     // ///////////// //
     // renderobjects //
     // ///////////// //
-    /// create a new (uninitialized) renderobject
-    RenderObject *create_renderobject(RenderObject *parent=nullptr, ID id=NULL_ID);
+    /// create a new (empty) renderobject
+    Object *create_renderobject(Object *parent=nullptr, ID id=NULL_ID);
     /// create a new renderobject, given a mesh and a shader
-    RenderObject *create_renderobject(Mesh *mesh, Shader *shader, RenderObject *parent=nullptr, ID id=NULL_ID);
-    /// create a new renderobject, given an array of meshes and a shader
-    RenderObject *create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, RenderObject *parent=nullptr, ID id=NULL_ID);
-    RenderObject *create_renderobject(const std::vector<Renderable> &renderables, RenderObject *parent=nullptr, ID id=NULL_ID);
+    Object *create_renderobject(Mesh *mesh, Shader *shader, Object *parent=nullptr, ID id=NULL_ID);
+    Object *create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, Object *parent=nullptr, ID id=NULL_ID);
+    /// create a new renderobject and add the given renderable
+    Object *create_renderobject(const Renderable &renderable, Object *parent=nullptr, ID id=NULL_ID);
+    /// create a new renderobject, given an array of renderables
+    Object *create_renderobject(const std::vector<Renderable> &renderables, Object *parent=nullptr, ID id=NULL_ID);
 
     // // //
     // UI //
@@ -85,7 +87,7 @@ class GLEngine {
     Mesh *_ss_quad = nullptr;
     std::vector<ID> _id_buffer; // buffer containing the id of the object in every pixel
 
-    RenderObject *_root = nullptr;
+    Object *_root = nullptr;
 
     std::vector<std::function<void(void)>> _ui_functions;
 

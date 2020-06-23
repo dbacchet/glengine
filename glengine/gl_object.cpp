@@ -1,4 +1,4 @@
-#include "gl_renderobject.h"
+#include "gl_object.h"
 #include "gl_camera.h"
 #include "gl_mesh.h"
 #include "gl_renderer.h"
@@ -11,7 +11,7 @@
 
 namespace glengine {
 
-RenderObject::RenderObject(RenderObject *parent, ID id)
+Object::Object(Object *parent, ID id)
 : _parent(parent)
 , _id(id) {
     if (_parent) {
@@ -19,7 +19,7 @@ RenderObject::RenderObject(RenderObject *parent, ID id)
     }
 }
 
-RenderObject::~RenderObject() {
+Object::~Object() {
     if (_parent) {
         _parent->detach_child(this);
     }
@@ -28,7 +28,7 @@ RenderObject::~RenderObject() {
     }
 }
 
-bool RenderObject::init(Mesh *mesh, Shader *shader) {
+bool Object::init(Mesh *mesh, Shader *shader) {
     if (!mesh || !shader) {
         return false;
     }
@@ -37,7 +37,7 @@ bool RenderObject::init(Mesh *mesh, Shader *shader) {
     return true;
 }
 
-bool RenderObject::init(std::vector<Mesh *> meshes, Shader *shader) {
+bool Object::init(std::vector<Mesh *> meshes, Shader *shader) {
     if (!shader) {
         return false;
     }
@@ -46,13 +46,18 @@ bool RenderObject::init(std::vector<Mesh *> meshes, Shader *shader) {
     return true;
 }
 
-bool RenderObject::init(const std::vector<Renderable> &renderables) {
+bool Object::init(const std::vector<Renderable> &renderables) {
     _renderables = renderables;
     _shader = nullptr;
     return true;
 }
 
-void RenderObject::add_child(RenderObject *ro) {
+bool Object::add_renderable(const Renderable *r, uint32_t num) {
+    _renderables.insert(_renderables.end(), r, r+num);
+    return true;
+}
+
+void Object::add_child(Object *ro) {
     if (!ro) {
         return;
     }
@@ -64,10 +69,10 @@ void RenderObject::add_child(RenderObject *ro) {
     _children.insert(ro);
 }
 
-RenderObject *RenderObject::detach_child(RenderObject *ro) {
+Object *Object::detach_child(Object *ro) {
     auto it = _children.find(ro);
     if (it != _children.end()) {
-        RenderObject *orphan = *it;
+        Object *orphan = *it;
         orphan->_parent = nullptr;
         _children.erase(it);
         return orphan;
@@ -75,7 +80,7 @@ RenderObject *RenderObject::detach_child(RenderObject *ro) {
     return nullptr;
 }
 
-bool RenderObject::draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &parent_tf) {
+bool Object::draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &parent_tf) {
     MICROPROFILE_SCOPEI("renderobject","draw",MP_AUTO);
     math::Matrix4f curr_tf = parent_tf * _transform * _scale;
     if (_visible) {
@@ -102,17 +107,17 @@ bool RenderObject::draw(Renderer &renderer, const Camera &cam, const math::Matri
     return true;
 }
 
-RenderObject &RenderObject::set_transform(const math::Matrix4f &tf) {
+Object &Object::set_transform(const math::Matrix4f &tf) {
     _transform = tf;
     return *this;
 }
-RenderObject &RenderObject::set_scale(const math::Vector3f &scl) {
+Object &Object::set_scale(const math::Vector3f &scl) {
     _scale(0, 0) = scl[0];
     _scale(1, 1) = scl[1];
     _scale(2, 2) = scl[2];
     return *this;
 }
-RenderObject &RenderObject::set_visible(bool flag) {
+Object &Object::set_visible(bool flag) {
     _visible = flag;
     return *this;
 }

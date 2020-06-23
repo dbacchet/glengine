@@ -10,7 +10,7 @@
 
 namespace glengine {
 
-class Shader {
+class Shader: public Resource {
   public:
     struct Uniform {
         GLint location = -1; ///< location of the uniform
@@ -18,7 +18,6 @@ class Shader {
     };
 
   public:
-    std::string name = "";
     GLuint vertex_shader_id = 0;
     GLuint fragment_shader_id = 0;
     GLuint program_id = 0; ///< shader program id in opengl
@@ -32,10 +31,10 @@ class Shader {
 
     std::unordered_map<std::string, Uniform> _uniforms;
 
-    Shader(const std::string &name_)
-    : name(name_) {}
-    Shader(const std::string &name_, const char *vs, const char *fs)
-    : name(name_) {
+    Shader(ID id, const std::string &name)
+    : Resource(id,name) {}
+    Shader(ID id, const std::string &name, const char *vs, const char *fs)
+    : Shader(id, name) {
         init(vs, fs);
     }
 
