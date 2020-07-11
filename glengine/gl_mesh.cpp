@@ -10,8 +10,8 @@
 
 namespace glengine {
 
-Mesh::Mesh(const std::string &name_)
-: name(name_) {}
+Mesh::Mesh(ID id, const std::string &name)
+: Resource(id, name) {}
 
 bool Mesh::init(const std::vector<Vertex> &vertices_, GLenum primitive_) {
     return init(vertices_, std::vector<uint32_t>(), primitive_);
@@ -36,18 +36,6 @@ bool Mesh::update() {
     }
     update_mesh_data();
     return true;
-}
-
-void Mesh::draw(Shader &shader) {
-    // draw mesh
-    glBindVertexArray(vao);
-    bind_textures(shader);
-    if (indices.size() > 0) {
-        glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);
-    } else {
-        glDrawArrays(primitive, 0, vertices.size());
-    }
-    glBindVertexArray(0);
 }
 
 void Mesh::setup_mesh() {
@@ -116,12 +104,4 @@ void Mesh::update_mesh_data() {
     glBindVertexArray(0);
 }
 
-void Mesh::bind_textures(Shader &shader) {
-    // diffuse
-    if (textures.diffuse && textures.diffuse->texture_id != NULL_TEXTURE_ID && shader.has_uniform("texture_diffuse")) {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textures.diffuse->texture_id);
-        shader.set_sampler("texture_diffuse", 0);
-    }
-}
 } // namespace glengine

@@ -1,5 +1,6 @@
 #include "gl_engine.h"
-#include "gl_renderobject.h"
+#include "gl_object.h"
+#include "gl_logger.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
@@ -173,7 +174,7 @@ bool GLEngine::init(const Config &config) {
     // initialize the resource manager (creates default resources)
     _resource_manager.init();
     // create root of the scene
-    _root = new RenderObject();
+    _root = new Object();
 
     // ///////////////////// //
     // framebuffer: g-buffer //
@@ -296,10 +297,17 @@ bool GLEngine::render() {
     glClearBufferfv(GL_COLOR, 3, clear_color);
     // "clear" the id buffer setting NULL_ID as clear value
     glClearBufferuiv(GL_COLOR, 0, &NULL_ID);
-    // draw scene
+    // create the draw commands for the scene
     if (_root) {
-        _root->draw(_camera);
+        _root->draw(_renderer, _camera);
     }
+    MICROPROFILE_LEAVE();
+
+    // render to g-buffer (apply the draw commands)
+    MICROPROFILE_ENTERI("glengine","render",MP_AUTO);
+    log_debug("render items %lu",_renderer.render_items.size());
+    _renderer.render();
+    _renderer.render_items.clear();
     MICROPROFILE_LEAVE();
 
     // calculate ssao
@@ -324,7 +332,9 @@ bool GLEngine::render() {
     ssao_shader->set_uniform_projection(_camera.projection());
     ssao_shader->set_float("radius",ssao_radius);
     ssao_shader->set_float("bias",ssao_bias);
-    _ss_quad->draw(*ssao_shader);
+    glBindVertexArray(_ss_quad->vao);
+    glDrawArrays(GL_TRIANGLES, 0, _ss_quad->vertices.size());
+    glBindVertexArray(0);
     MICROPROFILE_LEAVE();
 
     // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
@@ -351,7 +361,9 @@ bool GLEngine::render() {
     glUniform1i(glGetUniformLocation(quad_shader->program_id, "ssao_texture"), 3); 
     quad_shader->set_uniform_view(_camera.inverse_transform());
     quad_shader->set_uniform_light0_pos(math::Vector3f(100, 100, 100));
-    _ss_quad->draw(*quad_shader);
+    glBindVertexArray(_ss_quad->vao);
+    glDrawArrays(GL_TRIANGLES, 0, _ss_quad->vertices.size());
+    glBindVertexArray(0);
     glDisable(GL_FRAMEBUFFER_SRGB); 
     MICROPROFILE_LEAVE();
 
@@ -410,20 +422,20 @@ bool GLEngine::terminate() {
     return true;
 }
 
-RenderObject *GLEngine::create_renderobject(RenderObject *parent, ID id) {
-    RenderObject *ro = new RenderObject(parent ? parent : _root, id);
+Object *GLEngine::create_renderobject(Object *parent, ID id) {
+    Object *ro = new Object(parent ? parent : _root, id);
     return ro;
 }
 
-RenderObject *GLEngine::create_renderobject(Mesh *mesh, Shader *shader, RenderObject *parent, ID id) {
-    RenderObject *ro = create_renderobject(parent, id);
-    ro->init(mesh, shader);
+Object *GLEngine::create_renderobject(const Renderable &renderable, Object *parent, ID id) {
+    Object *ro = create_renderobject(parent, id);
+    ro->add_renderable(&renderable, 1);
     return ro;
 }
 
-RenderObject *GLEngine::create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, RenderObject *parent, ID id) {
-    RenderObject *ro = create_renderobject(parent, id);
-    ro->init(meshes, shader);
+Object *GLEngine::create_renderobject(const std::vector<Renderable> &renderables, Object *parent, ID id) {
+    Object *ro = create_renderobject(parent, id);
+    ro->init(renderables);
     return ro;
 }
 

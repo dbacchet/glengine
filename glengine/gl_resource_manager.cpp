@@ -1,5 +1,8 @@
 #include "gl_resource_manager.h"
 #include "gl_prefabs.h"
+#include "gl_material.h"
+#include "gl_mesh.h"
+#include "gl_texture.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -29,22 +32,32 @@ bool ResourceManager::terminate() {
 }
 
 Shader *ResourceManager::create_shader(const char *name) {
-    ID id = murmur_hash2_32(name);
-    if (_shaders.count(id)>0) {
-        printf("*** Error Creating Shader ***\nShader with name '%s' already exists\n", name);
-        return nullptr;
-    }
-    Shader *s = new Shader(name);
+    ID id = _next_shader_id++;
+    Shader *s = new Shader(id, name);
     _shaders[id] = s;
     return s;
 }
 
-Shader *ResourceManager::get_shader(const char *name) {
-    return _shaders[murmur_hash2_32(name)];
+Shader *ResourceManager::get_shader(ID id) {
+    if (!has_shader(id)) {
+        return nullptr;
+    }
+    return _shaders[id];
+}
+
+std::set<Shader*> ResourceManager::get_shader(const char *name) {
+    if (!has_shader(name)) {
+        return {};
+    }
+    return _shader_lookup[name];
+}
+
+bool ResourceManager::has_shader(ID id) const {
+    return _shaders.count(id) > 0;
 }
 
 bool ResourceManager::has_shader(const char *name) const {
-    return _shaders.count(murmur_hash2_32(name)) > 0;
+    return _shader_lookup.count(name) > 0;
 }
 
 Shader *ResourceManager::get_stock_shader(StockShader type) {
@@ -52,8 +65,8 @@ Shader *ResourceManager::get_stock_shader(StockShader type) {
 }
 
 void ResourceManager::create_stock_shaders() {
-    auto create_shader = [](const ShaderSrc &src, const char *shader_name) {
-        Shader *shader = new Shader(shader_name);
+    auto create_shader = [this](const ShaderSrc &src, const char *shader_name) {
+        Shader *shader = this->create_shader(shader_name);
         if (shader) {
             shader->init(src.vertex_shader_srcs, src.fragment_shader_srcs);
         }
@@ -70,22 +83,35 @@ void ResourceManager::create_stock_shaders() {
 }
 
 Texture *ResourceManager::create_texture(const char *name) {
-    ID id = murmur_hash2_32(name);
-    if (_textures.count(id)>0) {
-        printf("*** Error Creating Texture ***\nTexture with name '%s' already exists\n", name);
-        return nullptr;
+    ID id = _next_texture_id++;
+    Texture *t = new Texture(id, name);
+    if (t) {
+        _textures[id] = t;
+        _texture_lookup[name].insert(t);
     }
-    Texture *t = new Texture(name);
-    _textures[id] = t;
     return t;
 }
 
-Texture *ResourceManager::get_texture(const char *name) {
-    return _textures[murmur_hash2_32(name)];
+Texture *ResourceManager::get_texture(ID id) {
+    if (!has_texture(id)) {
+        return nullptr;
+    }
+    return _textures[id];
+}
+
+std::set<Texture*> ResourceManager::get_texture(const char *name) {
+    if (!has_texture(name)) {
+        return {};
+    }
+    return _texture_lookup[name];
+}
+
+bool ResourceManager::has_texture(ID id) const {
+    return _textures.count(id) > 0;
 }
 
 bool ResourceManager::has_texture(const char *name) const {
-    return _textures.count(murmur_hash2_32(name)) > 0;
+    return _texture_lookup.count(name) > 0;
 }
 
 Texture *ResourceManager::create_texture_from_file(const char *filename) {
@@ -113,23 +139,73 @@ Texture *ResourceManager::create_texture_from_data(const char *name, uint32_t wi
     return t;
 }
 
-Mesh *ResourceManager::create_mesh(const char *name) {
-    ID id = murmur_hash2_32(name);
-    if (_meshes.count(id)>0) {
-        printf("*** Error Creating Mesh ***\nMesh with name '%s' already exists\n", name);
-        return nullptr;
+Material *ResourceManager::create_material(const char *name, Shader *shader) {
+    ID id = _next_material_id++;
+    Material *m = new Material(id, name, shader);
+    if (m) {
+        _materials[id] = m;
+        _material_lookup[name].insert(m);
     }
-    Mesh *t = new Mesh(name);
-    _meshes[id] = t;
-    return t;
+    return m;
 }
 
-Mesh *ResourceManager::get_mesh(const char *name) {
-    return _meshes[murmur_hash2_32(name)];
+Material *ResourceManager::create_material(const char *name, StockShader type) {
+    return create_material(name, get_stock_shader(type));
+}
+
+Material *ResourceManager::get_material(ID id) {
+    if (!has_material(id)) {
+        return nullptr;
+    }
+    return _materials[id];
+}
+
+std::set<Material*> ResourceManager::get_material(const char *name) {
+    if (!has_material(name)) {
+        return {};
+    }
+    return _material_lookup[name];
+}
+
+bool ResourceManager::has_material(ID id) const {
+    return _materials.count(id) > 0;
+}
+
+bool ResourceManager::has_material(const char *name) const {
+    return _material_lookup.count(name) > 0;
+}
+
+
+Mesh *ResourceManager::create_mesh(const char *name) {
+    ID id = _next_mesh_id++;
+    Mesh *m = new Mesh(id, name);
+    if (m) {
+        _meshes[id] = m;
+        _mesh_lookup[name].insert(m);
+    }
+    return m;
+}
+
+Mesh *ResourceManager::get_mesh(ID id) {
+    if (!has_mesh(id)) {
+        return nullptr;
+    }
+    return _meshes[id];
+}
+
+std::set<Mesh*> ResourceManager::get_mesh(const char *name) {
+    if (!has_mesh(name)) {
+        return {};
+    }
+    return _mesh_lookup[name];
+}
+
+bool ResourceManager::has_mesh(ID id) const {
+    return _meshes.count(id) > 0;
 }
 
 bool ResourceManager::has_mesh(const char *name) const {
-    return _meshes.count(murmur_hash2_32(name)) > 0;
+    return _mesh_lookup.count(name) > 0;
 }
 
 Mesh *ResourceManager::create_axis_mesh(const char *name) {

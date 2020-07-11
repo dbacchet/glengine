@@ -8,7 +8,7 @@
         "name": "(lldb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build/samples/glengine/sample_glengine",
+        "program": "${workspaceFolder}/build/samples/glengine/sample_gltf",
         "args": ["../resources/models/the_mill/scene.gltf"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
@@ -16,24 +16,24 @@
         "externalConsole": false,
         "MIMode": "lldb"
     },
-        {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/samples/glengine/sample_glengine",
-            "args": ["../resources/models/the_mill/scene.gltf"],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        }
+    {
+        "name": "(gdb) Launch",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/samples/glengine/sample_gltf",
+        "args": ["~/models/fiat_500_body.gltf"],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}/build",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            }
+        ]
+    }
     ]
 }
