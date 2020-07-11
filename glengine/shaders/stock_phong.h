@@ -26,6 +26,8 @@ void main() {
     g_normal = vec4(norm,1.0);
     g_albedospec.rgb = u_color.rgb;
     g_albedospec.a = specular_strength * spec;
+    g_albedospec.a = 1; // workaround until I identify the problem with the shader
+    g_albedospec.a = 1.0; // workaround until I identify the problem with the shader
 })";
 
 

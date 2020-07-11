@@ -67,14 +67,14 @@ int main(void) {
             obj.beta = beta;
             obj.vlen = rand_range(0.0f, 1.0f);
             obj.tf = t1 * t2 * t3 * t4;
-            obj.ro = eng.create_renderobject(box_mesh, rm.get_stock_shader(glengine::StockShader::Diffuse), nullptr, i * N + j);
+            obj.ro = eng.create_renderobject({box_mesh, rm.create_material("",glengine::StockShader::Diffuse)}, nullptr, i * N + j);
             obj.ro->set_transform(obj.tf);
-            // obj.ro->set_color( {rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), 255});
+            obj.ro->_renderables[0].material->color = {rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), 255};
         }
     }
 
-    auto grid_mesh = rm.create_grid_mesh("grid_mesh", R, 1.0f);
-    eng.create_renderobject(grid_mesh, rm.get_stock_shader(glengine::StockShader::VertexColor));
+    auto &grid = *eng.create_renderobject({rm.create_grid_mesh("grid", 50.0f, 1.0f),
+                                           rm.create_material("grid_mtl", glengine::StockShader::VertexColor)});
 
     eng._camera_manipulator.set_center({-18.33f, 1.01f, 0.0f})
         .set_azimuth(1.87f)

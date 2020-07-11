@@ -8,13 +8,6 @@
 
 namespace glengine {
 
-// struct RenderItem {
-//     Camera *camera = nullptr;
-//     // Material *material = nullptr;
-//     Mesh *mesh = nullptr;
-//     math::Matrix4f model_tf;
-// };
-
 bool Renderer::render() {
     for (auto &ri : render_items) {
         if (!ri.renderable || !ri.renderable->mesh || !ri.renderable->material || !ri.camera) {

@@ -28,27 +28,8 @@ Object::~Object() {
     }
 }
 
-bool Object::init(Mesh *mesh, Shader *shader) {
-    if (!mesh || !shader) {
-        return false;
-    }
-    _meshes.push_back(mesh);
-    _shader = shader;
-    return true;
-}
-
-bool Object::init(std::vector<Mesh *> meshes, Shader *shader) {
-    if (!shader) {
-        return false;
-    }
-    _meshes = meshes;
-    _shader = shader;
-    return true;
-}
-
 bool Object::init(const std::vector<Renderable> &renderables) {
     _renderables = renderables;
-    _shader = nullptr;
     return true;
 }
 
@@ -87,18 +68,6 @@ bool Object::draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &p
         for (auto &go : _renderables) {
             MICROPROFILE_SCOPEI("renderobject","render_renderables",MP_AUTO);
             renderer.render_items.push_back({&cam, &go, curr_tf, _id});
-        }
-        if (_shader) {
-            _shader->activate();
-            _shader->set_uniform_id(_id);
-            _shader->set_uniform_model(curr_tf);
-            _shader->set_uniform_view(cam.inverse_transform());
-            _shader->set_uniform_projection(cam.projection());
-            _shader->set_uniform_light0_pos(math::Vector3f(100, 100, 100));
-            for (auto m : _meshes) {
-                MICROPROFILE_SCOPEI("renderobject","render_mesh",MP_AUTO);
-                m->draw(*_shader);
-            }
         }
         for (auto &c : _children) {
             c->draw(renderer, cam, curr_tf);

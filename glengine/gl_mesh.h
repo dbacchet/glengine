@@ -26,8 +26,6 @@ class Mesh: public Resource {
     // update the opengl buffers to reflect the vertices and indices arrays
     bool update();
 
-    void draw(Shader &shader);
-
     GLuint vao = 0;
     GLuint vbo = 0;
     GLuint ebo = 0;

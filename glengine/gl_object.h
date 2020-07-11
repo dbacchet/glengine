@@ -20,8 +20,6 @@ class Object final {
     Object(Object *parent = nullptr, ID id = NULL_ID);
     ~Object();
 
-    bool init(Mesh *mesh, Shader *shader);
-    bool init(std::vector<Mesh *> meshes, Shader *shader);
     bool init(const std::vector<Renderable> &renderables);
     bool add_renderable(const Renderable *r, uint32_t num);
 
@@ -56,8 +54,6 @@ class Object final {
     Object *_parent = nullptr;
     std::set<Object *> _children;
 
-    std::vector<Mesh *> _meshes;
-    Shader *_shader = nullptr;
     std::vector<Renderable> _renderables;
 
     math::Matrix4f _transform = math::matrix4_identity<float>();

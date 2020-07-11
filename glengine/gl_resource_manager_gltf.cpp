@@ -142,9 +142,6 @@ class GltfLoader {
             Material *mtl = nullptr;
             if (primitive.material >= 0) {
                 const tinygltf::Material &material = model.materials[primitive.material];
-                // if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
-                //     glmesh->textures.diffuse = _tx_map[material.pbrMetallicRoughness.baseColorTexture.index];
-                // }
                 go.material = get_or_create_material(material);
             }
             _renderables.push_back(go);
@@ -186,7 +183,7 @@ class GltfLoader {
                 log_info("  double-sided '%d'", (int)mtl.doubleSided);
                 auto &pbr = mtl.pbrMetallicRoughness;
                 log_info("  PBR:");
-                log_info("    base color factor %f %f %f", pbr.baseColorFactor[0], pbr.baseColorFactor[1], pbr.baseColorFactor[2]);
+                log_info("    base color factor %f %f %f [%f]", pbr.baseColorFactor[0], pbr.baseColorFactor[1], pbr.baseColorFactor[2], pbr.baseColorFactor[3]);
                 log_info("    base color texture idx %d coords %d", pbr.baseColorTexture.index, pbr.baseColorTexture.texCoord);
                 log_info("    metallic factor %f", pbr.metallicFactor);
                 log_info("    roughness factor %f", pbr.roughnessFactor);
@@ -210,8 +207,8 @@ class GltfLoader {
         }
         auto m = _rm.create_material(mtl_name.c_str(), _rm.get_stock_shader(glengine::StockShader::Diffuse));
         auto &pbr = mtl.pbrMetallicRoughness;
-        m->color = {(uint8_t)(pbr.baseColorFactor[0]*255+0.5), (uint8_t)(pbr.baseColorFactor[1]*255+0.5), (uint8_t)(pbr.baseColorFactor[2]*255+0.5), 255};
-        m->base_color_factor = {(float)pbr.baseColorFactor[0], (float)pbr.baseColorFactor[1], (float)pbr.baseColorFactor[2], 1.0};
+        m->color = {(uint8_t)(pbr.baseColorFactor[0]*255+0.5), (uint8_t)(pbr.baseColorFactor[1]*255+0.5), (uint8_t)(pbr.baseColorFactor[2]*255+0.5), (uint8_t)(pbr.baseColorFactor[3]*255+0.5)};
+        m->base_color_factor = {(float)pbr.baseColorFactor[0], (float)pbr.baseColorFactor[1], (float)pbr.baseColorFactor[2], (float)pbr.baseColorFactor[3]};
         m->emissive_factor = {(float)mtl.emissiveFactor[0], (float)mtl.emissiveFactor[1], (float)mtl.emissiveFactor[2]};
         m->metallic_factor = pbr.metallicFactor;
         m->roughness_factor = pbr.roughnessFactor;
@@ -271,7 +268,7 @@ std::vector<Renderable> create_from_gltf(ResourceManager &rm, const char *filena
     ml.load_textures(model);
     printf("loaded %d textures\n", (int)ml._tx_map.size());
     ml.parse_materials(model);
-    // this loader makes the assumption that the entire scene is a single model, rendered with the same shader
+    // this loader makes the assumption that the entire scene is a single model
     math::Matrix4f root_tf = math::matrix4_identity<float>();
     root_tf = math::create_transformation(
         {0, 0, 0}, math::quat_from_euler_321<float>(M_PI_2, 0, 0)); // because by default gltf are y-up

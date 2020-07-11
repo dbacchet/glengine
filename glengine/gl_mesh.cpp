@@ -38,17 +38,6 @@ bool Mesh::update() {
     return true;
 }
 
-void Mesh::draw(Shader &shader) {
-    // draw mesh
-    glBindVertexArray(vao);
-    if (indices.size() > 0) {
-        glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);
-    } else {
-        glDrawArrays(primitive, 0, vertices.size());
-    }
-    glBindVertexArray(0);
-}
-
 void Mesh::setup_mesh() {
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);

@@ -42,9 +42,6 @@ class GLEngine {
     // ///////////// //
     /// create a new (empty) renderobject
     Object *create_renderobject(Object *parent=nullptr, ID id=NULL_ID);
-    /// create a new renderobject, given a mesh and a shader
-    Object *create_renderobject(Mesh *mesh, Shader *shader, Object *parent=nullptr, ID id=NULL_ID);
-    Object *create_renderobject(const std::vector<Mesh*> &meshes, Shader *shader, Object *parent=nullptr, ID id=NULL_ID);
     /// create a new renderobject and add the given renderable
     Object *create_renderobject(const Renderable &renderable, Object *parent=nullptr, ID id=NULL_ID);
     /// create a new renderobject, given an array of renderables
