@@ -100,13 +100,13 @@ int main(void) {
     sg1->set_transform(math::create_transformation<float>({2, 0, 0}, math::quat_from_euler_321<float>(0, 0, 0)))
         .set_scale({0.5f, 0.5f, 0.5f});
     sg2->set_transform(math::create_transformation<float>({2, 1, 0}, math::quat_from_euler_321<float>(0.3, 0, 0)));
-    sg2->_renderables[0].material->color = {255, 0, 255, 255};
+    sg2->_renderables[0].material->base_color_factor = {1.0f, 0.0f, 1.0f, 1.0f};
     sg3->set_transform(math::create_transformation<float>({2, -1, 0}, math::quat_from_euler_321<float>(0.7, 0, 0)));
-    sg3->_renderables[0].material->color = {0, 255, 0, 255};
+    sg3->_renderables[0].material->base_color_factor = {0.0f, 1.0f, 0.0f, 1.0f};
     // explicitly create and add another object to the hierarchy
     glengine::Renderable sg4_renderable = {rm.create_box_mesh("box_rnd_mesh", {2, 2, 2}),
                                            rm.create_material("box_rnd_mtl", glengine::StockShader::Diffuse)};
-    sg4_renderable.material->color = {255, 0, 0, 255};
+    sg4_renderable.material->base_color_factor = {1.0f, 0.0f, 0.0f, 1.0f};
     auto sg4 = eng.create_renderobject(sg3, 124);
     sg4->add_renderable(&sg4_renderable, 1);
     sg4->set_transform(math::create_transformation<float>({2, -1, -3}, math::quat_from_euler_321<float>(0.7, 0, 0)));
@@ -125,22 +125,22 @@ int main(void) {
     int cnt = 0;
     while (eng.render()) {
         float t = glfwGetTime();
-        uint8_t k1 = uint8_t(cnt % 255);
-        uint8_t k2 = uint8_t(255 - cnt % 255);
+        float k1 = float(std::sin(cnt/100.0f)+1)/2;
+        float k2 = float(std::cos(cnt/100.0f)+1)/2;
 
-        sg4_renderable.material->color = {k1, 0, k2, 255};
+        sg4_renderable.material->base_color_factor = {k1, 0.0f, k2, 1.0f};
 
         // polyline
-        polyline_renderable.material->color = {k2, 0, k1, 255};
+        polyline_renderable.material->base_color_factor = {k2, 0.0f, k1, 1.0f};
         // triangle
         triangle .set_transform( math::create_transformation({0.0f, 0.0f, 0.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)))
                  .set_scale({1.0f + 0.5f * std::sin(2 * t), 1.0f, 1.0f});
         // box (static)
         box0.set_transform( math::create_transformation({-1.0f, 0.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)));
-        box0_renderable.material->color = {k1, k2, 0, 255};
+        box0_renderable.material->base_color_factor = {k1, k2, 0.0f, 1.0f};
         // another box using the same mesh
         box1.set_transform( math::create_transformation({1.0f, 0.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)));
-        box1_renderable.material->color = {k1, 0, k2, 255};
+        box1_renderable.material->base_color_factor = {k1, 0.0f, k2, 1.0f};
         // third box
         box2.set_transform( math::create_transformation({2.0f, 0.0f, 0.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)))
             .set_scale({1.5f, 1.5f, 1.5f});
@@ -167,7 +167,7 @@ int main(void) {
         axis.set_transform( math::create_transformation({0.0f, -1.0f, 2.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 2.1f)));
         // sphere
         sphere.set_transform( math::create_transformation({0.0f, 3.0f, 1.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)));
-        sphere_renderable.material->color = {0, k1, k2, 255};
+        sphere_renderable.material->base_color_factor = {0.0f, k1, k2, 1.0f};
 
         // scenegraph
         sg0->set_transform( math::create_transformation({2.0f, 0.0f, -1.0f}, math::quat_from_euler_321(1.0f, 0.0f, t * 1.5f)));

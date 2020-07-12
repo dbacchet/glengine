@@ -49,6 +49,7 @@ class Shader: public Resource {
     void set_uniform_view(const math::Matrix4f &v);
     void set_uniform_projection(const math::Matrix4f &p);
     void set_uniform_color(const Color &c);
+    void set_uniform_color(const math::Vector4f &c);
     void set_uniform_light0_pos(const math::Vector3f &pos);
 
     // utility uniform functions

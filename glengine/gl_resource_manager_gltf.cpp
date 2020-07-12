@@ -170,13 +170,11 @@ class GltfLoader {
         return true;
     }
 
-    bool parse_materials(const tinygltf::Model &model) {
+    bool parse_materials(const tinygltf::Model &model, bool verbose = false) {
         for (uint32_t i = 0; i < model.materials.size(); i++) {
             const tinygltf::Material &mtl = model.materials[i];
-            printf("gltf loader: material with index %d, name '%s'\n", i, mtl.name.c_str());
-            bool verbose = true;
             if (verbose) {
-                log_info("Material '%s'", mtl.name.c_str());
+                log_info("Material '%s', index %d", mtl.name.c_str(), i);
                 log_info("  Emissive factor %f %f %f", mtl.emissiveFactor[0], mtl.emissiveFactor[1], mtl.emissiveFactor[2]);
                 log_info("  Alpha Mode '%s'", mtl.alphaMode.c_str());
                 log_info("  Alpha cutoff '%f'", mtl.alphaCutoff);
@@ -190,7 +188,6 @@ class GltfLoader {
                 log_info("    metallicroughness texture");
                 log_info("    metallic roughness texture idx %d coords %d", pbr.metallicRoughnessTexture.index, pbr.metallicRoughnessTexture.texCoord);
             }
-            // _tx_map[i] = _rm.create_texture_from_data(img.name.c_str(), img.width, img.height, img.component, img.image.data());
             get_or_create_material(mtl);
         }
         return true;
@@ -207,7 +204,6 @@ class GltfLoader {
         }
         auto m = _rm.create_material(mtl_name.c_str(), _rm.get_stock_shader(glengine::StockShader::Diffuse));
         auto &pbr = mtl.pbrMetallicRoughness;
-        m->color = {(uint8_t)(pbr.baseColorFactor[0]*255+0.5), (uint8_t)(pbr.baseColorFactor[1]*255+0.5), (uint8_t)(pbr.baseColorFactor[2]*255+0.5), (uint8_t)(pbr.baseColorFactor[3]*255+0.5)};
         m->base_color_factor = {(float)pbr.baseColorFactor[0], (float)pbr.baseColorFactor[1], (float)pbr.baseColorFactor[2], (float)pbr.baseColorFactor[3]};
         m->emissive_factor = {(float)mtl.emissiveFactor[0], (float)mtl.emissiveFactor[1], (float)mtl.emissiveFactor[2]};
         m->metallic_factor = pbr.metallicFactor;

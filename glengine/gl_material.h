@@ -40,12 +40,24 @@ struct Material: public Resource {
     Shader *_shader = nullptr;
     Texture *_textures[(uint8_t)TextureType::TextureTypeNum] = {nullptr};
 
-    glengine::Color color = {200, 100, 100, 255};
     math::Vector4f base_color_factor = {1.0f, 1.0f, 1.0f, 1.0f};
     math::Vector3f emissive_factor = {1.0f, 1.0f, 1.0f};
     float metallic_factor = 0.0f;
     float roughness_factor = 0.0f;
     float normal_scale = 1.0f;
+
+    void apply(ID object_id, const math::Matrix4f &model_tf, const math::Matrix4f &view_tf, const math::Matrix4f &proj_tf, const math::Vector3f &light_pos={100.0f, 100.0f, 100.0f}) {
+        _shader->activate();
+        // standard attributes (common to all materials)
+        _shader->set_uniform_id(object_id);
+        _shader->set_uniform_model(model_tf);
+        _shader->set_uniform_view(view_tf);
+        _shader->set_uniform_projection(proj_tf);
+        _shader->set_uniform_light0_pos(light_pos);
+        // shader specific attributes
+        _shader->set_vec4("u_color", base_color_factor);
+        bind_textures();
+    }
 
     void bind_textures() {
         if (!_shader) {
