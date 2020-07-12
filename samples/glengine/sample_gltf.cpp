@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
         float t = glfwGetTime();
         // axis
         axis.set_transform( math::create_transformation({0.0f, -1.0f, 2.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 2.1f)));
+        model.set_transform( math::create_transformation({0.0f, 0.0f, 0.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 0.5f)));
     }
 
     eng.terminate();

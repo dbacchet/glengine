@@ -69,7 +69,7 @@ int main(void) {
             obj.tf = t1 * t2 * t3 * t4;
             obj.ro = eng.create_renderobject({box_mesh, rm.create_material("",glengine::StockShader::Diffuse)}, nullptr, i * N + j);
             obj.ro->set_transform(obj.tf);
-            obj.ro->_renderables[0].material->color = {rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), rand_range<uint8_t>(80, 250), 255};
+            obj.ro->_renderables[0].material->base_color_factor = {rand_range<float>(0.25, 1.0), rand_range<float>(0.25, 1.0), rand_range<float>(0.25, 1.0), 1.0f};
         }
     }
 

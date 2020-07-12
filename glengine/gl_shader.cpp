@@ -142,6 +142,10 @@ void Shader::set_uniform_color(const Color &c) {
     glUniform4fv(u_color, 1, math::Vector4f(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a / 255.0f));
 }
 
+void Shader::set_uniform_color(const math::Vector4f &c) {
+    glUniform4fv(u_color, 1, c);
+}
+
 void Shader::set_uniform_light0_pos(const math::Vector3f &pos) {
     glUniform3fv(u_light0_pos, 1, pos);
 }
