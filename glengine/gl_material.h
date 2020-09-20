@@ -10,9 +10,10 @@
 namespace glengine {
 
 class Shader;
-class Texture;
+struct Texture;
 
-struct Material: public Resource {
+class Material: public Resource {
+  public:
     /// "standard" textures, modeled after the GLTF specs for PBR Materials:
     /// [here](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#metallic-roughness-material)
     enum class TextureType {
