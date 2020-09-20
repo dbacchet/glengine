@@ -12,8 +12,7 @@
 namespace glengine {
 
 Object::Object(Object *parent, ID id)
-: _parent(parent)
-, _id(id) {
+: _id(id), _parent(parent) {
     if (_parent) {
         parent->add_child(this);
     }

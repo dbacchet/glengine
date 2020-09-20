@@ -139,10 +139,12 @@ class GltfLoader {
             go.mesh = _rm.create_mesh((_filename + std::string("_") + mesh.name).c_str());
             go.mesh->init(md.vertices, md.indices, GL_TRIANGLES);
             // material
-            Material *mtl = nullptr;
             if (primitive.material >= 0) {
                 const tinygltf::Material &material = model.materials[primitive.material];
                 go.material = get_or_create_material(material);
+            } else {
+                go.material = _rm.create_material("default_diffuse", glengine::StockShader::Diffuse);
+                go.material->base_color_factor = {0.05f,0.05f,0.05f,1.0f};
             }
             _renderables.push_back(go);
         }
@@ -164,7 +166,7 @@ class GltfLoader {
     bool load_textures(const tinygltf::Model &model) {
         for (uint32_t i = 0; i < model.images.size(); i++) {
             const tinygltf::Image &img = model.images[i];
-            printf("gltf loader: texture with index %d, name '%s', and uri '%s'\n", i, img.name.c_str(), img.uri.c_str());
+            log_debug("gltf loader: texture with index %d, name '%s', and uri '%s'\n", i, img.name.c_str(), img.uri.c_str());
             _tx_map[i] = _rm.create_texture_from_data((img.name+std::string("_")+img.uri).c_str(), img.width, img.height, img.component, img.image.data());
         }
         return true;
@@ -256,13 +258,13 @@ std::vector<Renderable> create_from_gltf(ResourceManager &rm, const char *filena
         return std::vector<Renderable>();
     }
 
-    printf("the model has %d buffers\n", (int)model.buffers.size());
-    printf("the model has %d textures\n", (int)model.images.size());
+    log_debug("the model has %d buffers\n", (int)model.buffers.size());
+    log_debug("the model has %d textures\n", (int)model.images.size());
     const tinygltf::Scene &scene = model.scenes[model.defaultScene];
-    printf("the scene has %d nodes\n", (int)scene.nodes.size());
+    log_debug("the scene has %d nodes\n", (int)scene.nodes.size());
     GltfLoader ml(filename, rm);
     ml.load_textures(model);
-    printf("loaded %d textures\n", (int)ml._tx_map.size());
+    log_debug("loaded %d textures\n", (int)ml._tx_map.size());
     ml.parse_materials(model);
     // this loader makes the assumption that the entire scene is a single model
     math::Matrix4f root_tf = math::matrix4_identity<float>();
