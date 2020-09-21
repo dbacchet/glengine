@@ -93,7 +93,7 @@ void main()
     
     fragment_color = vec4(lighting, 1.0);
     float ssao = texture(ssao_texture, texcoord).r;
-    fragment_color = vec4(lighting*ssao, 1.0);
+    fragment_color = vec4(lighting, 1.0);
 })";
 
 }

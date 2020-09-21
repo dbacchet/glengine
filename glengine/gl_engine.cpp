@@ -224,41 +224,6 @@ bool GLEngine::init(const Config &config) {
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // ///////////////// //
-    // framebuffer: SSAO //
-    // ///////////////// //
-    glGenFramebuffers(1, &_ssao_framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, _ssao_framebuffer);
-    // ssao color buffer
-    glGenTextures(1, &_ssao_color_texture);
-    glBindTexture(GL_TEXTURE_2D, _ssao_color_texture);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RED, GL_FLOAT, NULL);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _context.window_state.framebuffer_size.x, _context.window_state.framebuffer_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _ssao_color_texture, 0);
-    // finally check if framebuffer is complete
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        printf("Error: framebuffer not complete!\n");
-        return false;
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // ssao noise texture
-    std::mt19937 gen(12345678);
-    std::uniform_real_distribution<GLfloat> random_float(-1.0, 1.0); // generates random floats between -1.0 and 1.0
-    std::vector<math::Vector3d> ssao_noise;
-    for (unsigned int i = 0; i < 16; i++) {
-        math::Vector3d noise(random_float(gen), random_float(gen), 0.0f); // rotate around z-axis (in tangent space)
-        ssao_noise.push_back(noise);
-    }
-    glGenTextures(1, &_ssao_noise_texture);
-    glBindTexture(GL_TEXTURE_2D, _ssao_noise_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssao_noise[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
     // resize the cpu buffer for the object ids
     _id_buffer.resize(_context.window_state.framebuffer_size.x*_context.window_state.framebuffer_size.y, NULL_ID);
 
@@ -310,32 +275,32 @@ bool GLEngine::render() {
     _renderer.render_items.clear();
     MICROPROFILE_LEAVE();
 
-    // calculate ssao
-    static float ssao_radius = 0.5f;
-    static float ssao_bias = 0.025f;
-    MICROPROFILE_ENTERI("glengine","ssao",MP_AUTO);
-    glBindFramebuffer(GL_FRAMEBUFFER, _ssao_framebuffer);
-    glViewport(0, 0, fbsize.x, fbsize.y);
-    glClear(GL_COLOR_BUFFER_BIT);
-    Shader *ssao_shader = _resource_manager.get_stock_shader(StockShader::Ssao);
-    ssao_shader->activate();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _gb_position);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, _gb_normal);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, _ssao_noise_texture);
-    glUniform1i(glGetUniformLocation(ssao_shader->program_id, "g_position_texture"), 0); 
-    glUniform1i(glGetUniformLocation(ssao_shader->program_id, "g_normal_texture"), 1); 
-    glUniform1i(glGetUniformLocation(ssao_shader->program_id, "noise_texture"), 2); 
-    ssao_shader->set_vec2("noise_scale",math::Vector2f(fbsize.x/4.0f,fbsize.y/4.0f)); // noise texture is 4x4
-    ssao_shader->set_uniform_projection(_camera.projection());
-    ssao_shader->set_float("radius",ssao_radius);
-    ssao_shader->set_float("bias",ssao_bias);
-    glBindVertexArray(_ss_quad->vao);
-    glDrawArrays(GL_TRIANGLES, 0, _ss_quad->vertices.size());
-    glBindVertexArray(0);
-    MICROPROFILE_LEAVE();
+    // // calculate ssao
+    // static float ssao_radius = 0.5f;
+    // static float ssao_bias = 0.025f;
+    // MICROPROFILE_ENTERI("glengine","ssao",MP_AUTO);
+    // glBindFramebuffer(GL_FRAMEBUFFER, _ssao_framebuffer);
+    // glViewport(0, 0, fbsize.x, fbsize.y);
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // Shader *ssao_shader = _resource_manager.get_stock_shader(StockShader::Ssao);
+    // ssao_shader->activate();
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, _gb_position);
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, _gb_normal);
+    // glActiveTexture(GL_TEXTURE2);
+    // glBindTexture(GL_TEXTURE_2D, _ssao_noise_texture);
+    // glUniform1i(glGetUniformLocation(ssao_shader->program_id, "g_position_texture"), 0); 
+    // glUniform1i(glGetUniformLocation(ssao_shader->program_id, "g_normal_texture"), 1); 
+    // glUniform1i(glGetUniformLocation(ssao_shader->program_id, "noise_texture"), 2); 
+    // ssao_shader->set_vec2("noise_scale",math::Vector2f(fbsize.x/4.0f,fbsize.y/4.0f)); // noise texture is 4x4
+    // ssao_shader->set_uniform_projection(_camera.projection());
+    // ssao_shader->set_float("radius",ssao_radius);
+    // ssao_shader->set_float("bias",ssao_bias);
+    // glBindVertexArray(_ss_quad->vao);
+    // glDrawArrays(GL_TRIANGLES, 0, _ss_quad->vertices.size());
+    // glBindVertexArray(0);
+    // MICROPROFILE_LEAVE();
 
     // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
     MICROPROFILE_ENTERI("glengine","quad",MP_AUTO);
@@ -354,7 +319,7 @@ bool GLEngine::render() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, _gb_albedo);
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, _ssao_color_texture);	// use the color attachment texture as the texture of the quad plane
+    // glBindTexture(GL_TEXTURE_2D, _ssao_color_texture);	// use the color attachment texture as the texture of the quad plane
     glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_position_texture"), 0); 
     glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_normal_texture"), 1); 
     glUniform1i(glGetUniformLocation(quad_shader->program_id, "g_albedospec_texture"), 2); 
@@ -368,8 +333,10 @@ bool GLEngine::render() {
     MICROPROFILE_LEAVE();
 
     // copy the id texture in cpu memory
+    MICROPROFILE_ENTERI("glengine","copy tex",MP_AUTO);
     glBindTexture(GL_TEXTURE_2D, _gb_id);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, _id_buffer.data());
+    MICROPROFILE_LEAVE();
 
     // Start the Dear ImGui frame
     MICROPROFILE_ENTERI("glengine","imgui",MP_AUTO);
@@ -391,10 +358,10 @@ bool GLEngine::render() {
         ImGui::Image((void*)(intptr_t)_gb_normal, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
         ImGui::Text("Albedo");
         ImGui::Image((void*)(intptr_t)_gb_albedo, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
-        ImGui::Text("SSAO");
-        ImGui::DragFloat("radius", &ssao_radius, 0.01);
-        ImGui::DragFloat("bias", &ssao_bias, 0.001);
-        ImGui::Image((void*)(intptr_t)_ssao_color_texture, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
+        // ImGui::Text("SSAO");
+        // ImGui::DragFloat("radius", &ssao_radius, 0.01);
+        // ImGui::DragFloat("bias", &ssao_bias, 0.001);
+        // ImGui::Image((void*)(intptr_t)_ssao_color_texture, ImVec2(img_width,img_height),ImVec2(0,1),ImVec2(1,0));
         ImGui::End();
     }
     for (auto& fun: _ui_functions) {
@@ -488,10 +455,10 @@ void GLEngine::resize_buffers() {
         glBindRenderbuffer(GL_RENDERBUFFER, _gb_depth);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fb_size.x, fb_size.y);
     }
-    if (_ssao_color_texture!=INVALID_BUFFER) {
-        glBindTexture(GL_TEXTURE_2D, _ssao_color_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fb_size.x, fb_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    }
+    // if (_ssao_color_texture!=INVALID_BUFFER) {
+    //     glBindTexture(GL_TEXTURE_2D, _ssao_color_texture);
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fb_size.x, fb_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    // }
     _id_buffer.resize(fb_size.x*fb_size.y, NULL_ID);
 }
 

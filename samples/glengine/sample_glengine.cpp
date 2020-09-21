@@ -35,7 +35,7 @@ int main(void) {
     glengine::Config config;
     config.window_width = 1280;
     config.window_height = 720;
-    config.vsync = true;
+    config.vsync = false;
     config.show_framebuffer_texture = true;
     config.show_imgui_statistics = true;
 

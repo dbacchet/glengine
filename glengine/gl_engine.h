@@ -73,14 +73,11 @@ class GLEngine {
     Renderer _renderer;
 
     GLuint _g_buffer = 0;              // framebuffer id
-    GLuint _ssao_framebuffer = 0;      // SSAO framebuffer id
     GLuint _gb_position = INVALID_BUFFER; // framebuffer position attachment handle
     GLuint _gb_normal = INVALID_BUFFER; // framebuffer normal attachment handle
     GLuint _gb_albedo = INVALID_BUFFER; // framebuffer albedo attachment handle
     GLuint _gb_id = INVALID_BUFFER;    // framebuffer object_id attachment handle
     GLuint _gb_depth = INVALID_BUFFER; // framebuffer depth+stencil attachment handle
-    GLuint _ssao_color_texture = INVALID_BUFFER; // ssao framebuffer color attachment handle
-    GLuint _ssao_noise_texture = INVALID_BUFFER; // texture used to randomly rotate the ssao kernel
     Mesh *_ss_quad = nullptr;
     std::vector<ID> _id_buffer; // buffer containing the id of the object in every pixel
 
