@@ -42,8 +42,4 @@ class Resource {
     std::string name = ""; ///< resource name. Not guaranteed to be unique
 };
 
-/// murmur hash function, 32bit, based on the code made by Austin Appleby (http://code.google.com/p/smhasher/)
-uint32_t murmur_hash2_32(const void *key, int len, uint32_t seed = 0);
-uint32_t murmur_hash2_32(const char *str, uint32_t seed = 0);
-
 } // namespace glengine

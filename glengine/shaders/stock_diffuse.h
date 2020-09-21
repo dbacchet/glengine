@@ -23,11 +23,7 @@ void main() {
     
     vec3 result = (ambient + diffuse) * u_color.xyz;//vcolor.xyz;
     // output
-    object_id = u_id;
-    g_position = vec4(frag_pos,1.0);
-    g_normal = vec4(norm,1.0);
-    g_albedospec.rgb = u_color.rgb;
-    g_albedospec.a = u_color.a;
+    fragment_color = vec4(result,u_color.a);
 })";
 
 
@@ -54,11 +50,7 @@ void main() {
         discard;
     vec3 result = (ambient + diffuse) * color.xyz;//vcolor.xyz;
     // output
-    object_id = u_id;
-    g_position = vec4(frag_pos,1.0);
-    g_normal = vec4(norm,1.0);
-    g_albedospec.rgb = color.rgb;
-    g_albedospec.a = color.a;
+    fragment_color = vec4(result, color.a);
 })";
 
 

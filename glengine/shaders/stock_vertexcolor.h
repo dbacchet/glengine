@@ -9,13 +9,7 @@ namespace {
 const char *vertexcolor_fs_src =
     R"(
 void main() {
-    object_id = u_id;
-    vec4 color = vcolor * u_color; // mix global color with vertex color
-    // for deferred rendering
-    g_position = vec4(frag_pos,1.0);
-    g_normal = vec4(normalize(light_pos),1.0); // alignign the normal with the light will make the color flat
-    g_albedospec.rgb = color.rgb;
-    g_albedospec.a = color.a;
+    fragment_color = vcolor * u_color; // mix global color with vertex color
 })";
 
 

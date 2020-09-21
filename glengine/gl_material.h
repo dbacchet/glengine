@@ -18,16 +18,10 @@ class Material: public Resource {
     /// [here](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#metallic-roughness-material)
     enum class TextureType {
         BaseColor = 0, ///< the base color texture (i.e. albedo, diffuse, etc)
-        ORM,           ///< Occlusion, Roughness, Metallic (in R,G,B channels respectively)
-        Normal,        ///< normal map in tangent space
-        Emissive,      ///< color and intensity of the light emitted by the material
         TextureTypeNum
     };
     static constexpr char const *uniform_names[] = {
         "tex_basecolor", ///< standard uniform for the base color
-        "tex_ORM",       ///< standard uniform for occlusion/roughness/metallic
-        "tex_normal",    ///< standard uniform for the tangent space normals
-        "tex_emissive"   ///< standard uniform for the emissive color
     };
 
     Material(ID id, const std::string &name, Shader *shader) 
@@ -45,7 +39,6 @@ class Material: public Resource {
     math::Vector3f emissive_factor = {1.0f, 1.0f, 1.0f};
     float metallic_factor = 0.0f;
     float roughness_factor = 0.0f;
-    float normal_scale = 1.0f;
 
     void apply(ID object_id, const math::Matrix4f &model_tf, const math::Matrix4f &view_tf, const math::Matrix4f &proj_tf, const math::Vector3f &light_pos={100.0f, 100.0f, 100.0f}) {
         _shader->activate();

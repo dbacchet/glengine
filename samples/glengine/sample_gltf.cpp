@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     auto &rm = eng.resource_manager();
 
     // renderables
-    glengine::Renderable grid_renderable = {rm.create_grid_mesh("grid", 50.0f, 1.0f),
+    glengine::Renderable grid_renderable = {rm.create_grid_mesh("grid", 100.0f, 5.0f),
                                             rm.create_material("grid_mtl", glengine::StockShader::VertexColor)};
     glengine::Renderable axis_renderable = {rm.create_axis_mesh("axis"),
                                             rm.create_material("axis_mtl", glengine::StockShader::VertexColor)};

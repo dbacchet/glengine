@@ -9,12 +9,7 @@ namespace {
 const char *flat_fs_src =
     R"(
 void main() {
-    object_id = u_id;
-    // for deferred rendering
-    g_position = vec4(frag_pos,1.0);
-    g_normal = vec4(normalize(light_pos),1.0); // alignign the normal with the light will make the color flat
-    g_albedospec.rgb = u_color.rgb;
-    g_albedospec.a = u_color.a;
+    fragment_color = u_color;
 })";
 
 
