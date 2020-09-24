@@ -1,3 +1,6 @@
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 set(imgui_files imgui/imconfig.h
                 imgui/imgui.cpp
                 imgui/imgui.h
@@ -39,6 +42,7 @@ target_include_directories(glengine PUBLIC .)
 target_link_libraries(glengine PUBLIC glfw
                                       common
 )
+target_link_libraries(glengine PRIVATE Threads::Threads)
 
 # install
 # file(GLOB_RECURSE GLENGINE_PUBLIC_HEADERS "*.h*")

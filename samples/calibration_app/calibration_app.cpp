@@ -125,8 +125,7 @@ int main(void) {
                          {uint8_t(i*11 % 100 + 100), uint8_t(i*31 % 200 + 50), uint8_t(i*51 % 200 + 50), 255}};
         }
         lidar1.set_points(points);
-        // lidar.set_transform( math::create_transformation({-1.0f, 0.0f, std::sin(t)}, math::quat_from_euler_321(0.0f,
-        // 0.0f, t * 1.5f)));
+        // lidar1.set_transform( math::create_transformation({-1.0f, 0.0f, std::sin(t)}, math::quat_from_euler_321(0.0f, 0.0f, t * 1.5f)));
         lidar1.update();
         lidar2.set_points(points);
         lidar2.update();
