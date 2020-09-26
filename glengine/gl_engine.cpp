@@ -131,14 +131,14 @@ void window_size_callback(GLFWwindow *window, int width, int height) {
     auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
     auto &ctx = app._context;
     ctx.window_state.window_size = {width, height};
-    printf("win size: %d %d\n", width, height);
+    // printf("win size: %d %d\n", width, height);
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int fb_width, int fb_height) {
     auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
     auto &ctx = app._context;
     ctx.window_state.framebuffer_size = {fb_width, fb_height};
-    printf("fb size: %d %d\n", fb_width, fb_height);
+    // printf("fb size: %d %d\n", fb_width, fb_height);
     app.resize_buffers();
 }
 

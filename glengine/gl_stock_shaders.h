@@ -9,9 +9,6 @@ enum class StockShader {
     DiffuseTextured,
     Phong,
     VertexColor,
-    Ssao,
-    QuadDebug,
-    QuadDeferred,
     NumStockShader
 };
 

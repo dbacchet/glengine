@@ -4,8 +4,6 @@
 #include "shaders/stock_diffuse.h"
 #include "shaders/stock_flat.h"
 #include "shaders/stock_phong.h"
-// #include "shaders/stock_quad.h"
-// #include "shaders/stock_ssao.h"
 #include "shaders/stock_vertexcolor.h"
 
 
@@ -21,12 +19,6 @@ ShaderSrc get_stock_shader_source(StockShader type) {
         return {stock_shaders::diffuse_textured_vs_srcs, stock_shaders::diffuse_textured_fs_srcs};
     case StockShader::Phong:
         return {stock_shaders::phong_vs_srcs, stock_shaders::phong_fs_srcs};
-    // case StockShader::Ssao:
-        // return {stock_shaders::ssao_vs_srcs, stock_shaders::ssao_fs_srcs};
-    // case StockShader::QuadDebug:
-    //     return {stock_shaders::quad_debug_vs_srcs, stock_shaders::quad_debug_fs_srcs};
-    // case StockShader::QuadDeferred:
-    //     return {stock_shaders::quad_deferred_vs_srcs, stock_shaders::quad_deferred_fs_srcs};
     default: // use vertexcolor by default
         return {stock_shaders::vertexcolor_vs_srcs, stock_shaders::vertexcolor_fs_srcs};
     }

@@ -77,9 +77,6 @@ void ResourceManager::create_stock_shaders() {
     _stock_shaders[StockShader::DiffuseTextured] = create_shader(get_stock_shader_source(StockShader::DiffuseTextured), "DiffuseTextured");
     _stock_shaders[StockShader::Phong]           = create_shader(get_stock_shader_source(StockShader::Phong), "Phong");
     _stock_shaders[StockShader::VertexColor]     = create_shader(get_stock_shader_source(StockShader::VertexColor), "VertexColor");
-    _stock_shaders[StockShader::Ssao]            = create_shader(get_stock_shader_source(StockShader::Ssao), "Ssao");
-    _stock_shaders[StockShader::QuadDebug]       = create_shader(get_stock_shader_source(StockShader::QuadDebug), "Quad");
-    _stock_shaders[StockShader::QuadDeferred]    = create_shader(get_stock_shader_source(StockShader::QuadDeferred), "QuadDeferred");
 }
 
 Texture *ResourceManager::create_texture(const char *name) {
