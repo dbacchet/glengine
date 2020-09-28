@@ -118,7 +118,7 @@ Texture *ResourceManager::create_texture_from_file(const char *filename) {
     stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
     if (t && data) {
-        t->init(width, height, data, GL_RGBA, nrChannels < 4 ? GL_RGB : GL_RGBA);
+        t->init(width, height, data, GL_SRGB_ALPHA, nrChannels < 4 ? GL_RGB : GL_RGBA);
     } else {
         printf("Failed to generate/load texture\n");
     }
