@@ -13,6 +13,8 @@ ShaderSrc get_stock_shader_source(StockShader type) {
     switch (type) {
     case StockShader::Flat:
         return {stock_shaders::flat_vs_srcs, stock_shaders::flat_fs_srcs};
+    case StockShader::FlatTextured:
+        return {stock_shaders::flat_vs_srcs, stock_shaders::flat_textured_fs_srcs};
     case StockShader::Diffuse:
         return {stock_shaders::diffuse_vs_srcs, stock_shaders::diffuse_fs_srcs};
     case StockShader::DiffuseTextured:

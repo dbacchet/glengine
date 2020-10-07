@@ -76,7 +76,7 @@ Context init_context(const Config &config, const char *title, void *user_pointer
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(context.window, true);
-    ImGui_ImplOpenGL3_Init(NULL);
+    ImGui_ImplOpenGL3_Init("#version 330"); // use opengl 3.3 as minimum version
 
     return context;
 }

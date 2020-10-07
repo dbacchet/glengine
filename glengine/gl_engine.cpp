@@ -190,9 +190,6 @@ bool GLEngine::render() {
     _camera_manipulator.update(_camera);
     _camera.update(fbsize.x, fbsize.y);
 
-    const float srgb_gamma = 2.2;
-    const math::Vector4f clear_color = {std::pow(0.1f,srgb_gamma), std::pow(0.1f,srgb_gamma), std::pow(0.1f,srgb_gamma), 1.0f};
-
     glViewport(0, 0, fbsize.x, fbsize.y);
     glEnable(GL_FRAMEBUFFER_SRGB); 
     glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)

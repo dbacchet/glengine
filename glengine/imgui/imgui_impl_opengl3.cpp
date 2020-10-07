@@ -596,7 +596,8 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         "out vec4 Out_Color;\n"
         "void main()\n"
         "{\n"
-        "    Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
+        // "    Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
+        "    Out_Color = Frag_Color * pow(texture(Texture, Frag_UV.st),vec4(1/2.2));\n" // to compensate for the sRGB color space in glengine
         "}\n";
 
     const GLchar* fragment_shader_glsl_300_es =

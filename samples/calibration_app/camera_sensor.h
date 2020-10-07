@@ -21,7 +21,7 @@ class CameraSensor : public Sensor {
         quad_mesh = rm.create_mesh(name.c_str());
         quad_mesh->init(vertices, indices, GL_TRIANGLES);
         glengine::Renderable quad_renderable = {quad_mesh,
-                                                rm.create_material("quad_mtl", glengine::StockShader::DiffuseTextured)};
+                                                rm.create_material("quad_mtl", glengine::StockShader::FlatTextured)};
         uint8_t default_tex[4 * 4] = {255, 255, 255, 255};
         image = rm.create_texture_from_data(name_.c_str(), 1, 1, 4, default_tex);
         quad_renderable.material->_textures[(uint8_t)glengine::Material::TextureType::BaseColor] = image;
