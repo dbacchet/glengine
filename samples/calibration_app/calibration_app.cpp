@@ -27,8 +27,12 @@ int main(void) {
     // create basic renderables
     glengine::Renderable grid_renderable = {rm.create_grid_mesh("grid", 50.0f, 1.0f),
                                             rm.create_material("grid_mtl", glengine::StockShader::VertexColor)};
+    glengine::Renderable quad_renderable = {rm.create_quad_mesh("quad"), // the default quad is between (-1,-1) and (1,1) 
+                                            rm.create_material("quad_mtl", glengine::StockShader::FlatTextured)};
+    quad_renderable.material->_textures[(uint8_t)glengine::Material::TextureType::BaseColor] = rm.create_texture_from_file("images/frame_000_delay-0.05s.png");
     // add renderables to the scene
-    auto &grid = *eng.create_renderobject(grid_renderable, nullptr, 101); // renderable is _copied_ in the renderobject
+    auto &grid = *eng.create_renderobject(grid_renderable, nullptr); // renderable is _copied_ in the renderobject
+    auto &quad = *eng.create_renderobject(quad_renderable, nullptr); // renderable is _copied_ in the renderobject
 
     eng._camera_manipulator.set_azimuth(-1.0f).set_elevation(1.0f);
 
@@ -97,6 +101,10 @@ int main(void) {
         for (auto &s : sensors) {
             s->update();
         }
+        // move the sample quad around
+        quad.set_transform(math::create_transformation(math::Vector3f{0.0f, 0.0f, 5.0f * std::sin(cnt / 100.0f)},
+                           math::quat_from_euler_321(0.0f, 0.0f, cnt / 20.0f)));
+        quad.set_scale({3.1f,2.1f,1.0f}); // this will make it 6.2 wide (x), 4.2 tall (y), and same in z
 
         cnt++;
     }
