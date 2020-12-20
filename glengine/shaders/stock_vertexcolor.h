@@ -15,7 +15,7 @@ void main() {
     tex_coord = v_texcoord0;
     vcolor   = v_color;
     gl_Position = u_projection * u_view * u_model * vec4(v_position,1.0);
-    gl_PointSize = 2.0;
+    // gl_PointSize = 2.0;
 })";
 
 const char *vertexcolor_fs_src =
