@@ -8,6 +8,12 @@
 
 #include <vector>
 
+#include <mutex>
+
+namespace {
+std::mutex g_opengl_lock;
+}
+
 namespace glengine {
 
 Mesh::Mesh(ID id, const std::string &name)
@@ -39,6 +45,7 @@ bool Mesh::update() {
 }
 
 void Mesh::setup_mesh() {
+    std::lock_guard<std::mutex> guard(g_opengl_lock);
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
 

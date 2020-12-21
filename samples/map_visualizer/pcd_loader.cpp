@@ -14,8 +14,7 @@ bool load_pcd(const char *filename, std::vector<glengine::Vertex> &points) {
         std::cerr << "Error reading file " << filename << std::endl;
         return false;
     }
-    std::cout << "Loaded " << cloud->width * cloud->height
-              << " data points from " << std::string(filename) << std::endl;
+    // std::cout << "Loaded " << cloud->width * cloud->height << " data points from " << std::string(filename) << std::endl;
     for (const auto &point : *cloud) {
         points.push_back({{point.x, point.y, point.z}, {255, 255, 255, 255}});
     }

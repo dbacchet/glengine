@@ -1,11 +1,12 @@
 find_package(PCL REQUIRED)
+find_package(Protobuf REQUIRED)
 
 add_executable(map_visualizer map_visualizer.cpp
-                              pcd_loader.cpp)
-target_link_libraries(map_visualizer glengine)
-
+                              pcd_loader.cpp
+                              pcd_tiles.cpp
+                              voyage_map.pb.cc)
 target_include_directories(map_visualizer PRIVATE ${PCL_INCLUDE_DIRS})
-# link_directories(${PCL_LIBRARY_DIRS})
-# add_definitions(${PCL_DEFINITIONS})
-target_link_libraries (map_visualizer ${PCL_LIBRARIES})
+target_link_libraries(map_visualizer glengine
+                                     ${Protobuf_LIBRARIES}
+                                     ${PCL_LIBRARIES})
 
