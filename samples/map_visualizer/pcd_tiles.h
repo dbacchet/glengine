@@ -17,13 +17,14 @@ class PCDTiles : public Sensor {
 
     void draw_imgui() override {
         if (ImGui::CollapsingHeader(name.c_str())) {
-            ImGui::Text("name: %s", name.c_str());
+            Sensor::draw_imgui();
             char decorated_label[128];
             sprintf(decorated_label, "pos##%s", name.c_str());
             ImGui::DragFloat3(decorated_label, &pos[0], 0.1f, -200.0f, 200.0f);
             sprintf(decorated_label, "ori##%s", name.c_str());
             ImGui::DragFloat3(decorated_label, &ori_euler[0], 0.1f, -10.0f, 10.0f);
-            ImGui::ColorPicker4("color", &points_material->base_color_factor[0]);
+            sprintf(decorated_label, "color##%s", name.c_str());
+            ImGui::ColorEdit4(decorated_label, &points_material->base_color_factor[0]);
         }
     }
 

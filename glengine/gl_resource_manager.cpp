@@ -5,6 +5,7 @@
 #include "gl_texture.h"
 
 #include "math/vmath.h"
+#include "math/math_utils.h"
 #include "stb/stb_image.h"
 
 namespace {} // namespace
@@ -238,6 +239,29 @@ Mesh *ResourceManager::create_grid_mesh(const char *name, float len, float step)
     Mesh *m = create_mesh(name);
     MeshData md = create_grid_data(len, step);
     m->init(md.vertices, md.indices, GL_LINES);
+    return m;
+}
+    /// polyline with width
+Mesh *ResourceManager::create_polyline_mesh(const char *name, const math::Vector3f *pts, uint32_t npts, float width, const math::Vector3f &up) {
+    std::vector<double> heading(npts);
+    if (!math::utils::calc_centered_heading(pts, npts, heading.data())) {
+        return nullptr;
+    }
+    MeshData md;
+    float w = width/2.0f;
+    for (int i=0; i<npts; i++) {
+        const auto &pt = pts[i];
+        float alpha = float(heading[i]);
+        md.vertices.push_back({{pt[0]-w*std::sin(alpha), pt[1]+w*std::cos(alpha), pt[2]}}); // pt on left of the polyline
+        md.vertices.push_back({{pt[0]+w*std::sin(alpha), pt[1]-w*std::cos(alpha), pt[2]}}); // pt on right of the polyline
+    }
+    for (uint32_t i=0; i<npts-1; i++) {
+        uint32_t idx = 2*i;
+        md.indices.push_back(idx); md.indices.push_back(idx+1); md.indices.push_back(idx+3);
+        md.indices.push_back(idx); md.indices.push_back(idx+3); md.indices.push_back(idx+2);
+    }
+    Mesh *m = create_mesh(name);
+    m->init(md.vertices, md.indices, GL_TRIANGLES);
     return m;
 }
 

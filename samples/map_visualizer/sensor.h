@@ -40,6 +40,9 @@ class Sensor {
 
     virtual void draw_imgui() {
         ImGui::Text("name: %s", name.c_str());
+        char decorated_label[128];
+        sprintf(decorated_label, "visible##%s", name.c_str());
+        ImGui::Checkbox(decorated_label, &root->_visible);
     }
 
     std::string name = "sensor";

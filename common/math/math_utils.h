@@ -196,6 +196,32 @@ bool calc_moving_average(const T *values, const uint32_t np, uint32_t num_sample
     return true;
 }
 
+/// calculate the (centered) heading array, in the xy plane
+/// The heading is centered, averaging the previous and following segment directions
+/// \param values array of points
+/// \param np number of points in the arrays
+/// \param[out] out_values array with the heading. It assumed allocated and big enough to contain np points
+/// \return success flag
+template <typename T>
+bool calc_centered_heading(const T *values, const uint32_t np, double *out_values) {
+    if (!values || !out_values || np<1) {
+        return false;
+    }
+    if (np==1) {
+        out_values[0] = 0.0;
+        return true;
+    }
+    // work in-place on the output array
+    for (int32_t idx=0; idx<static_cast<int32_t>(np)-1; idx++) {
+        out_values[idx] = std::atan2(values[idx+1][1]-values[idx][1], values[idx+1][0]-values[idx][0]);
+    }
+    out_values[np-1] = out_values[np-2];
+    for (int32_t idx=1; idx<static_cast<int32_t>(np)-1; idx++) {
+        out_values[idx] = (out_values[idx] + out_values[idx-1])/2;
+    }
+    return true;
+}
+
 /// Convert radians to degrees
 /// \param value in radians
 /// \return value in degrees

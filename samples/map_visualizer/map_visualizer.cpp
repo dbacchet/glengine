@@ -7,9 +7,7 @@
 #include "pcd_tiles.h"
 #include "pcd_loader.h"
 
-#include "voyage_map.pb.h"
-
-#include "WGS84toCartesian.hpp"
+#include "annotations.h"
 
 #include <cstdio>
 #include <string>
@@ -39,11 +37,12 @@ int main(void) {
     (void)grid; // unused var
 
     PCDTiles *point_cloud = new PCDTiles("point_cloud", eng);
+    Annotations *annotations = new Annotations("annotations", eng);
 
-    std::vector<Sensor*> sensors= {point_cloud};
-    
+    std::vector<Sensor *> sensors = {point_cloud, annotations};
+
     math::Vector3f cam_center = eng._camera_manipulator.center();
-    eng._camera_manipulator.set_center({0,0,-80});
+    eng._camera_manipulator.set_center({0, 0, -80});
     int32_t pcd_tile_radius = 3;
 
     // add a UI panel to the visualizer
@@ -67,84 +66,10 @@ int main(void) {
     });
 
     // preload some tiles
-    point_cloud->update_tiles(math::Vector2i(int(cam_center.x/20.0),int(cam_center.y/20.0)),pcd_tile_radius);
+    point_cloud->update_tiles(math::Vector2i(int(cam_center.x / 20.0), int(cam_center.y / 20.0)), pcd_tile_radius);
 
-    // load the map from the binary protobuf
-    std::string map_file_path("/maps/Voyage_VGCC_Protobuf_v1.6_Preview_20201218/vyg_map.bin");
-    std::fstream input(map_file_path.c_str(), std::ios::in | std::ios::binary);
-    Map annotations;
-    annotations.ParseFromIstream(&input);
-    printf("number of paths: %d\n", annotations.paths_size());
-
-    // WGS84 converter
-    // "origin": {
-    //   "lat": "37.290493011474609375",
-    //   "lng": "-121.753868103027343750",
-    //   "alt": "204.159072875976562500"
-    // },
-    std::array<double,2> origin {37.290493011474609375,-121.753868103027343750};
-    double origin_z = 204.159072875976562500;
-
-    std::vector<glengine::Vertex> lines_points;
-    lines_points.reserve(10000);
-    for (const auto &it : annotations.paths()) {
-        // printf("%d\n", it.first);
-        const auto &left_pline = it.second.left_boundary().line();
-        for (int i=1; i<left_pline.waypoints_size(); i++) {
-            const auto &pt0 = left_pline.waypoints(i-1);
-            const auto &pt1 = left_pline.waypoints(i);
-            std::array<double, 2> pt0_cart{wgs84::toCartesian(origin, {pt0.y(),pt0.x()})};
-            std::array<double, 2> pt1_cart{wgs84::toCartesian(origin, {pt1.y(),pt1.x()})};
-            lines_points.push_back({{float(pt0_cart[0]),float(pt0_cart[1]),float(pt0.z()-origin_z)}});
-            lines_points.push_back({{float(pt1_cart[0]),float(pt1_cart[1]),float(pt1.z()-origin_z)}});
-        }
-        const auto &right_pline = it.second.right_boundary().line();
-        for (int i=1; i<right_pline.waypoints_size(); i++) {
-            const auto &pt0 = right_pline.waypoints(i-1);
-            const auto &pt1 = right_pline.waypoints(i);
-            std::array<double, 2> pt0_cart{wgs84::toCartesian(origin, {pt0.y(),pt0.x()})};
-            std::array<double, 2> pt1_cart{wgs84::toCartesian(origin, {pt1.y(),pt1.x()})};
-            lines_points.push_back({{float(pt0_cart[0]),float(pt0_cart[1]),float(pt0.z()-origin_z)}});
-            lines_points.push_back({{float(pt1_cart[0]),float(pt1_cart[1]),float(pt1.z()-origin_z)}});
-        }
-        if (left_pline.waypoints_size()>0) {
-            const auto &pt0 = left_pline.waypoints(0);
-            const auto &pt1 = right_pline.waypoints(0);
-            std::array<double, 2> pt0_cart{wgs84::toCartesian(origin, {pt0.y(),pt0.x()})};
-            std::array<double, 2> pt1_cart{wgs84::toCartesian(origin, {pt1.y(),pt1.x()})};
-            lines_points.push_back({{float(pt0_cart[0]),float(pt0_cart[1]),float(pt0.z()-origin_z)}});
-            lines_points.push_back({{float(pt1_cart[0]),float(pt1_cart[1]),float(pt1.z()-origin_z)}});
-        }
-        if (left_pline.waypoints_size()>0) {
-            const auto &pt0 = left_pline.waypoints(left_pline.waypoints_size()-1);
-            const auto &pt1 = right_pline.waypoints(right_pline.waypoints_size()-1);
-            std::array<double, 2> pt0_cart{wgs84::toCartesian(origin, {pt0.y(),pt0.x()})};
-            std::array<double, 2> pt1_cart{wgs84::toCartesian(origin, {pt1.y(),pt1.x()})};
-            lines_points.push_back({{float(pt0_cart[0]),float(pt0_cart[1]),float(pt0.z()-origin_z)}});
-            lines_points.push_back({{float(pt1_cart[0]),float(pt1_cart[1]),float(pt1.z()-origin_z)}});
-        }
-
-        // extract tags
-        auto stopline_mtl = rm.create_material("stopline_mtl", glengine::StockShader::Diffuse);
-        stopline_mtl->base_color_factor = {1.0f,1.0f,0.0f,1.0f};
-        for (int i=0; i<it.second.tags_size(); i++) {
-            const auto &tag = it.second.tags(i);
-            const auto &sp = tag.start();
-            const auto &ep = tag.end();
-            std::cout << tag.tag_type() << " " << sp.x() << " " << sp.y() << " " << sp.z() << " " << ep.x() << " " << ep.y() << " " << ep.z() << std::endl;
-            if (tag.tag_type()==STOPLINE) {
-                glengine::Renderable stopline_renderable = {rm.create_sphere_mesh(), stopline_mtl};
-                auto stopline_ro = eng.create_renderobject(stopline_renderable);
-                std::array<double, 2> sp_cart{wgs84::toCartesian(origin, {sp.y(),sp.x()})};
-                stopline_ro->set_transform(math::create_translation<float>({float(sp_cart[0]),float(sp_cart[1]),float(sp.z()-origin_z)}));
-            }
-        }
-    }
-    glengine::Mesh *annotations_mesh = rm.create_mesh("left_lines");
-    annotations_mesh->init(lines_points,GL_LINES);
-    glengine::Renderable annotations_renderable = {annotations_mesh,
-                                            rm.create_material("left_lines_mtl", glengine::StockShader::Flat)};
-    auto &annotations_ro = *eng.create_renderobject(annotations_renderable, nullptr); // renderable is _copied_ in the renderobject
+    // load annotations
+    annotations->init_from_file("/maps/Voyage_VGCC_Protobuf_v1.6_Preview_20201218/vyg_map.bin");
 
     int cnt = 0;
     while (eng.render()) {
@@ -153,7 +78,7 @@ int main(void) {
             s->update();
         }
 
-        point_cloud->update_tiles(math::Vector2i(int(cam_center.x/20.0),int(cam_center.y/20.0)),pcd_tile_radius);
+        point_cloud->update_tiles(math::Vector2i(int(cam_center.x / 20.0), int(cam_center.y / 20.0)), pcd_tile_radius);
 
         cnt++;
     }

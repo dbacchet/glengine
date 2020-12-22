@@ -100,6 +100,8 @@ class ResourceManager {
     Mesh *create_sphere_mesh(const char *name = "sphere", float radius = 1.0f, uint32_t subdiv = 10);
     /// grid
     Mesh *create_grid_mesh(const char *name = "grid", float len = 100.0f, float step = 5.0f);
+    /// polyline with width
+    Mesh *create_polyline_mesh(const char *name, const math::Vector3f *pts, uint32_t npts, float width = 1.0f, const math::Vector3f &up = {0.0f,0.0f,1.0f});
 
   protected:
     std::unordered_map<ID, Shader *> _shaders;
