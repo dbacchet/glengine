@@ -1,5 +1,7 @@
 #include "annotations.h"
 
+#include "wgs84_converter.hpp"
+
 namespace {
 
 math::Vector3d lle_to_vec3(const Point3d &p) {
@@ -13,7 +15,7 @@ bool Annotations::init_from_file(const char *filename, const math::Vector3d &ori
     if (!_annotations.ParseFromIstream(&input)) {
         return false;
     }
-    printf("number of paths: %d\n", _annotations.paths_size());
+    // printf("number of paths: %d\n", _annotations.paths_size());
 
     // WGS84 converter
     WGS84Converter conv;
@@ -63,8 +65,8 @@ bool Annotations::init_from_file(const char *filename, const math::Vector3d &ori
             const auto &tag = it.second.tags(i);
             const auto &sp = tag.start();
             const auto &ep = tag.end();
-            std::cout << tag.tag_type() << " " << sp.x() << " " << sp.y() << " " << sp.z() << " " << ep.x() << " "
-                      << ep.y() << " " << ep.z() << std::endl;
+            // std::cout << tag.tag_type() << " " << sp.x() << " " << sp.y() << " " << sp.z() << " " << ep.x() << " "
+            //           << ep.y() << " " << ep.z() << std::endl;
             if (tag.tag_type() == STOPLINE) {
                 std::vector<math::Vector3f> stopline_points;
                 stopline_points.push_back(
@@ -76,10 +78,11 @@ bool Annotations::init_from_file(const char *filename, const math::Vector3d &ori
                 glengine::Renderable stopline_renderable = {stopline_mesh, stopline_material};
                 auto stopline_ro = _eng.create_renderobject(stopline_renderable, root);
                 // stopline marker
-                glengine::Renderable stopline_renderable_marker = {_eng.resource_manager().create_sphere_mesh("stopline_marker",0.5f),
-                                                                   stopline_material};
+                glengine::Renderable stopline_renderable_marker = {
+                    _eng.resource_manager().create_sphere_mesh("stopline_marker", 0.5f), stopline_material};
                 auto stopline_ro_marker = _eng.create_renderobject(stopline_renderable_marker, root);
-                stopline_ro_marker->set_transform(math::create_translation<float>({conv.wgs84_to_cart(lle_to_vec3(sp))}));
+                stopline_ro_marker->set_transform(
+                    math::create_translation<float>({conv.wgs84_to_cart(lle_to_vec3(sp))}));
             }
             if (tag.tag_type() == PEDESTRIAN_CROSSING) {
                 std::vector<math::Vector3f> points;

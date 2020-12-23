@@ -8,6 +8,7 @@
 #include "pcd_loader.h"
 
 #include "annotations.h"
+#include "terrain.h"
 
 #include <cstdio>
 #include <string>
@@ -38,8 +39,9 @@ int main(void) {
 
     PCDTiles *point_cloud = new PCDTiles("point_cloud", eng);
     Annotations *annotations = new Annotations("annotations", eng);
+    Terrain *terrain = new Terrain("terrain", eng);
 
-    std::vector<Sensor *> sensors = {point_cloud, annotations};
+    std::vector<Sensor *> sensors = {point_cloud, annotations, terrain};
 
     math::Vector3f cam_center = eng._camera_manipulator.center();
     eng._camera_manipulator.set_center({0, 0, -80});
@@ -65,11 +67,15 @@ int main(void) {
         // ImGui::ShowDemoWindow();
     });
 
+    math::Vector3d origin = {37.290493011474609375, -121.753868103027343750, 204.159072875976562500};
     // preload some tiles
     point_cloud->update_tiles(math::Vector2i(int(cam_center.x / 20.0), int(cam_center.y / 20.0)), pcd_tile_radius);
 
     // load annotations
-    annotations->init_from_file("/maps/Voyage_VGCC_Protobuf_v1.6_Preview_20201218/vyg_map.bin");
+    annotations->init_from_file("/maps/Voyage_VGCC_Protobuf_v1.6_Preview_20201218/vyg_map.bin", origin);
+
+    // load terrain
+    terrain->fetch_elevation_data(origin);
 
     int cnt = 0;
     while (eng.render()) {

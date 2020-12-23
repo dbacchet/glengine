@@ -11,6 +11,8 @@ RUN apt-get install -y libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev li
 # RUN apt-get install -y libglfw3-dev # built with the engine
 # PCL and deps (man, PCL brings in every lib created since the 80s...)
 RUN apt-get install -y libpcl-dev
+# GeographicLib
+RUN apt-get install -y libgeographic-dev
 # protocol buffers
 RUN apt-get install -y libprotobuf-dev protobuf-compiler
 

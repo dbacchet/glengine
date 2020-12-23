@@ -4,7 +4,6 @@
 #include "math/vmath.h"
 
 #include "voyage_map.pb.h"
-#include "wgs84_converter.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -39,8 +38,7 @@ class Annotations : public Sensor {
     }
 
     bool init_from_file(const char *filename,
-                        const math::Vector3d &origin = {37.290493011474609375, -121.753868103027343750,
-                                                        204.159072875976562500});
+                        const math::Vector3d &origin);
 
     Map _annotations; ///< protobuf map
 
