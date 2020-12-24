@@ -31,7 +31,10 @@ class Terrain : public Sensor {
 
     bool fetch_elevation_data(const math::Vector3d &origin);
 
-    std::vector<math::Vector3f> grid;
+    /// get the interpolated point in the grid
+    math::Vector3f interpolate(double x, double y);
+
+    std::vector<math::Vector3d> grid;
     int32_t radius = 100;   ///< how many tiles in each direction starting from origin
     double tile_len = 20.0; ///< length of each tile (m)
 

@@ -32,8 +32,8 @@ int main(void) {
                                             rm.create_material("grid_mtl", glengine::StockShader::VertexColor)};
     // add renderables to the scene
     auto &grid = *eng.create_renderobject(grid_renderable, nullptr); // renderable is _copied_ in the renderobject
+    grid.set_visible(false);
 
-    eng._camera_manipulator.set_azimuth(-1.0f).set_elevation(1.0f);
 
     (void)grid; // unused var
 
@@ -43,8 +43,9 @@ int main(void) {
 
     std::vector<Sensor *> sensors = {point_cloud, annotations, terrain};
 
+    eng._camera_manipulator.set_azimuth(-1.0f).set_elevation(1.0f).set_distance(150.0f);
     math::Vector3f cam_center = eng._camera_manipulator.center();
-    eng._camera_manipulator.set_center({0, 0, -80});
+    bool follow_terrain = false;
     int32_t pcd_tile_radius = 3;
 
     // add a UI panel to the visualizer
@@ -52,6 +53,10 @@ int main(void) {
         ImGui::Begin("camera");
         cam_center = eng._camera_manipulator.center();
         ImGui::DragFloat3("camera center", &cam_center[0], 0.1f, -200.0f, 200.0f);
+        ImGui::Checkbox("follow terrain", &follow_terrain);
+        if (terrain && follow_terrain) {
+            cam_center.z = terrain->interpolate(cam_center.x, cam_center.y).z;
+        }
         eng._camera_manipulator.set_center(cam_center);
         grid.set_transform(math::create_translation(cam_center));
         ImGui::Text("Grid");
@@ -73,20 +78,18 @@ int main(void) {
 
     // load annotations
     annotations->init_from_file("/maps/Voyage_VGCC_Protobuf_v1.6_Preview_20201218/vyg_map.bin", origin);
-
+        
     // load terrain
-    terrain->fetch_elevation_data(origin);
+    follow_terrain = terrain->fetch_elevation_data(origin);
 
-    int cnt = 0;
     while (eng.render()) {
-        float t = glfwGetTime();
+        // update sensors
         for (auto &s : sensors) {
             s->update();
         }
 
+        if (point_cloud->root->visible())
         point_cloud->update_tiles(math::Vector2i(int(cam_center.x / 20.0), int(cam_center.y / 20.0)), pcd_tile_radius);
-
-        cnt++;
     }
 
     eng.terminate();

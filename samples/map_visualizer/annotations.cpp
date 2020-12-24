@@ -25,31 +25,47 @@ bool Annotations::init_from_file(const char *filename, const math::Vector3d &ori
     std::vector<glengine::Vertex> lines_points;
     lines_points.reserve(10000);
     for (const auto &it : _annotations.paths()) {
-        // printf("%d\n", it.first);
-        const auto &left_pline = it.second.left_boundary().line();
-        for (int i = 1; i < left_pline.waypoints_size(); i++) {
-            const auto &pt0 = left_pline.waypoints(i - 1);
-            const auto &pt1 = left_pline.waypoints(i);
+        const auto &path = it.second;
+        // path area (contour)
+        const auto &area = path.area();
+        for (int i = 1; i < area.points_size(); i++) {
+            const auto &pt0 = area.points(i - 1);
+            const auto &pt1 = area.points(i);
             lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(pt0))});
             lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(pt1))});
         }
-        const auto &right_pline = it.second.right_boundary().line();
-        for (int i = 1; i < right_pline.waypoints_size(); i++) {
-            const auto &pt0 = right_pline.waypoints(i - 1);
-            const auto &pt1 = right_pline.waypoints(i);
+        // path reference line
+        const auto &ref_line = path.reference_line();
+        for (int i = 1; i < ref_line.waypoints_size(); i++) {
+            const auto &pt0 = ref_line.waypoints(i - 1);
+            const auto &pt1 = ref_line.waypoints(i);
             lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(pt0))});
             lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(pt1))});
         }
-        if (left_pline.waypoints_size() > 0) {
-            // connect the initial points
-            lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(left_pline.waypoints(0)))});
-            lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(right_pline.waypoints(0)))});
-            // connect the final points
-            lines_points.push_back(
-                {conv.wgs84_to_cart(lle_to_vec3(left_pline.waypoints(left_pline.waypoints_size() - 1)))});
-            lines_points.push_back(
-                {conv.wgs84_to_cart(lle_to_vec3(right_pline.waypoints(right_pline.waypoints_size() - 1)))});
-        }
+        // const auto &left_pline = path.left_boundary().line();
+        // for (int i = 1; i < left_pline.waypoints_size(); i++) {
+        //     const auto &pt0 = left_pline.waypoints(i - 1);
+        //     const auto &pt1 = left_pline.waypoints(i);
+        //     lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(pt0))});
+        //     lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(pt1))});
+        // }
+        // const auto &right_pline = path.right_boundary().line();
+        // for (int i = 1; i < right_pline.waypoints_size(); i++) {
+        //     const auto &pt0 = right_pline.waypoints(i - 1);
+        //     const auto &pt1 = right_pline.waypoints(i);
+        //     lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(pt0))});
+        //     lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(pt1))});
+        // }
+        // if (left_pline.waypoints_size() > 0) {
+        //     // connect the initial points
+        //     lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(left_pline.waypoints(0)))});
+        //     lines_points.push_back({conv.wgs84_to_cart(lle_to_vec3(right_pline.waypoints(0)))});
+        //     // connect the final points
+        //     lines_points.push_back(
+        //         {conv.wgs84_to_cart(lle_to_vec3(left_pline.waypoints(left_pline.waypoints_size() - 1)))});
+        //     lines_points.push_back(
+        //         {conv.wgs84_to_cart(lle_to_vec3(right_pline.waypoints(right_pline.waypoints_size() - 1)))});
+        // }
     }
     glengine::Mesh *annotations_mesh = _eng.resource_manager().create_mesh("lines");
     annotations_mesh->init(lines_points, GL_LINES);
@@ -58,16 +74,19 @@ bool Annotations::init_from_file(const char *filename, const math::Vector3d &ori
 
     // tags
     for (const auto &it : _annotations.paths()) {
-        const auto &left_pline = it.second.left_boundary().line();
-        const auto &right_pline = it.second.right_boundary().line();
+        const auto &path = it.second;
+        const auto &left_pline = path.left_boundary().line();
+        const auto &right_pline = path.right_boundary().line();
         // extract tags
-        for (int i = 0; i < it.second.tags_size(); i++) {
-            const auto &tag = it.second.tags(i);
+        for (int i = 0; i < path.tags_size(); i++) {
+            const auto &tag = path.tags(i);
             const auto &sp = tag.start();
             const auto &ep = tag.end();
             // std::cout << tag.tag_type() << " " << sp.x() << " " << sp.y() << " " << sp.z() << " " << ep.x() << " "
             //           << ep.y() << " " << ep.z() << std::endl;
             if (tag.tag_type() == STOPLINE) {
+                std::cout << "path: " << path.id() << " tag: " << tag.tag_type() << " id: " << tag.id() << " " << sp.x() << " " << sp.y() << " " << sp.z() << " " << ep.x() << " "
+                      << ep.y() << " " << ep.z() << std::endl;
                 std::vector<math::Vector3f> stopline_points;
                 stopline_points.push_back(
                     conv.wgs84_to_cart(lle_to_vec3(left_pline.waypoints(left_pline.waypoints_size() - 1))));

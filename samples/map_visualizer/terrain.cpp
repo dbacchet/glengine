@@ -1,5 +1,7 @@
 #include "terrain.h"
 
+#include "math/math_utils.h"
+#include "math/vmath.h"
 #include "wgs84_converter.hpp"
 
 #include "curl/curl.h"
@@ -14,10 +16,33 @@
 using nlohmann::json;
 namespace fs = std::filesystem;
 
+namespace {
+
 size_t append_to_string(void *contents, size_t size, size_t nmemb, void *userp) {
     ((std::string *)userp)->append((char *)contents, size * nmemb);
     return size * nmemb;
 }
+
+// Compute barycentric coordinates (u, v, w) for
+// point p with respect to triangle (a, b, c)
+template <typename T>
+void calc_barycentric_coords(math::Vector2<T> p, math::Vector2<T> a, math::Vector2<T> b, math::Vector2<T> c, T &u, T &v,
+                             T &w) {
+    math::Vector2<T> v0 = b - a;
+    math::Vector2<T> v1 = c - a;
+    math::Vector2<T> v2 = p - a;
+    T d00 = v0.dot(v0);
+    T d01 = v0.dot(v1);
+    T d11 = v1.dot(v1);
+    T d20 = v2.dot(v0);
+    T d21 = v2.dot(v1);
+    T denom = d00 * d11 - d01 * d01;
+    v = (d11 * d20 - d01 * d21) / denom;
+    w = (d00 * d21 - d01 * d20) / denom;
+    u = T(1.0) - v - w;
+}
+
+} // namespace
 
 class HttpCache {
   public:
@@ -168,3 +193,29 @@ bool Terrain::fetch_elevation_data(const math::Vector3d &origin) {
     return true;
 }
 
+math::Vector3f Terrain::interpolate(double x_, double y_) {
+    // limit to the borders
+    const double x = math::utils::clamp(x_, -radius * tile_len, radius * tile_len);
+    const double y = math::utils::clamp(y_, -radius * tile_len, radius * tile_len);
+    // find the indices
+    int32_t i = math::utils::clamp((int32_t)std::floor(x / tile_len) + radius, 0, 2 * radius - 1);
+    int32_t j = math::utils::clamp((int32_t)std::floor(y / tile_len) + radius, 0, 2 * radius - 1);
+    const double dx = x - (i-radius) * tile_len;
+    const double dy = y - (j-radius) * tile_len;
+    // calc barycentric coordinates
+    int32_t nx = 2 * radius + 1;
+    double a,b,c;
+        auto p0 = grid[j*nx+i];
+        auto p1 = grid[j*nx+i+1];
+        auto p2 = grid[(j+1)*nx+i+1];
+    if (dy>dx) {
+        p0 = grid[j*nx+i];
+        p1 = grid[(j+1)*nx+i+1];
+        p2 = grid[(j+1)*nx+i];
+    }
+    calc_barycentric_coords(math::Vector2d(x,y), math::Vector2d(p0.x,p0.y), math::Vector2d(p1.x,p1.y), math::Vector2d(p2.x,p2.y), a, b, c);
+    auto p = a*p0 + b*p1 + c*p2;
+    // printf("%.2f,%.2f %.2f %.2f | (%.2f,%.2f,%.2f) (%.2f,%.2f,%.2f) (%.2f,%.2f,%.2f) -> (%.2f,%.2f,%.2f)\n",x,y, dx,dy, p0.x,p0.y,p0.z, p1.x,p1.y,p1.z, p2.x,p2.y,p2.z, p.x,p.y,p.z);
+    // printf("%f %f %f\n", a,b,c);
+    return p;
+}

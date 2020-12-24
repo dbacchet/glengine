@@ -24,7 +24,7 @@
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/build_debug",
-        "environment": [],
+        "environment": [{"name":"GOOGLE_MAPS_API_KEY", "value":"_YOUR_KEY_HERE_"}],
         "externalConsole": false,
         "MIMode": "gdb",
         "setupCommands": [
