@@ -2,8 +2,6 @@
 #include "gl_logger.h"
 
 #include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
 
 #include "math/vmath.h"
 #include "math/math_utils.h"
@@ -16,7 +14,7 @@
 
 namespace {
 
-int saveScreenshot(const char *filename)
+int save_screenshot(const char *filename)
 {
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
