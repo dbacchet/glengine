@@ -21,9 +21,21 @@ set(microprofile_files microprofile/microprofile.h
 add_executable(sample_cube sample_cube.cpp
                            glad/glad_gl.c
                            sokol_gfx_impl.cpp
-                           gl_camera_manipulator.cpp
-                           gl_context.cpp
-                           gl_engine.cpp
+      gl_camera.h
+      gl_camera_manipulator.cpp
+      gl_camera_manipulator.h
+      gl_context.cpp
+      gl_context.h
+      gl_engine.cpp
+      gl_engine.h
+      gl_logger.h
+      gl_mesh.cpp
+      gl_mesh.h
+      gl_pipelines.h
+      gl_pipelines.cpp
+      gl_prefabs.h
+      gl_prefabs.cpp
+      gl_types.h
                            ${imgui_files}
                            ${microprofile_files}
                            )
