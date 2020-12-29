@@ -36,10 +36,14 @@ add_executable(sample_cube sample_cube.cpp
       gl_materialsystem.h
       gl_mesh.cpp
       gl_mesh.h
+      gl_object.cpp
+      gl_object.h
       gl_pipelines.h
       gl_pipelines.cpp
       gl_prefabs.h
       gl_prefabs.cpp
+      gl_renderable.cpp
+      gl_renderable.h
       gl_types.h
       gl_utils.h
       gl_utils.cpp

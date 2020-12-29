@@ -34,7 +34,6 @@ void Mesh::setup_mesh() {
                                                .content = indices.data(),
                                                .label = "mesh-indices"});
     }
-    bind = {.vertex_buffers[0] = vbuf, .index_buffer = ibuf};
 }
 
 // update the data in the buffers. buffers have to be already allocated

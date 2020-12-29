@@ -28,7 +28,6 @@ class Mesh: public Resource {
 
     sg_buffer vbuf = {0};
     sg_buffer ibuf = {SG_INVALID_ID};
-    sg_bindings bind = {0};
 
   private:
     void setup_mesh();
