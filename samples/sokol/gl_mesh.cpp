@@ -24,12 +24,6 @@ bool Mesh::init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t
     return true;
 }
 
-bool Mesh::update() {
-    update_mesh_data();
-    //
-    return true;
-}
-
 void Mesh::setup_mesh() {
     vbuf = sg_make_buffer((sg_buffer_desc){
         .size = int(vertices.size() * sizeof(Vertex)), .content = vertices.data(), .label = "mesh-vertices"});
@@ -40,12 +34,11 @@ void Mesh::setup_mesh() {
                                                .content = indices.data(),
                                                .label = "mesh-indices"});
     }
-    // create bindings struct
     bind = {.vertex_buffers[0] = vbuf, .index_buffer = ibuf};
 }
 
 // update the data in the buffers. buffers have to be already allocated
-void Mesh::update_mesh_data() {
+bool Mesh::update() {
     // glBindVertexArray(vao);
     // glBindBuffer(GL_ARRAY_BUFFER, vbo);
     // GLint size = 0;
@@ -66,6 +59,12 @@ void Mesh::update_mesh_data() {
     //     }
     // }
     // glBindVertexArray(0);
+    return true;
+}
+
+void Mesh::update_bindings(sg_bindings &bind) {
+    bind.vertex_buffers[0] = vbuf;
+    bind.index_buffer = ibuf;
 }
 
 } // namespace glengine

@@ -1,4 +1,5 @@
 #include "gl_pipelines.h"
+#include "gl_utils.h"
 
 #include "math/vmath_types.h"
 
@@ -16,8 +17,9 @@ bool Pipelines::init_shaders() {
 
 bool Pipelines::init_pipelines() {
     // using vertexcolor shader
+    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? 4:1;
     auto make_vertexcolor_pipeline = [&](sg_primitive_type primitive, sg_index_type index_type=SG_INDEXTYPE_NONE) {
-        return sg_make_pipeline((sg_pipeline_desc){
+        sg_pipeline_desc pip_desc = {
             .layout = {.buffers[0].stride = sizeof(Vertex),
                        .attrs = {[ATTR_vs_vertexcolor_position].format = SG_VERTEXFORMAT_FLOAT3,
                                  [ATTR_vs_vertexcolor_color0].format = SG_VERTEXFORMAT_UBYTE4N}},
@@ -26,8 +28,10 @@ bool Pipelines::init_pipelines() {
             .index_type = index_type,
             .depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true},
             .blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH},
-            .rasterizer = {.cull_mode = SG_CULLMODE_NONE, .sample_count = 1},
-            .label = "offscreen pipeline"});
+            .rasterizer = {.cull_mode = SG_CULLMODE_NONE, .sample_count = offscreen_sample_count},
+            .label = "offscreen pipeline"};
+        printf("%20u | %llu\n",murmur_hash2_32(&pip_desc, sizeof(pip_desc), 12345678), murmur_hash2_64(&pip_desc, sizeof(pip_desc), 12345678));
+        return sg_make_pipeline(pip_desc);
     };
     // non indexed
     pipelines[GL_PIPELINE_VERTEXCOLOR_POINTS] = make_vertexcolor_pipeline(SG_PRIMITIVETYPE_POINTS);
