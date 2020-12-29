@@ -192,6 +192,22 @@ bool GLEngine::terminate() {
     return true;
 }
 
+Object *GLEngine::create_object(Object *parent, ID id) {
+    Object *ro = new Object(parent ? parent : _root, id);
+    return ro;
+}
+
+Object *GLEngine::create_object(const Renderable &renderable, Object *parent, ID id) {
+    Object *ro = create_object(parent, id);
+    ro->add_renderable(&renderable, 1);
+    return ro;
+}
+
+Object *GLEngine::create_object(const std::vector<Renderable> &renderables, Object *parent, ID id) {
+    Object *ro = create_object(parent, id);
+    ro->init(renderables);
+    return ro;
+}
 
 void GLEngine::add_ui_function(std::function<void(void)> fun) {
     _ui_functions.push_back(fun);

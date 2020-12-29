@@ -17,12 +17,7 @@ struct Renderable {
     Material *material = nullptr;
     sg_bindings bind = {0};
 
-    void update_bindings() {
-        assert(mesh && "invalid mesh pointer");
-        assert(material && "invalid material pointer");
-        mesh->update_bindings(bind);
-        material->update_bindings(bind);
-    }
+    void update_bindings();
 };
 
 } // namespace glengine

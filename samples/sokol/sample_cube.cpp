@@ -69,9 +69,35 @@ void create_offscreen_pass(int width, int height) {
                                                     .depth_stencil_attachment.image = sg_make_image(&depth_img_desc),
                                                     .label = "offscreen pass"};
     state.offscreen.pass.pass_id = sg_make_pass(&state.offscreen.pass.pass_desc);
+    /* pass action for offscreen pass */
+    state.offscreen.pass.pass_action =
+        (sg_pass_action){.colors = {
+                             [0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}},
+                         }};
 
     /* also need to update the fullscreen-quad texture bindings */
     state.fsq.bind.fs_images[0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
+}
+
+// create the final fullscreen quad rendering pass
+void create_fsq_pass(int width, int height) {
+    // fulscreen quad rendering
+    float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+    sg_buffer quad_vbuf = sg_make_buffer(
+        (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
+
+    /* the pipeline object to render the fullscreen quad */
+    state.fsq.pip =
+        sg_make_pipeline((sg_pipeline_desc){.layout = {.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2},
+                                            .shader = sg_make_shader(fsq_shader_desc()),
+                                            .primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP,
+                                            .label = "fullscreen quad pipeline"});
+
+    /* resource bindings to render a fullscreen quad */
+    state.fsq.bind = (sg_bindings){.vertex_buffers[0] = quad_vbuf,
+                                   .fs_images = {
+                                       [SLOT_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image,
+                                   }};
 }
 
 int main() {
@@ -90,56 +116,40 @@ int main() {
 
     // create offscreen pass
     create_offscreen_pass(eng._context.window_state.window_size.x, eng._context.window_state.window_size.y);
+    // final pass
+    create_fsq_pass(eng._context.window_state.window_size.x, eng._context.window_state.window_size.y);
 
     // grid
     // mesh
-    glengine::Mesh grid(101,"grid");
+    glengine::Mesh grid_mesh(101,"grid_mesh");
     auto grid_md = glengine::create_grid_data(50.0f);
-    grid.init(grid_md.vertices, grid_md.indices);
+    grid_mesh.init(grid_md.vertices, grid_md.indices);
     // material
     glengine::MaterialVertexColor grid_mtl;
     grid_mtl.init(SG_PRIMITIVETYPE_LINES);
     // renderable
-    glengine::Renderable grid_renderable {&grid, &grid_mtl};
+    glengine::Renderable grid_renderable {&grid_mesh, &grid_mtl};
     grid_renderable.update_bindings();
 
     // box
     // mesh
-    glengine::Mesh box(102,"box");
+    glengine::Mesh box_mesh(102,"box_mesh");
     auto box_md = glengine::create_box_data();
-    box.init(box_md.vertices, box_md.indices);
+    box_mesh.init(box_md.vertices, box_md.indices);
     // material
     glengine::MaterialVertexColor box_mtl;
     box_mtl.init(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     // renderable
-    glengine::Renderable box_renderable {&box, &box_mtl};
+    glengine::Renderable box_renderable {&box_mesh, &box_mtl};
     box_renderable.update_bindings();
 
 
-    // offscreen pipeline
-    /* pass action for offscreen pass */
-    state.offscreen.pass.pass_action =
-        (sg_pass_action){.colors = {
-                             [0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}},
-                         }};
-
-    // fulscreen quad rendering
-    float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
-    sg_buffer quad_vbuf = sg_make_buffer(
-        (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
-
-    /* the pipeline object to render the fullscreen quad */
-    state.fsq.pip =
-        sg_make_pipeline((sg_pipeline_desc){.layout = {.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2},
-                                            .shader = sg_make_shader(fsq_shader_desc()),
-                                            .primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP,
-                                            .label = "fullscreen quad pipeline"});
-
-    /* resource bindings to render a fullscreen quad */
-    state.fsq.bind = (sg_bindings){.vertex_buffers[0] = quad_vbuf,
-                                   .fs_images = {
-                                       [SLOT_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image,
-                                   }};
+    //
+    // /* resource bindings to render a fullscreen quad */
+    // state.fsq.bind = (sg_bindings){.vertex_buffers[0] = quad_vbuf,
+    //                                .fs_images = {
+    //                                    [slot_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image,
+    //                                }};
 
     uint64_t last_time = 0;
 
@@ -161,7 +171,7 @@ int main() {
         sg_begin_pass(state.offscreen.pass.pass_id, &state.offscreen.pass.pass_action);
         // first object
         sg_apply_pipeline(box_renderable.material->pip);
-        sg_apply_bindings(&box.bind);
+        sg_apply_bindings(&box_renderable.bind);
         vs_params_t vs_params;
         vs_params.view = eng._camera.inverse_transform();
         vs_params.projection = eng._camera.projection();
@@ -169,17 +179,17 @@ int main() {
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);
         // second object
-        sg_apply_bindings(&box.bind);
+        sg_apply_bindings(&box_renderable.bind);
         vs_params.model = math::create_translation<float>({-1.0f, 1.0f, 0.0f});
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);
         // third object
-        sg_apply_bindings(&box.bind);
+        sg_apply_bindings(&box_renderable.bind);
         vs_params.model = math::create_translation<float>({1.0f, 1.0f, 0.0f});
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);
         // forth object
-        sg_apply_bindings(&box.bind);
+        sg_apply_bindings(&box_renderable.bind);
         vs_params.model = math::create_translation<float>({1.0f, -1.0f, 0.0f});
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);

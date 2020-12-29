@@ -10,11 +10,6 @@
 
 namespace glengine {
 
-class Mesh;
-class Shader;
-class Material;
-class Renderer;
-
 class Object final {
   public:
     Object(Object *parent = nullptr, ID id = NULL_ID);
@@ -22,8 +17,6 @@ class Object final {
 
     bool init(const std::vector<Renderable> &renderables);
     bool add_renderable(const Renderable *r, uint32_t num);
-
-    bool draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &parent_tf=math::matrix4_identity<float>());
 
     // ////////// //
     // scenegraph //
