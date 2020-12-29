@@ -29,6 +29,11 @@ add_executable(sample_cube sample_cube.cpp
       gl_engine.cpp
       gl_engine.h
       gl_logger.h
+      gl_material.h
+      gl_material_vertexcolor.cpp
+      gl_material_vertexcolor.h
+      gl_materialsystem.cpp
+      gl_materialsystem.h
       gl_mesh.cpp
       gl_mesh.h
       gl_pipelines.h
@@ -36,11 +41,13 @@ add_executable(sample_cube sample_cube.cpp
       gl_prefabs.h
       gl_prefabs.cpp
       gl_types.h
+      gl_utils.h
+      gl_utils.cpp
                            ${imgui_files}
                            ${microprofile_files}
                            )
 target_compile_definitions(sample_cube PUBLIC SOKOL_GLCORE33
-    SOKOL_TRACE_HOOKS
+                                              SOKOL_TRACE_HOOKS
                                               SOKOL_IMGUI_NO_SOKOL_APP)
 target_include_directories(sample_cube PUBLIC .
                                               imgui)

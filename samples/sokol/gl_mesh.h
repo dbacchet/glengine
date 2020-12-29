@@ -24,13 +24,13 @@ class Mesh: public Resource {
     // update the opengl buffers to reflect the vertices and indices arrays
     bool update();
 
+    void update_bindings(sg_bindings &bind);
+
     sg_buffer vbuf = {0};
-    sg_buffer ibuf = {0};
+    sg_buffer ibuf = {SG_INVALID_ID};
     sg_bindings bind = {0};
 
   private:
     void setup_mesh();
-    // update the data in the buffers. buffers have to be already allocated
-    void update_mesh_data();
 };
 } // namespace glengine

@@ -11,9 +11,10 @@
 #include "gl_types.h"
 #include "gl_context.h"
 #include "gl_engine.h"
-#include "gl_pipelines.h"
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
+#include "gl_material_vertexcolor.h"
+#include "gl_renderable.h"
 
 struct Pass {
     sg_pass_action pass_action = {0};
@@ -24,8 +25,6 @@ struct Pass {
 static struct {
     struct {
         Pass pass;
-        sg_pipeline pip;
-        sg_bindings bind;
     } offscreen;
     struct {
         Pass pass;
@@ -43,7 +42,7 @@ void create_offscreen_pass(int width, int height) {
     sg_destroy_image(state.offscreen.pass.pass_desc.depth_stencil_attachment.image);
 
     /* create offscreen rendertarget images and pass */
-    const int offscreen_sample_count = 1;
+    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? 4:1;
     sg_image_desc color_img_desc = {.render_target = true,
                                     .width = width,
                                     .height = height,
@@ -89,70 +88,33 @@ int main() {
     simgui_desc.dpi_scale = eng._context.window_state.framebuffer_size.x / eng._context.window_state.window_size.x;
     simgui_setup(&simgui_desc);
 
-    glengine::Pipelines pipelines;
-    pipelines.init();
-
     // create offscreen pass
     create_offscreen_pass(eng._context.window_state.window_size.x, eng._context.window_state.window_size.y);
 
+    // grid
+    // mesh
     glengine::Mesh grid(101,"grid");
     auto grid_md = glengine::create_grid_data(50.0f);
     grid.init(grid_md.vertices, grid_md.indices);
+    // material
+    glengine::MaterialVertexColor grid_mtl;
+    grid_mtl.init(SG_PRIMITIVETYPE_LINES);
+    // renderable
+    glengine::Renderable grid_renderable {&grid, &grid_mtl};
+    grid_renderable.update_bindings();
 
+    // box
+    // mesh
     glengine::Mesh box(102,"box");
     auto box_md = glengine::create_box_data();
     box.init(box_md.vertices, box_md.indices);
+    // material
+    glengine::MaterialVertexColor box_mtl;
+    box_mtl.init(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+    // renderable
+    glengine::Renderable box_renderable {&box, &box_mtl};
+    box_renderable.update_bindings();
 
-    /* cube vertex buffer */
-    // clang-format off
-    glengine::Vertex vertices[] = {
-        {{-1.0f, -1.0f, -1.0f},   {255,0,0,255}},
-        {{ 1.0f, -1.0f, -1.0f},   {255,0,0,255}},
-        {{ 1.0f,  1.0f, -1.0f},   {255,0,0,255}},
-        {{-1.0f,  1.0f, -1.0f},   {255,0,0,255}},
-
-        {{-1.0f, -1.0f,  1.0f},   {0,255,0,255}},
-        {{ 1.0f, -1.0f,  1.0f},   {0,255,0,255}},
-        {{ 1.0f,  1.0f,  1.0f},   {0,255,0,255}},
-        {{-1.0f,  1.0f,  1.0f},   {0,255,0,255}},
-
-        {{-1.0f, -1.0f, -1.0f},   {0,0,255,255}},
-        {{-1.0f,  1.0f, -1.0f},   {0,0,255,255}},
-        {{-1.0f,  1.0f,  1.0f},   {0,0,255,255}},
-        {{-1.0f, -1.0f,  1.0f},   {0,0,255,255}},
-
-        {{ 1.0f, -1.0f, -1.0f},   {255,128,0,255}},
-        {{ 1.0f,  1.0f, -1.0f},   {255,128,0,255}},
-        {{ 1.0f,  1.0f,  1.0f},   {255,128,0,255}},
-        {{ 1.0f, -1.0f,  1.0f},   {255,128,0,255}},
-
-        {{-1.0f, -1.0f, -1.0f},   {0,128,255,255}},
-        {{-1.0f, -1.0f,  1.0f},   {0,128,255,255}},
-        {{ 1.0f, -1.0f,  1.0f},   {0,128,255,255}},
-        {{ 1.0f, -1.0f, -1.0f},   {0,128,255,255}},
-
-        {{-1.0f,  1.0f, -1.0f},   {255,0,128,255}},
-        {{-1.0f,  1.0f,  1.0f},   {255,0,128,255}},
-        {{ 1.0f,  1.0f,  1.0f},   {255,0,128,255}},
-        {{ 1.0f,  1.0f, -1.0f},   {255,0,128,255}}
-    };
-    // clang-format on
-    sg_buffer vbuf =
-        sg_make_buffer((sg_buffer_desc){.size = sizeof(vertices), .content = vertices, .label = "cube-vertices"});
-
-    /* create an index buffer for the cube */
-    // clang-format off
-    uint32_t indices[] = {
-        0, 1, 2,  0, 2, 3,
-        6, 5, 4,  7, 6, 4,
-        8, 9, 10,  8, 10, 11,
-        14, 13, 12,  15, 14, 12,
-        16, 17, 18,  16, 18, 19,
-        22, 21, 20,  23, 22, 20
-    };
-    // clang-format on
-    sg_buffer ibuf = sg_make_buffer((sg_buffer_desc){
-        .type = SG_BUFFERTYPE_INDEXBUFFER, .size = sizeof(indices), .content = indices, .label = "cube-indices"});
 
     // offscreen pipeline
     /* pass action for offscreen pass */
@@ -160,10 +122,6 @@ int main() {
         (sg_pass_action){.colors = {
                              [0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}},
                          }};
-    state.offscreen.pip = pipelines.get(glengine::GL_PIPELINE_VERTEXCOLOR_TRIANGLES_INDEXED);
-
-    /* resource bindings for offscreen rendering */
-    state.offscreen.bind = (sg_bindings){.vertex_buffers[0] = vbuf, .index_buffer = ibuf};
 
     // fulscreen quad rendering
     float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
@@ -201,8 +159,8 @@ int main() {
         simgui_new_frame(cur_fb_width, cur_fb_height, delta_time);
 
         sg_begin_pass(state.offscreen.pass.pass_id, &state.offscreen.pass.pass_action);
-        sg_apply_pipeline(pipelines.get(glengine::GL_PIPELINE_VERTEXCOLOR_TRIANGLES_INDEXED));
         // first object
+        sg_apply_pipeline(box_renderable.material->pip);
         sg_apply_bindings(&box.bind);
         vs_params_t vs_params;
         vs_params.view = eng._camera.inverse_transform();
@@ -226,11 +184,11 @@ int main() {
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);
         // grid
-        sg_apply_pipeline(pipelines.get(glengine::GL_PIPELINE_VERTEXCOLOR_LINES));
-        sg_apply_bindings(&grid.bind);
+        sg_apply_pipeline(grid_renderable.material->pip);
+        sg_apply_bindings(&grid_renderable.bind);
         vs_params.model = math::create_translation<float>({0.0f, 0.0f, 0.0f});
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
-        sg_draw(0, grid.vertices.size(), 1);
+        sg_draw(0, grid_renderable.mesh->vertices.size(), 1);
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("sokol-gfx")) {

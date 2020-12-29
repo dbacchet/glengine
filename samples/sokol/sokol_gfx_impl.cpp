@@ -2,7 +2,6 @@
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 #define SOKOL_IMPL
-// #define SOKOL_TRACE_HOOKS
 #include "sokol_gfx.h"
 #include "sokol_time.h"
 // imgui support
