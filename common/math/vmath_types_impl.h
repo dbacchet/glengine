@@ -25,7 +25,6 @@
 #pragma once
 
 #include <cmath>
-#include <cstdlib> // needed for std::abs(int) in clang
 #include <cassert>
 #include <cstring>
 
