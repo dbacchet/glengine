@@ -18,6 +18,10 @@ struct Renderable {
     sg_bindings bind = {0};
 
     void update_bindings();
+
+    void apply_pipeline();
+    void apply_bindings();
+    void apply_uniforms();
 };
 
 } // namespace glengine

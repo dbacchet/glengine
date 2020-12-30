@@ -163,6 +163,8 @@ bool GLEngine::init(const Config &config) {
                                           window_size_callback,
                                           framebuffer_size_callback //
                                       });
+    // resource manager
+    _resource_manager.init();
 
     _camera.set_perspective(0.1, 1000.0, math::utils::deg2rad(45.0f));
     _camera.set_transform(math::create_lookat<float>({-10.0f, -1.0f, 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
@@ -186,8 +188,11 @@ bool GLEngine::render() {
 }
 
 bool GLEngine::terminate() {
+    log_info("Shutting down engine");
 	MicroProfileShutdown();
     // deallocate all resources
+    _resource_manager.terminate();
+    // destroy the gfx context
     glengine::destroy_context(_context);
     return true;
 }

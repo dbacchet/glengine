@@ -3,6 +3,7 @@
 #include "gl_context.h"
 #include "gl_camera.h"
 #include "gl_camera_manipulator.h"
+#include "gl_resource_manager.h"
 #include "gl_object.h"
 
 #include <cstdint>
@@ -25,15 +26,33 @@ class GLEngine {
 
     bool terminate();
 
-    // ///////////// //
+    /// get resource manager
+    ResourceManager &resource_manager() { return _resource_manager; }
+
+    // /////// //
     // objects //
-    // ///////////// //
+    // /////// //
     /// create a new (empty) object
-    Object *create_object(Object *parent=nullptr, ID id=NULL_ID);
+    Object *create_object(Object *parent = nullptr, ID id = NULL_ID);
     /// create a new object and add the given renderable
-    Object *create_object(const Renderable &renderable, Object *parent=nullptr, ID id=NULL_ID);
+    Object *create_object(const Renderable &renderable, Object *parent = nullptr, ID id = NULL_ID);
     /// create a new object, given an array of renderables
-    Object *create_object(const std::vector<Renderable> &renderables, Object *parent=nullptr, ID id=NULL_ID);
+    Object *create_object(const std::vector<Renderable> &renderables, Object *parent = nullptr, ID id = NULL_ID);
+
+    // ///////// //
+    // materials //
+    // ///////// //
+    /// create a material
+    template <typename MtlT>
+    MtlT *create_material(sg_primitive_type primitive, sg_index_type idx_type = SG_INDEXTYPE_NONE) {
+        MtlT *mtl = new MtlT();
+        if (mtl && mtl->init(_resource_manager, primitive, idx_type)) {
+            return mtl;
+        } else {
+            delete mtl;
+            return nullptr;
+        }
+    }
 
     // // //
     // UI //
@@ -46,6 +65,7 @@ class GLEngine {
     Context _context;
     Camera _camera;
     CameraManipulator _camera_manipulator;
+    ResourceManager _resource_manager;
 
     Object *_root = nullptr;
 
