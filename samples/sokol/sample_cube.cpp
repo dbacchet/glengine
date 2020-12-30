@@ -13,6 +13,7 @@
 #include "gl_engine.h"
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
+#include "gl_material_flat.h"
 #include "gl_material_vertexcolor.h"
 #include "gl_renderable.h"
 
@@ -123,39 +124,34 @@ int main() {
     // mesh
     glengine::Mesh grid_mesh(101,"grid_mesh");
     auto grid_md = glengine::create_grid_data(50.0f);
-    grid_mesh.init(grid_md.vertices, grid_md.indices);
+    grid_mesh.init(grid_md.vertices);
     // material
-    glengine::MaterialVertexColor grid_mtl;
-    grid_mtl.init(SG_PRIMITIVETYPE_LINES);
+    auto *grid_mtl = eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_LINES);
     // renderable
-    glengine::Renderable grid_renderable {&grid_mesh, &grid_mtl};
+    glengine::Renderable grid_renderable {&grid_mesh, grid_mtl};
     grid_renderable.update_bindings();
 
-    // box
+    // boxes
     // mesh
     glengine::Mesh box_mesh(102,"box_mesh");
     auto box_md = glengine::create_box_data();
     box_mesh.init(box_md.vertices, box_md.indices);
     // material
-    glengine::MaterialVertexColor box_mtl;
-    box_mtl.init(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+    auto *box_mtl_vc = eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+    auto *box_mtl_flat = eng.create_material<glengine::MaterialFlat>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     // renderable
-    glengine::Renderable box_renderable {&box_mesh, &box_mtl};
+    glengine::Renderable box_renderable {&box_mesh, box_mtl_vc};
     box_renderable.update_bindings();
+    glengine::Renderable box_renderable_flat {&box_mesh, box_mtl_flat};
+    box_renderable_flat.update_bindings();
 
-
-    //
-    // /* resource bindings to render a fullscreen quad */
-    // state.fsq.bind = (sg_bindings){.vertex_buffers[0] = quad_vbuf,
-    //                                .fs_images = {
-    //                                    [slot_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image,
-    //                                }};
 
     uint64_t last_time = 0;
 
     sg_imgui_t sg_imgui;
     sg_imgui_init(&sg_imgui);
 
+    int cnt = 0;
     while (eng.render()) {
         const double delta_time = stm_sec(stm_laptime(&last_time));
 
@@ -165,13 +161,17 @@ int main() {
         int cur_fb_width = eng._context.window_state.framebuffer_size.x;
         int cur_fb_height = eng._context.window_state.framebuffer_size.y;
 
+        box_mtl_flat->color.r = uint8_t(cnt%256);
+        box_mtl_flat->color.g = uint8_t(255-cnt%256);
+
         ImGui_ImplGlfw_NewFrame();
         simgui_new_frame(cur_fb_width, cur_fb_height, delta_time);
 
         sg_begin_pass(state.offscreen.pass.pass_id, &state.offscreen.pass.pass_action);
         // first object
-        sg_apply_pipeline(box_renderable.material->pip);
-        sg_apply_bindings(&box_renderable.bind);
+        box_renderable.apply_pipeline();
+        box_renderable.apply_bindings();
+        box_renderable.apply_uniforms();
         vs_params_t vs_params;
         vs_params.view = eng._camera.inverse_transform();
         vs_params.projection = eng._camera.projection();
@@ -179,23 +179,30 @@ int main() {
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);
         // second object
-        sg_apply_bindings(&box_renderable.bind);
+        box_renderable_flat.apply_pipeline();
+        box_renderable_flat.apply_bindings();
+        box_renderable_flat.apply_uniforms();
         vs_params.model = math::create_translation<float>({-1.0f, 1.0f, 0.0f});
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);
         // third object
-        sg_apply_bindings(&box_renderable.bind);
+        box_renderable.apply_pipeline();
+        box_renderable.apply_bindings();
+        box_renderable.apply_uniforms();
         vs_params.model = math::create_translation<float>({1.0f, 1.0f, 0.0f});
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);
         // forth object
-        sg_apply_bindings(&box_renderable.bind);
+        box_renderable_flat.apply_pipeline();
+        box_renderable_flat.apply_bindings();
+        box_renderable_flat.apply_uniforms();
         vs_params.model = math::create_translation<float>({1.0f, -1.0f, 0.0f});
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, 36, 1);
         // grid
-        sg_apply_pipeline(grid_renderable.material->pip);
-        sg_apply_bindings(&grid_renderable.bind);
+        grid_renderable.apply_pipeline();
+        grid_renderable.apply_bindings();
+        grid_renderable.apply_uniforms();
         vs_params.model = math::create_translation<float>({0.0f, 0.0f, 0.0f});
         sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
         sg_draw(0, grid_renderable.mesh->vertices.size(), 1);
@@ -224,6 +231,8 @@ int main() {
         sg_end_pass();
         // imgui
         sg_commit();
+
+        cnt++;
     }
 
     eng.terminate();

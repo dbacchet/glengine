@@ -30,10 +30,10 @@ add_executable(sample_cube sample_cube.cpp
       gl_engine.h
       gl_logger.h
       gl_material.h
+      gl_material_flat.cpp
+      gl_material_flat.h
       gl_material_vertexcolor.cpp
       gl_material_vertexcolor.h
-      gl_materialsystem.cpp
-      gl_materialsystem.h
       gl_mesh.cpp
       gl_mesh.h
       gl_object.cpp
@@ -44,6 +44,8 @@ add_executable(sample_cube sample_cube.cpp
       gl_prefabs.cpp
       gl_renderable.cpp
       gl_renderable.h
+      gl_resource_manager.cpp
+      gl_resource_manager.h
       gl_types.h
       gl_utils.h
       gl_utils.cpp

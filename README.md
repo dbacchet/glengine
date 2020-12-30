@@ -36,3 +36,17 @@ Additional rendering that can be useful as debug/annotations, like text, boundin
 Objects in this stage will *not* be selectable.
 
 
+TO BE ADDED
+===========
+
+resource ownership
+------------------
+if created by the engine is managed by the engine
+
+why sokol
+---------
+* better support more than one platform/gfx api
+* passes and pipelines were implemented very well
+* low-level enough to have total flexibility on the architecture
+
+

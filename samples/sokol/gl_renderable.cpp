@@ -12,4 +12,14 @@ void Renderable::update_bindings() {
     material->update_bindings(bind);
 }
 
+    void Renderable::apply_pipeline() {
+        sg_apply_pipeline(material->pip);
+    }
+    void Renderable::apply_bindings() {
+        sg_apply_bindings(bind);
+    }
+void Renderable::apply_uniforms() {
+    material->apply_uniforms();
+}
+
 } // namespace glengine

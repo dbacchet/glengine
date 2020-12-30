@@ -39,6 +39,8 @@ class Object final {
     Object &set_scale(const math::Vector3f &scl);
     Object &set_visible(bool flag);
 
+    bool draw(const Camera &cam, const math::Matrix4f &parent_tf);
+
     // //// //
     // data //
     // //// //
