@@ -33,10 +33,16 @@ struct Vertex {
 class Resource {
   protected:
     Resource(ID id_, const std::string &name_)
-    : id(id_), name(name_) {}
+    : id(id_)
+    , name(name_) {}
 
     ID id = NULL_ID;       ///< resource id. Unique per class of resource
     std::string name = ""; ///< resource name. Not guaranteed to be unique
 };
 
+struct common_uniform_params_t {
+    math::Matrix4f model;
+    math::Matrix4f view;
+    math::Matrix4f projection;
+};
 } // namespace glengine

@@ -2,6 +2,7 @@
 
 #include "math/vmath.h"
 #include "gl_types.h"
+#include "gl_material.h"
 #include "sokol_gfx.h"
 
 #include <memory>
@@ -21,7 +22,9 @@ struct Renderable {
 
     void apply_pipeline();
     void apply_bindings();
-    void apply_uniforms();
+    void apply_uniforms(const common_uniform_params_t &params);
+
+    void draw();
 };
 
 } // namespace glengine

@@ -12,6 +12,8 @@
 
 namespace glengine {
 
+struct State;
+
 class GLEngine {
   public:
     virtual ~GLEngine();
@@ -68,6 +70,9 @@ class GLEngine {
     ResourceManager _resource_manager;
 
     Object *_root = nullptr;
+
+    uint64_t _curr_time = 0;
+    State *_state = nullptr; ///< persistent state needed by the renderer
 
     std::vector<std::function<void(void)>> _ui_functions;
 };

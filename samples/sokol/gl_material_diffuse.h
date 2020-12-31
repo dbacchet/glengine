@@ -8,17 +8,19 @@
 
 namespace glengine {
 
-class MaterialVertexColor : public Material {
+class MaterialDiffuse : public Material {
   public:
-    MaterialVertexColor()
+    MaterialDiffuse()
     : Material() {}
-    virtual ~MaterialVertexColor() = default;
+    virtual ~MaterialDiffuse() = default;
 
     virtual bool init(ResourceManager &rm, sg_primitive_type primitive, sg_index_type idx_type = SG_INDEXTYPE_NONE) override;
 
     virtual void update_bindings(sg_bindings &bind) override;
 
     virtual void apply_uniforms(const common_uniform_params_t &params) override;
+
+    Color color = {180,180,180,255};
 };
 
 } // namespace glengine
