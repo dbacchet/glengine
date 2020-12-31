@@ -28,7 +28,6 @@ int main() {
     auto *grid_mtl = eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_LINES);
     // renderable
     glengine::Renderable grid_renderable {&grid_mesh, grid_mtl};
-    grid_renderable.update_bindings();
     // object
     auto *grid = eng.create_object(grid_renderable);
 
@@ -43,11 +42,8 @@ int main() {
     auto *box_mtl_diffuse = eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     // renderables
     glengine::Renderable box_renderable_vc {&box_mesh, box_mtl_vc};
-    box_renderable_vc.update_bindings();
     glengine::Renderable box_renderable_flat {&box_mesh, box_mtl_flat};
-    box_renderable_flat.update_bindings();
     glengine::Renderable box_renderable_diffuse {&box_mesh, box_mtl_diffuse};
-    box_renderable_diffuse.update_bindings();
     // objects
     auto *root = eng.create_object();
     auto *box1 = eng.create_object(box_renderable_vc,root);
