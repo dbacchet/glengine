@@ -63,11 +63,11 @@ Object *Object::detach_child(Object *ro) {
 }
 
 bool Object::draw(const Camera &cam, const math::Matrix4f &parent_tf) {
-    MICROPROFILE_SCOPEI("renderobject", "draw", MP_AUTO);
+    // MICROPROFILE_SCOPEI("renderobject", "draw", MP_AUTO);
     math::Matrix4f curr_tf = parent_tf * _transform * _scale;
     if (_visible) {
         for (auto &go : _renderables) {
-            MICROPROFILE_SCOPEI("renderobject", "render_renderables", MP_AUTO);
+            // MICROPROFILE_SCOPEI("renderobject", "render_renderables", MP_AUTO);
             // renderer.render_items.push_back({&cam, &go, curr_tf, _id});
             go.apply_pipeline();
             go.apply_bindings();

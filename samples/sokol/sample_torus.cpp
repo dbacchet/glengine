@@ -9,6 +9,8 @@
 #include "gl_material_vertexcolor.h"
 #include "gl_renderable.h"
 
+#include "microprofile/microprofile.h"
+
 struct Obj {
     glengine::ID id = 0;
     float alpha = 0.0f;
@@ -35,12 +37,6 @@ int main() {
     float R = 50.0;
     float r = float(R * N) / M;
     float l = 2 * M_PI * r / N;
-
-    // float r = 5.0f;
-    // float R = 10*r;
-    // uint32_t N = 40;
-    // uint32_t M = (r+R)/r*N;
-    // float l = 2*M_PI*r/N;
     printf("r:%f R:%f, N:%d, M:%d, l:%f\n", r, R, N, M, l);
 
     std::vector<Obj> cubes(M * N);
@@ -68,7 +64,6 @@ int main() {
 
             auto *mtl = eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
             glengine::Renderable box_renderable {&box_mesh, mtl};
-            box_renderable.update_bindings();
             obj.ro = eng.create_object(box_renderable, nullptr, i * N + j);
             obj.ro->set_transform(obj.tf);
             mtl->color = {rand_range<uint8_t>(60, 255), rand_range<uint8_t>(60, 255), rand_range<uint8_t>(60, 255), 255};
@@ -87,7 +82,6 @@ int main() {
     auto *grid_mtl = eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_LINES);
     // renderable
     glengine::Renderable grid_renderable {&grid_mesh, grid_mtl};
-    grid_renderable.update_bindings();
     // object
     auto *grid = eng.create_object(grid_renderable);
 
@@ -104,6 +98,7 @@ int main() {
         float t = glfwGetTime();
 
         // update positions
+        MICROPROFILE_ENTERI("sample_torus", "update tfs", MP_AUTO);
         float da = t / 10.0f;
         math::Matrix4f m =
             math::create_transformation({0.0f, 0.0f, -R}, math::quat_from_euler_321<float>(0.0f, da, 0.0f));
@@ -117,6 +112,7 @@ int main() {
             obj.ro->set_scale({1.0f + scaling, 1.0f + scaling, 1.0f + scaling});
             obj.ro->set_visible(std::cos(angle) > 0.5);
         }
+        MICROPROFILE_LEAVE();
 
         cnt++;
     }

@@ -14,6 +14,10 @@ class Mesh;
 class Material;
 
 struct Renderable {
+    Renderable(Mesh *msh, Material *mtl);
+
+    void init(Mesh *msh, Material *mtl);
+
     Mesh *mesh = nullptr;
     Material *material = nullptr;
     sg_bindings bind = {0};

@@ -5,6 +5,17 @@
 
 namespace glengine {
 
+Renderable::Renderable(Mesh *msh, Material *mtl) {
+    init(msh, mtl);
+}
+
+void Renderable::init(Mesh *msh, Material *mtl) {
+    mesh = msh;
+    material = mtl;
+    bind = {0};
+    update_bindings();
+}
+
 void Renderable::update_bindings() {
     assert(mesh && "invalid mesh pointer");
     assert(material && "invalid material pointer");
