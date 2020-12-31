@@ -8,7 +8,7 @@ uniform vs_params {
     mat4 projection;
 };
 
-in vec4 vertex_pos;
+in vec4 vertex_pos; // since the pos is a vec3, the last coord will be initialized with 1.0 by the backend when setting the vertex format
 
 void main() {
     gl_Position = projection * view * model * vertex_pos;

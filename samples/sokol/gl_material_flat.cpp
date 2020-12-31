@@ -33,7 +33,9 @@ void MaterialFlat::update_bindings(sg_bindings &bind) {
     // nothing to be done here
 }
 
-void MaterialFlat::apply_uniforms() {
+void MaterialFlat::apply_uniforms(const common_uniform_params_t &params) {
+    vs_params_t vs_params { .model = params.model, .view = params.view, .projection = params.projection};
+    sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
     fs_params_t fs_params { .color = {color.r/255.0f,color.g/255.0f,color.b/255.0f,color.a/255.0f}};
     sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fs_params, &fs_params, sizeof(fs_params));
 }

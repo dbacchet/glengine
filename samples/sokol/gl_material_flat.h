@@ -18,7 +18,7 @@ class MaterialFlat : public Material {
 
     virtual void update_bindings(sg_bindings &bind) override;
 
-    virtual void apply_uniforms() override;
+    virtual void apply_uniforms(const common_uniform_params_t &params) override;
 
     Color color = {180,180,180,255};
 };

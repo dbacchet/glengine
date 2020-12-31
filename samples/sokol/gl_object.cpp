@@ -1,6 +1,7 @@
 #include "gl_object.h"
 #include "gl_camera.h"
 #include "gl_mesh.h"
+#include "gl_logger.h"
 
 #include "microprofile/microprofile.h"
 
@@ -18,11 +19,12 @@ Object::Object(Object *parent, ID id)
 }
 
 Object::~Object() {
+    log_debug("Destroying object %p",this);
     if (_parent) {
         _parent->detach_child(this);
     }
-    while (_children.size() >
-           0) { // have to iterate this way because a regulare iterator gets invalidated when deleting
+    // have to iterate this way because a regular iterator gets invalidated when deleting
+    while (_children.size() > 0) {
         delete *_children.begin();
     }
 }
@@ -69,13 +71,12 @@ bool Object::draw(const Camera &cam, const math::Matrix4f &parent_tf) {
             // renderer.render_items.push_back({&cam, &go, curr_tf, _id});
             go.apply_pipeline();
             go.apply_bindings();
-            go.apply_uniforms();
-            // vs_params_t vs_params;
-            // vs_params.view = cam.inverse_transform();
-            // vs_params.projection = cam.projection();
-            // vs_params.model = curr_tf;
-            // sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
-            sg_draw(0, 36, 1);
+            glengine::common_uniform_params_t obj_params;
+            obj_params.model = curr_tf;
+            obj_params.view = cam.inverse_transform();
+            obj_params.projection = cam.projection();
+            go.apply_uniforms(obj_params);
+            go.draw();
         }
         for (auto &c : _children) {
             c->draw(cam, curr_tf);

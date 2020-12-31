@@ -15,7 +15,7 @@ class Material {
 
     virtual void update_bindings(sg_bindings &bind) {}
 
-    virtual void apply_uniforms() {}
+    virtual void apply_uniforms(const common_uniform_params_t &params) {}
 
     sg_pipeline pip = {0};
 };
