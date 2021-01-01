@@ -41,6 +41,27 @@ class GLEngine {
     /// create a new object, given an array of renderables
     Object *create_object(const std::vector<Renderable> &renderables, Object *parent = nullptr, ID id = NULL_ID);
 
+    // ////// //
+    // meshes //
+    // ////// //
+    /// create a new (empty) mesh
+    /// the mesh will _not_ be initialized, and the user is responsible for that
+    Mesh *create_mesh();
+    /// create a new mesh given vertices and (optionally) indices
+    /// the mesh will be initialized
+    Mesh *create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_={});
+    // prefab meshes
+    /// axis gizmo
+    Mesh *create_axis_mesh();
+    /// quad that extends -1..1
+    Mesh *create_quad_mesh();
+    /// solid box
+    Mesh *create_box_mesh(const math::Vector3f &size = {1.0f, 1.0f, 1.0f});
+    /// sphere
+    Mesh *create_sphere_mesh(float radius = 1.0f, uint32_t subdiv = 10);
+    /// grid
+    Mesh *create_grid_mesh(float len = 100.0f, float step = 5.0f);
+
     // ///////// //
     // materials //
     // ///////// //
@@ -49,6 +70,7 @@ class GLEngine {
     MtlT *create_material(sg_primitive_type primitive, sg_index_type idx_type = SG_INDEXTYPE_NONE) {
         MtlT *mtl = new MtlT();
         if (mtl && mtl->init(_resource_manager, primitive, idx_type)) {
+            _resource_manager.register_material(mtl);
             return mtl;
         } else {
             delete mtl;

@@ -42,6 +42,7 @@ TO BE ADDED
 resource ownership
 ------------------
 if created by the engine is managed by the engine
+if created by the user has to be managed by the user
 
 why sokol
 ---------

@@ -1,6 +1,8 @@
 #include "gl_resource_manager.h"
 #include "gl_utils.h"
 #include "gl_logger.h"
+#include "gl_material.h"
+#include "gl_mesh.h"
 
 namespace glengine {
 
@@ -9,15 +11,30 @@ ResourceManager::~ResourceManager() {
 }
 
 void ResourceManager::terminate() {
+    // cleanup meshes
+    log_info("ResourceManager: cleanup meshes");
+    for (auto &mesh : _meshes) {
+        log_debug("Destroying mesh %p", &mesh);
+        delete mesh;
+    }
+    // cleanup materials
+    log_info("ResourceManager: cleanup materials");
+    for (auto &mtl : _materials) {
+        log_debug("Destroying material %p", &mtl);
+        delete mtl;
+    }
+    _materials.clear();
     // cleanup pipeline resources
+    log_info("ResourceManager: cleanup pipelines");
     for (auto it : _pipelines) {
-        log_info("Destroying pipeline %u", it.second.id);
+        log_debug("Destroying pipeline %u", it.second.id);
         sg_destroy_pipeline(it.second);
     }
     _pipelines.clear();
     // cleanup shader resources
+    log_info("ResourceManager: cleanup shaders");
     for (auto it : _shaders) {
-        log_info("Destroying shader %u", it.second.id);
+        log_debug("Destroying shader %u", it.second.id);
         sg_destroy_shader(it.second);
     }
     _shaders.clear();
@@ -47,6 +64,14 @@ sg_pipeline ResourceManager::get_or_create_pipeline(const sg_pipeline_desc &desc
     log_info("Created pipeline %u", pip.id);
     _pipelines[pipeline_hash] = pip;
     return pip;
+}
+
+void ResourceManager::register_material(Material *mtl) {
+    _materials.insert(mtl);
+}
+
+void ResourceManager::register_mesh(Mesh *msh) {
+    _meshes.insert(msh);
 }
 
 } // namespace glengine

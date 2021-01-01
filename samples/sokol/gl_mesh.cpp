@@ -10,13 +10,6 @@
 
 namespace glengine {
 
-Mesh::Mesh(ID id, const std::string &name)
-: Resource(id, name) {}
-
-bool Mesh::init(const std::vector<Vertex> &vertices_) {
-    return init(vertices_, std::vector<uint32_t>());
-}
-
 bool Mesh::init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_) {
     vertices = vertices_;
     indices = indices_;
