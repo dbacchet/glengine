@@ -42,7 +42,7 @@ int main() {
     std::vector<Obj> cubes(M * N);
 
     // meshes
-    glengine::Mesh box_mesh(102,"box_mesh");
+    glengine::Mesh box_mesh;
     auto box_md = glengine::create_box_data({l,l,l});
     box_mesh.init(box_md.vertices, box_md.indices);
     // render objects
@@ -75,7 +75,7 @@ int main() {
     // /////// //
     // grid
     // mesh
-    glengine::Mesh grid_mesh(101,"grid_mesh");
+    glengine::Mesh grid_mesh;
     auto grid_md = glengine::create_grid_data(50.0f);
     grid_mesh.init(grid_md.vertices);
     // material

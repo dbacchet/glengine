@@ -5,8 +5,6 @@ set(imgui_files imgui/imconfig.h
                 imgui/imgui_draw.cpp
                 imgui/imgui_impl_glfw.cpp
                 imgui/imgui_impl_glfw.h
-                # imgui/imgui_impl_opengl3.cpp
-                # imgui/imgui_impl_opengl3.h
                 imgui/imgui_internal.h
                 imgui/imgui_tables.cpp
                 imgui/imgui_widgets.cpp
@@ -22,6 +20,7 @@ set(microprofile_files microprofile/microprofile.h
 add_library(glengine_sokol STATIC 
                            glad/glad_gl.c
                            sokol_gfx_impl.cpp
+                           stb/stb_image.cpp
       gl_camera.h
       gl_camera_manipulator.cpp
       gl_camera_manipulator.h
@@ -35,6 +34,8 @@ add_library(glengine_sokol STATIC
       gl_material_diffuse.h
       gl_material_flat.cpp
       gl_material_flat.h
+      gl_material_flat_textured.cpp
+      gl_material_flat_textured.h
       gl_material_vertexcolor.cpp
       gl_material_vertexcolor.h
       gl_mesh.cpp

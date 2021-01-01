@@ -11,6 +11,9 @@
 #include "sokol_imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 
+#include "gl_material.h"
+#include "gl_mesh.h"
+#include "gl_prefabs.h"
 #include "shaders/generated/multipass-basic.glsl.h"
 
 #include "stb/stb_image_write.h"
@@ -362,12 +365,16 @@ bool GLEngine::terminate() {
     log_info("Shutting down engine");
     MicroProfileShutdown();
     // destroying objects
+    log_info("Glengine: delete objects");
     delete _root;
     // deallocate all resources
+    log_info("Glengine: shut down resource manager");
     _resource_manager.terminate();
     // destroy the renderer's state
+    log_info("Glengine: delete internal state");
     delete _state;
     // destroy the gfx context
+    log_info("Glengine: destroy gfx context");
     glengine::destroy_context(_context);
     return true;
 }
@@ -387,6 +394,53 @@ Object *GLEngine::create_object(const std::vector<Renderable> &renderables, Obje
     Object *ro = create_object(parent, id);
     ro->init(renderables);
     return ro;
+}
+
+Mesh *GLEngine::create_mesh() {
+    Mesh *mesh = new Mesh();
+    _resource_manager.register_mesh(mesh);
+    return mesh;
+}
+
+Mesh *GLEngine::create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_) {
+    Mesh *mesh = create_mesh();
+    mesh->init(vertices_,indices_);
+    return mesh;
+}
+
+Mesh *GLEngine::create_axis_mesh() {
+    Mesh *m = create_mesh();
+    MeshData md = create_axis_data();
+    m->init(md.vertices, md.indices);
+    return m;
+}
+
+Mesh *GLEngine::create_quad_mesh() {
+    Mesh *m = create_mesh();
+    MeshData md = create_quad_data();
+    m->init(md.vertices, md.indices);
+    return m;
+}
+
+Mesh *GLEngine::create_box_mesh(const math::Vector3f &size) {
+    Mesh *m = create_mesh();
+    MeshData md = create_box_data(size);
+    m->init(md.vertices, md.indices);
+    return m;
+}
+
+Mesh *GLEngine::create_sphere_mesh(float radius, uint32_t subdiv) {
+    Mesh *m = create_mesh();
+    MeshData md = create_sphere_data(radius, subdiv);
+    m->init(md.vertices, md.indices);
+    return m;
+}
+
+Mesh *GLEngine::create_grid_mesh(float len, float step) {
+    Mesh *m = create_mesh();
+    MeshData md = create_grid_data(len, step);
+    m->init(md.vertices, md.indices);
+    return m;
 }
 
 void GLEngine::add_ui_function(std::function<void(void)> fun) {

@@ -11,16 +11,15 @@ namespace glengine {
 /// Very simple mesh class, that can allocate and update the verted and (optionally) index data.
 /// The class is _completely passive_ so after updating the vertices or indices data you have to explicitly
 /// call the update() function.
-class Mesh: public Resource {
+class Mesh {
   public:
     // mesh data
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
-    Mesh(ID id, const std::string &name);
+    Mesh() = default;
 
-    bool init(const std::vector<Vertex> &vertices_);
-    bool init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_);
+    bool init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_={});
     // update the opengl buffers to reflect the vertices and indices arrays
     bool update();
 

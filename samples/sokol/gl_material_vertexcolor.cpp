@@ -21,7 +21,9 @@ bool MaterialVertexColor::init(ResourceManager &rm, sg_primitive_type primitive,
         .index_type = idx_type,
         .depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true},
         .blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH},
-        .rasterizer = {.cull_mode = SG_CULLMODE_NONE, .sample_count = offscreen_sample_count},
+        .rasterizer = {.cull_mode = SG_CULLMODE_NONE,
+                       .face_winding = SG_FACEWINDING_CCW,
+                       .sample_count = offscreen_sample_count},
         .label = "vertexcolor pipeline"};
     pip = rm.get_or_create_pipeline(pip_desc);
     return true;
@@ -32,7 +34,7 @@ void MaterialVertexColor::update_bindings(sg_bindings &bind) {
 }
 
 void MaterialVertexColor::apply_uniforms(const common_uniform_params_t &params) {
-    vs_params_t vs_params { .model = params.model, .view = params.view, .projection = params.projection};
+    vs_params_t vs_params{.model = params.model, .view = params.view, .projection = params.projection};
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
 }
 
