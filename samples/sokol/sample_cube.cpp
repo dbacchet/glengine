@@ -4,6 +4,7 @@
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
 #include "gl_material_diffuse.h"
+#include "gl_material_diffuse_textured.h"
 #include "gl_material_flat.h"
 #include "gl_material_flat_textured.h"
 #include "gl_material_vertexcolor.h"
@@ -73,17 +74,23 @@ int main() {
     box_mtl_flat_textured->tex_diffuse = create_texture();
     auto *box_mtl_diffuse =
         eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+    auto *box_mtl_diffuse_textured =
+        eng.create_material<glengine::MaterialDiffuseTextured>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+    box_mtl_diffuse_textured->tex_diffuse = box_mtl_flat_textured->tex_diffuse;
     // renderables
     glengine::Renderable box_renderable_vc{box_mesh, box_mtl_vc};
     glengine::Renderable box_renderable_flat{box_mesh, box_mtl_flat};
     glengine::Renderable box_renderable_flat_textured{box_mesh, box_mtl_flat_textured};
     glengine::Renderable box_renderable_diffuse{box_mesh, box_mtl_diffuse};
+    glengine::Renderable box_renderable_diffuse_textured{box_mesh, box_mtl_diffuse_textured};
     // objects
     auto *root = eng.create_object();
     auto *box1 = eng.create_object(box_renderable_vc, root);
     auto *box2 = eng.create_object(box_renderable_flat, root);
     auto *box3 = eng.create_object(box_renderable_flat_textured, root);
     auto *box4 = eng.create_object(box_renderable_diffuse, root);
+    auto *box5 = eng.create_object(box_renderable_diffuse_textured, box3);
+    box5->set_transform(math::create_translation<float>({0.0f,0.0f,2.0f}));
 
     glengine::Renderable axes {eng.create_axis_mesh(), eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_LINES, SG_INDEXTYPE_NONE)};
     box3->add_renderable(&axes,1);

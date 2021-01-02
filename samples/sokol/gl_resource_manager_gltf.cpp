@@ -5,6 +5,7 @@
 #include "gl_object.h"
 #include "gl_mesh.h"
 #include "gl_material_diffuse.h"
+#include "gl_material_diffuse_textured.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -65,7 +66,7 @@ class GltfLoader {
         for (size_t pi = 0; pi < mesh.primitives.size(); ++pi) {
             tinygltf::Primitive primitive = mesh.primitives[pi];
             if (primitive.mode != TINYGLTF_MODE_TRIANGLES || primitive.attributes.count("POSITION") == 0) {
-                printf("         SKIP (only triangles are supported for now)!\n");
+                printf("SKIP (only triangles are supported for now)!\n");
                 continue;
             }
             // position
@@ -144,16 +145,14 @@ class GltfLoader {
             glengine::Mesh *mesh = _eng.create_mesh();
             mesh->init(md.vertices, md.indices);
             // material
-            // glengine::Material *material = nullptr;
-            // if (primitive.material >= 0) {
-            //     const tinygltf::Material &material = model.materials[primitive.material];
-            //     material = get_or_create_material(material);
-            // } else {
-            //     material = _eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES);
-            //     material->color = {0.05f,0.05f,0.05f,1.0f};
-            // }
-            auto material = _eng.create_material<glengine::MaterialDiffuse>(
-                SG_PRIMITIVETYPE_TRIANGLES, md.indices.size() > 0 ? SG_INDEXTYPE_UINT32 : SG_INDEXTYPE_NONE);
+            glengine::Material *material = nullptr;
+            if (primitive.material >= 0) {
+                const tinygltf::Material &mtl = model.materials[primitive.material];
+                material = create_material(mtl);
+            } else {
+                material = _eng.create_material<glengine::MaterialDiffuse>(
+                    SG_PRIMITIVETYPE_TRIANGLES, md.indices.size() > 0 ? SG_INDEXTYPE_UINT32 : SG_INDEXTYPE_NONE);
+            }
             Renderable go{mesh, material};
             _renderables.push_back(go);
         }
@@ -177,8 +176,19 @@ class GltfLoader {
             const tinygltf::Image &img = model.images[i];
             log_debug("gltf loader: texture with index %d, name '%s', and uri '%s'\n", i, img.name.c_str(),
                       img.uri.c_str());
-            // _tx_map[i] = _rm.create_texture_from_data((img.name+std::string("_")+img.uri).c_str(), img.width,
-            // img.height, img.component, img.image.data());
+            _tx_map[i] = sg_make_image((sg_image_desc){
+                .width = img.width,
+                .height = img.height,
+                .pixel_format = SG_PIXELFORMAT_RGBA8,
+                .min_filter = SG_FILTER_LINEAR,
+                .mag_filter = SG_FILTER_LINEAR,
+                .content.subimage[0][0] =
+                    {
+                        .ptr = img.image.data(),
+                        .size = (int)img.image.size(),
+                    },
+                .label = img.uri.c_str(),
+            });
         }
         return true;
     }
@@ -212,25 +222,34 @@ class GltfLoader {
 
     std::string material_fullname(const tinygltf::Material &mtl) { return _filename + std::string("_") + mtl.name; }
 
-    // glengine::Material *get_or_create_material(const tinygltf::Material &mtl) {
-    //     std::string mtl_name = material_fullname(mtl);
-    //     if (_rm.has_material(mtl_name.c_str())) {
-    //         return *_rm.get_material(mtl_name.c_str()).begin();
-    //     }
-    //     auto m = _rm.create_material(mtl_name.c_str(), _rm.get_stock_shader(glengine::StockShader::Diffuse));
-    //     auto &pbr = mtl.pbrMetallicRoughness;
-    //     m->base_color_factor = {(float)pbr.baseColorFactor[0], (float)pbr.baseColorFactor[1],
-    //     (float)pbr.baseColorFactor[2], (float)pbr.baseColorFactor[3]}; m->emissive_factor =
-    //     {(float)mtl.emissiveFactor[0], (float)mtl.emissiveFactor[1], (float)mtl.emissiveFactor[2]};
-    //     m->metallic_factor = pbr.metallicFactor;
-    //     m->roughness_factor = pbr.roughnessFactor;
-    //     // set diffuse texture and select shader
-    //     if (pbr.baseColorTexture.index>=0) {
-    //         m->_textures[(uint8_t)Material::TextureType::BaseColor] = _tx_map[pbr.baseColorTexture.index];
-    //         m->_shader = _rm.get_stock_shader(glengine::StockShader::DiffuseTextured);
-    //     }
-    //     return m;
-    // }
+    glengine::Material *create_material(const tinygltf::Material &mtl) {
+        std::string mtl_name = material_fullname(mtl);
+        //     if (_rm.has_material(mtl_name.c_str())) {
+        //         return *_rm.get_material(mtl_name.c_str()).begin();
+        //     }
+        //     auto m = _rm.create_material(mtl_name.c_str(), _rm.get_stock_shader(glengine::StockShader::Diffuse));
+        //     auto &pbr = mtl.pbrMetallicRoughness;
+        //     m->base_color_factor = {(float)pbr.baseColorFactor[0], (float)pbr.baseColorFactor[1],
+        //     (float)pbr.baseColorFactor[2], (float)pbr.baseColorFactor[3]}; m->emissive_factor =
+        //     {(float)mtl.emissiveFactor[0], (float)mtl.emissiveFactor[1], (float)mtl.emissiveFactor[2]};
+        //     m->metallic_factor = pbr.metallicFactor;
+        //     m->roughness_factor = pbr.roughnessFactor;
+        //     // set diffuse texture and select shader
+        //     if (pbr.baseColorTexture.index>=0) {
+        //         m->_textures[(uint8_t)Material::TextureType::BaseColor] = _tx_map[pbr.baseColorTexture.index];
+        //         m->_shader = _rm.get_stock_shader(glengine::StockShader::DiffuseTextured);
+        //     }
+        //     return m;
+        auto &pbr = mtl.pbrMetallicRoughness;
+        // set diffuse texture and select shader
+        if (pbr.baseColorTexture.index >= 0) {
+            auto material = _eng.create_material<glengine::MaterialDiffuseTextured>(SG_PRIMITIVETYPE_TRIANGLES,
+                                                                                    SG_INDEXTYPE_UINT32);
+            material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
+            return material;
+        }
+        return nullptr;
+    }
 
     std::vector<Mesh *> &meshes() { return _meshes; }
     std::vector<Renderable> &renderables() { return _renderables; }
@@ -280,7 +299,7 @@ std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename) {
     GltfLoader ml(filename, eng);
     ml.load_textures(model);
     log_debug("loaded %d textures\n", (int)ml._tx_map.size());
-    ml.parse_materials(model);
+    ml.parse_materials(model, false);
     // this loader makes the assumption that the entire scene is a single model
     math::Matrix4f root_tf = math::matrix4_identity<float>();
     root_tf = math::create_transformation(

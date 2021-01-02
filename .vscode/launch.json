@@ -8,10 +8,10 @@
         "name": "(lldb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build_debug/samples/sokol/sample_cube",
+        "program": "${workspaceFolder}/build_debug/samples/sokol/sample_gltf2",
         "args": ["../resources/models/the_mill/scene.gltf"],
         "stopAtEntry": false,
-        "cwd": "${workspaceFolder}",
+        "cwd": "${workspaceFolder}/build_debug",
         "environment": [],
         "externalConsole": false,
         "MIMode": "lldb"
