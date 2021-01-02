@@ -22,7 +22,7 @@ bool MaterialFlat::init(ResourceManager &rm, sg_primitive_type primitive, sg_ind
         .primitive_type = primitive,
         .index_type = idx_type,
         .depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true},
-        .blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH},
+        .blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL},
         .rasterizer = {.cull_mode = SG_CULLMODE_NONE,
                        .face_winding = SG_FACEWINDING_CCW,
                        .sample_count = offscreen_sample_count},

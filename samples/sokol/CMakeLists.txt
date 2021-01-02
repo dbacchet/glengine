@@ -16,11 +16,35 @@ set(microprofile_files microprofile/microprofile.h
                        microprofile/microprofile.cpp
                        microprofile/microprofile_html.h
 )
+set(basisu_files
+        basisu/basisu.h
+        basisu/basisu_file_headers.h
+        basisu/basisu_global_selector_cb.h
+        basisu/basisu_global_selector_palette.h
+        basisu/basisu_sokol.cpp
+        basisu/basisu_sokol.h
+        basisu/basisu_transcoder.cpp
+        basisu/basisu_transcoder.h
+        basisu/basisu_transcoder_internal.h
+        basisu/basisu_transcoder_tables_astc.inc
+        basisu/basisu_transcoder_tables_astc_0_255.inc
+        basisu/basisu_transcoder_tables_atc_55.inc
+        basisu/basisu_transcoder_tables_atc_56.inc
+        basisu/basisu_transcoder_tables_bc7_m5_alpha.inc
+        basisu/basisu_transcoder_tables_bc7_m5_color.inc
+        basisu/basisu_transcoder_tables_bc7_m6.inc
+        basisu/basisu_transcoder_tables_dxt1_5.inc
+        basisu/basisu_transcoder_tables_dxt1_6.inc
+        basisu/basisu_transcoder_tables_pvrtc2_45.inc
+        basisu/basisu_transcoder_tables_pvrtc2_alpha_33.inc
+        basisu/basisu_transcoder_uastc.h
+)
 
 add_library(glengine_sokol STATIC 
                            glad/glad_gl.c
                            sokol_gfx_impl.cpp
                            stb/stb_image.cpp
+                           tinygltf/tiny_gltf.cpp
       gl_camera.h
       gl_camera_manipulator.cpp
       gl_camera_manipulator.h
@@ -42,19 +66,20 @@ add_library(glengine_sokol STATIC
       gl_mesh.h
       gl_object.cpp
       gl_object.h
-      gl_pipelines.h
-      gl_pipelines.cpp
       gl_prefabs.h
       gl_prefabs.cpp
       gl_renderable.cpp
       gl_renderable.h
       gl_resource_manager.cpp
       gl_resource_manager.h
+      gl_resource_manager_gltf.cpp
+      gl_rm_gltf.cpp
       gl_types.h
       gl_utils.h
       gl_utils.cpp
                            ${imgui_files}
                            ${microprofile_files}
+                           ${basisu_files}
 )
 target_compile_definitions(glengine_sokol PUBLIC SOKOL_GLCORE33
                                               SOKOL_TRACE_HOOKS
@@ -69,6 +94,9 @@ target_link_libraries(sample_cube PUBLIC glengine_sokol)
 
 add_executable(sample_torus sample_torus.cpp)
 target_link_libraries(sample_torus PUBLIC glengine_sokol)
+
+add_executable(sample_gltf2 sample_gltf.cpp)
+target_link_libraries(sample_gltf2 PUBLIC glengine_sokol)
 
 # add_executable(sample_cube sample_cube.cpp
 #                            glad/glad_gl.c
