@@ -8,7 +8,7 @@
         "name": "(lldb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build_debug/samples/sokol/sample_gltf2",
+        "program": "${workspaceFolder}/build_debug/samples/sokol/sample_glengine2",
         "args": ["../resources/models/the_mill/scene.gltf"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/build_debug",

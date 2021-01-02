@@ -19,6 +19,10 @@ class Material {
 
     virtual void apply_uniforms(const common_uniform_params_t &params) {}
 
+    template <typename T>
+        T* as() { return this; }
+
+    Color color = {180,180,180,255};
     sg_pipeline pip = {0};
 };
 

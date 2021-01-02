@@ -43,12 +43,14 @@ resource ownership
 ------------------
 if created by the engine is managed by the engine
 if created by the user has to be managed by the user
+renderables are ephemeral and _copied_ into the glengine::Object. Make sure to always update the one in the object, not a temporary object created when _constructing_ the object itself 
 
 why sokol
 ---------
 * better support more than one platform/gfx api
 * passes and pipelines were implemented very well
 * low-level enough to have total flexibility on the architecture
+* very good validation layer in debug (useful for troubleshooting tricky opengl buffers/pipelines incompatibilities, for example)
 
 TODO
 ----
@@ -58,3 +60,4 @@ TODO
 - [] support PBR materials (using gltf as reference)
 - [] object selection (ID buffer)
 - [] consistent color spaces (sRGB for both meshes and textures)
+- [] better object/mesh/material update semantics. Now it's tricky with shared and copied components (ex. in the renderable material and mesh are pointers to values created externally, but `bind` is a local object, and since the renderable is _copied_ it cannot be updated in the original Renderable instance created when constructing the Object, but has to be modified in the object itself)
