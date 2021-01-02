@@ -19,7 +19,8 @@ class Mesh {
 
     Mesh() = default;
 
-    bool init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_={});
+    bool init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_ = {},
+              sg_usage usage = SG_USAGE_IMMUTABLE);
     // update the opengl buffers to reflect the vertices and indices arrays
     bool update();
 
@@ -27,6 +28,9 @@ class Mesh {
 
     sg_buffer vbuf = {0};
     sg_buffer ibuf = {SG_INVALID_ID};
+    int32_t   vbuf_size = 0;
+    int32_t   ibuf_size = 0;
+    sg_usage _usage = SG_USAGE_IMMUTABLE;
 
   private:
     void setup_mesh();

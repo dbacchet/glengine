@@ -402,9 +402,9 @@ Mesh *GLEngine::create_mesh() {
     return mesh;
 }
 
-Mesh *GLEngine::create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_) {
+Mesh *GLEngine::create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_, sg_usage usage) {
     Mesh *mesh = create_mesh();
-    mesh->init(vertices_,indices_);
+    mesh->init(vertices_,indices_,usage);
     return mesh;
 }
 

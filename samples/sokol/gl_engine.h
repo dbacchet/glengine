@@ -48,8 +48,8 @@ class GLEngine {
     /// the mesh will _not_ be initialized, and the user is responsible for that
     Mesh *create_mesh();
     /// create a new mesh given vertices and (optionally) indices
-    /// the mesh will be initialized
-    Mesh *create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_={});
+    /// the mesh will be initialized, and the given usage (immutable, dynamic, stream) set
+    Mesh *create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_={}, sg_usage usage = SG_USAGE_IMMUTABLE);
     // prefab meshes
     /// axis gizmo
     Mesh *create_axis_mesh();
