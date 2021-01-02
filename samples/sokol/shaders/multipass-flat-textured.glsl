@@ -15,11 +15,11 @@ in vec4 vertex_color;
 in vec3 vertex_normal;
 in vec2 vertex_texcoord;
 
-out vec2 uv;
+out vec2 frag_uv;
 
 void main() {
     gl_Position = projection * view * model * vertex_pos;
-    uv = vertex_texcoord;
+    frag_uv = vertex_texcoord;
 }
 @end
 
@@ -30,14 +30,17 @@ uniform fs_params {
 
 uniform sampler2D tex_diffuse;
 
-in vec2 uv;
+in vec2 frag_uv;
 
 // uniform uint object_id;
 
 layout(location=0) out vec4 frag_color;
 
 void main() {
-    frag_color = texture(tex_diffuse, uv) * color;
+    vec4 tmp_color = texture(tex_diffuse, frag_uv) * color;
+    if(tmp_color.a < 0.1)
+        discard;
+    frag_color = tmp_color;
 }
 @end
 

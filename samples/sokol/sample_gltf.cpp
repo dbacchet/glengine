@@ -46,7 +46,12 @@ namespace glengine {
 std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+
+    std::string gltf_filename = "";
+    if (argc>1) {
+        gltf_filename = argv[1];
+    }
 
     glengine::GLEngine eng;
     eng.init({1280, 720, true});
@@ -69,12 +74,13 @@ int main() {
     // auto *grid = eng.create_object({eng.create_grid_mesh(50.0f, 1.0f),
     //                                 eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_LINES)});
 
-    auto *gltf_obj = eng.create_object();
-    // auto gltf_renderables = glengine::create_from_gltf(eng, "glTF/DamagedHelmet.gltf");
-    auto gltf_renderables = glengine::create_from_gltf(eng, "the_mill/scene.gltf");
-    printf("loaded %d renderables from gltf file\n", (int)gltf_renderables.size());
-    gltf_obj->add_renderable(gltf_renderables.data(),gltf_renderables.size());
-    // gltf_obj->set_scale({10.1f,10.1f,10.1f});
+    // load a gltf file if passed in the command line
+    if (gltf_filename != "") {
+        auto *gltf_obj = eng.create_object();
+        auto gltf_renderables = glengine::create_from_gltf(eng, gltf_filename.c_str());
+        printf("loaded %d renderables from gltf file\n", (int)gltf_renderables.size());
+        gltf_obj->add_renderable(gltf_renderables.data(),gltf_renderables.size());
+    }
     
     // gltf_scene_init();
     // ///////// //

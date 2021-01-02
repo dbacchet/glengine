@@ -16,29 +16,6 @@ set(microprofile_files microprofile/microprofile.h
                        microprofile/microprofile.cpp
                        microprofile/microprofile_html.h
 )
-set(basisu_files
-        basisu/basisu.h
-        basisu/basisu_file_headers.h
-        basisu/basisu_global_selector_cb.h
-        basisu/basisu_global_selector_palette.h
-        basisu/basisu_sokol.cpp
-        basisu/basisu_sokol.h
-        basisu/basisu_transcoder.cpp
-        basisu/basisu_transcoder.h
-        basisu/basisu_transcoder_internal.h
-        basisu/basisu_transcoder_tables_astc.inc
-        basisu/basisu_transcoder_tables_astc_0_255.inc
-        basisu/basisu_transcoder_tables_atc_55.inc
-        basisu/basisu_transcoder_tables_atc_56.inc
-        basisu/basisu_transcoder_tables_bc7_m5_alpha.inc
-        basisu/basisu_transcoder_tables_bc7_m5_color.inc
-        basisu/basisu_transcoder_tables_bc7_m6.inc
-        basisu/basisu_transcoder_tables_dxt1_5.inc
-        basisu/basisu_transcoder_tables_dxt1_6.inc
-        basisu/basisu_transcoder_tables_pvrtc2_45.inc
-        basisu/basisu_transcoder_tables_pvrtc2_alpha_33.inc
-        basisu/basisu_transcoder_uastc.h
-)
 
 add_library(glengine_sokol STATIC 
                            glad/glad_gl.c
@@ -56,6 +33,8 @@ add_library(glengine_sokol STATIC
       gl_material.h
       gl_material_diffuse.cpp
       gl_material_diffuse.h
+      gl_material_diffuse_textured.cpp
+      gl_material_diffuse_textured.h
       gl_material_flat.cpp
       gl_material_flat.h
       gl_material_flat_textured.cpp
@@ -73,13 +52,11 @@ add_library(glengine_sokol STATIC
       gl_resource_manager.cpp
       gl_resource_manager.h
       gl_resource_manager_gltf.cpp
-      gl_rm_gltf.cpp
       gl_types.h
       gl_utils.h
       gl_utils.cpp
                            ${imgui_files}
                            ${microprofile_files}
-                           ${basisu_files}
 )
 target_compile_definitions(glengine_sokol PUBLIC SOKOL_GLCORE33
                                               SOKOL_TRACE_HOOKS

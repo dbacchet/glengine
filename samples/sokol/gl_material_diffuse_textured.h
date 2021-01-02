@@ -8,11 +8,11 @@
 
 namespace glengine {
 
-class MaterialFlatTextured : public Material {
+class MaterialDiffuseTextured : public Material {
   public:
-    MaterialFlatTextured()
+    MaterialDiffuseTextured()
     : Material() {}
-    virtual ~MaterialFlatTextured() = default;
+    virtual ~MaterialDiffuseTextured() = default;
 
     virtual bool init(ResourceManager &rm, sg_primitive_type primitive, sg_index_type idx_type = SG_INDEXTYPE_NONE) override;
 
