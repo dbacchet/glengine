@@ -11,7 +11,9 @@ namespace glengine {
 class MaterialFlatTextured : public Material {
   public:
     MaterialFlatTextured()
-    : Material() {}
+    : Material() {
+        color = {255, 255, 255, 255};
+    }
     virtual ~MaterialFlatTextured() = default;
 
     virtual bool init(ResourceManager &rm, sg_primitive_type primitive, sg_index_type idx_type = SG_INDEXTYPE_NONE) override;
@@ -20,7 +22,6 @@ class MaterialFlatTextured : public Material {
 
     virtual void apply_uniforms(const common_uniform_params_t &params) override;
 
-    Color color = {255,255,255,255};
     sg_image tex_diffuse = {0};
 };
 
