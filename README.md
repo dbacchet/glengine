@@ -50,4 +50,11 @@ why sokol
 * passes and pipelines were implemented very well
 * low-level enough to have total flexibility on the architecture
 
-
+TODO
+----
+- [] dynamic meshes (update mesh data)
+- [] generate mipmaps
+- [] gltf import
+- [] support PBR materials (using gltf as reference)
+- [] object selection (ID buffer)
+- [] consistent color spaces (sRGB for both meshes and textures)

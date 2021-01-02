@@ -65,7 +65,7 @@ void create_offscreen_pass(glengine::State &state, int width, int height) {
     sg_image_desc depth_img_desc = {.render_target = true,
                                     .width = width,
                                     .height = height,
-                                    .pixel_format = SG_PIXELFORMAT_DEPTH,
+                                    .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL,
                                     .sample_count = offscreen_sample_count,
                                     .min_filter = SG_FILTER_LINEAR,
                                     .mag_filter = SG_FILTER_LINEAR,
