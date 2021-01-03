@@ -23,29 +23,29 @@ void Mesh::setup_mesh() {
     ibuf_size = int(indices.size() * sizeof(uint32_t));
     if (_usage == SG_USAGE_IMMUTABLE) {
         // init with info and content
-        vbuf = sg_make_buffer((sg_buffer_desc){.type = SG_BUFFERTYPE_VERTEXBUFFER,
-                                               .size = vbuf_size,
+        vbuf = sg_make_buffer((sg_buffer_desc){.size = vbuf_size,
+                                               .type = SG_BUFFERTYPE_VERTEXBUFFER,
                                                .usage = _usage,
                                                .content = vertices.data(),
                                                .label = "mesh-vertices"});
 
         if (indices.size() > 0) {
-            ibuf = sg_make_buffer((sg_buffer_desc){.type = SG_BUFFERTYPE_INDEXBUFFER,
-                                                   .size = ibuf_size,
+            ibuf = sg_make_buffer((sg_buffer_desc){.size = ibuf_size,
+                                                   .type = SG_BUFFERTYPE_INDEXBUFFER,
                                                    .usage = _usage,
                                                    .content = indices.data(),
                                                    .label = "mesh-indices"});
         }
     } else { // dynamic and streaming mesh buffers have to be declared and initialized in 2 steps
-        vbuf = sg_make_buffer((sg_buffer_desc){.type = SG_BUFFERTYPE_VERTEXBUFFER,
-                                               .size = vbuf_size,
+        vbuf = sg_make_buffer((sg_buffer_desc){.size = vbuf_size,
+                                               .type = SG_BUFFERTYPE_VERTEXBUFFER,
                                                .usage = _usage,
                                                .content = nullptr,
                                                .label = "mesh-vertices"});
 
         if (indices.size() > 0) {
-            ibuf = sg_make_buffer((sg_buffer_desc){.type = SG_BUFFERTYPE_INDEXBUFFER,
-                                                   .size = ibuf_size,
+            ibuf = sg_make_buffer((sg_buffer_desc){.size = ibuf_size,
+                                                   .type = SG_BUFFERTYPE_INDEXBUFFER,
                                                    .usage = _usage,
                                                    .content = nullptr,
                                                    .label = "mesh-indices"});
@@ -61,8 +61,8 @@ bool Mesh::update_buffers() {
     int32_t new_ibuf_size = int32_t(indices.size() * sizeof(uint32_t));
     if (new_vbuf_size > vbuf_size) {
         sg_destroy_buffer(vbuf);
-        vbuf = sg_make_buffer((sg_buffer_desc){.type = SG_BUFFERTYPE_VERTEXBUFFER,
-                                               .size = new_vbuf_size,
+        vbuf = sg_make_buffer((sg_buffer_desc){.size = new_vbuf_size,
+                                               .type = SG_BUFFERTYPE_VERTEXBUFFER,
                                                .usage = _usage,
                                                .content = nullptr,
                                                .label = "mesh-vertices"});
@@ -70,8 +70,8 @@ bool Mesh::update_buffers() {
     }
     if (new_ibuf_size > ibuf_size) {
         sg_destroy_buffer(ibuf);
-        ibuf = sg_make_buffer((sg_buffer_desc){.type = SG_BUFFERTYPE_INDEXBUFFER,
-                                               .size = new_ibuf_size,
+        ibuf = sg_make_buffer((sg_buffer_desc){.size = new_ibuf_size,
+                                               .type = SG_BUFFERTYPE_INDEXBUFFER,
                                                .usage = _usage,
                                                .content = nullptr,
                                                .label = "mesh-vertices"});

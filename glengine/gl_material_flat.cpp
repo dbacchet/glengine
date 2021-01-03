@@ -8,25 +8,18 @@
 namespace glengine {
 
 bool MaterialFlat::init(ResourceManager &rm, sg_primitive_type primitive, sg_index_type idx_type) {
-    // auto &rm = glengine::ResourceManager::get();
     sg_shader offscreen_vertexcolor = rm.get_or_create_shader(*offscreen_flat_shader_desc());
 
     const int offscreen_sample_count = sg_query_features().msaa_render_targets ? 4 : 1;
-    sg_pipeline_desc pip_desc = {
-        .layout = {.buffers[0].stride = sizeof(Vertex),
-                   .attrs =
-                       {
-                           [ATTR_vs_flat_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3,
-                       }},
-        .shader = offscreen_vertexcolor,
-        .primitive_type = primitive,
-        .index_type = idx_type,
-        .depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true},
-        .blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL},
-        .rasterizer = {.cull_mode = SG_CULLMODE_NONE,
-                       .face_winding = SG_FACEWINDING_CCW,
-                       .sample_count = offscreen_sample_count},
-        .label = "flat pipeline"};
+    sg_pipeline_desc pip_desc = {0};
+    pip_desc.layout.buffers[0].stride = sizeof(Vertex);
+    pip_desc.layout.attrs[ATTR_vs_flat_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3;
+    pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
+    pip_desc.depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true};
+    pip_desc.blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
+    pip_desc.rasterizer = {
+        .cull_mode = SG_CULLMODE_NONE, .face_winding = SG_FACEWINDING_CCW, .sample_count = offscreen_sample_count};
+    pip_desc.label = "flat pipeline";
     pip = rm.get_or_create_pipeline(pip_desc);
     return true;
 }
