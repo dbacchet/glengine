@@ -4,6 +4,8 @@
 #include "gl_material.h"
 #include "gl_mesh.h"
 
+#include "stb/stb_image.h"
+
 namespace glengine {
 
 ResourceManager::~ResourceManager() {
@@ -24,6 +26,13 @@ void ResourceManager::terminate() {
         delete mtl;
     }
     _materials.clear();
+    // cleanup image resources
+    log_info("ResourceManager: cleanup images");
+    for (auto it : _images) {
+        log_debug("Destroying image %u", it.second.id);
+        sg_destroy_image(it.second);
+    }
+    _images.clear();
     // cleanup pipeline resources
     log_info("ResourceManager: cleanup pipelines");
     for (auto it : _pipelines) {
@@ -38,6 +47,73 @@ void ResourceManager::terminate() {
         sg_destroy_shader(it.second);
     }
     _shaders.clear();
+}
+
+sg_image ResourceManager::get_or_create_image(const sg_image_desc &desc) {
+    uint64_t image_hash = murmur_hash2_64(&desc, sizeof(desc), 12345678);
+    if (_images.count(image_hash) > 0) {
+        return _images[image_hash];
+    }
+    // create the image and add it to the cache
+    log_info("Creating image %s", desc.label);
+    sg_image img = sg_make_image(desc);
+    log_info("Created image %u", img.id);
+    _images[image_hash] = img;
+    return img;
+}
+
+sg_image ResourceManager::get_or_create_image(const char *filename) {
+    int img_width, img_height, num_channels;
+    const int desired_channels = 4;
+    stbi_set_flip_vertically_on_load(true);
+    stbi_uc *pixels = stbi_load(filename, &img_width, &img_height,
+                                            &num_channels, desired_channels);
+    if (pixels) {
+        sg_image img = get_or_create_image((sg_image_desc){
+            .width = img_width,
+            .height = img_height,
+            .pixel_format = SG_PIXELFORMAT_RGBA8,
+            .min_filter = SG_FILTER_LINEAR,
+            .mag_filter = SG_FILTER_LINEAR,
+            .content.subimage[0][0] =
+                {
+                    .ptr = pixels,
+                    .size = img_width * img_height * 4,
+                },
+            .label = filename,
+        });
+        stbi_image_free(pixels);
+        return img;
+    }
+    return {SG_INVALID_ID};
+}
+
+sg_image ResourceManager::get_or_create_image(const uint8_t *data, int32_t len) {
+    int img_width, img_height, num_channels;
+    const int desired_channels = 4;
+    stbi_set_flip_vertically_on_load(true);
+    stbi_uc *pixels = stbi_load_from_memory(data, len, &img_width, &img_height,
+                                            &num_channels, desired_channels);
+    if (pixels) {
+        char label[32];
+        sprintf(label, "ptr:%p len:%d",data, len);
+        sg_image img = get_or_create_image((sg_image_desc){
+            .width = img_width,
+            .height = img_height,
+            .pixel_format = SG_PIXELFORMAT_RGBA8,
+            .min_filter = SG_FILTER_LINEAR,
+            .mag_filter = SG_FILTER_LINEAR,
+            .content.subimage[0][0] =
+                {
+                    .ptr = pixels,
+                    .size = img_width * img_height * 4,
+                },
+            .label = label,
+        });
+        stbi_image_free(pixels);
+        return img;
+    }
+    return {SG_INVALID_ID};
 }
 
 sg_shader ResourceManager::get_or_create_shader(const sg_shader_desc &desc) {

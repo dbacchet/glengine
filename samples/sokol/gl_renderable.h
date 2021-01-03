@@ -22,6 +22,10 @@ struct Renderable {
     Material *material = nullptr;
     sg_bindings bind = {0};
 
+    /// update both the content of the mesh buffers and the bindings
+    /// Note: updating the buffers can be expensive; if the mesh data is unchanged, prefer update_bindings() instead
+    void update();
+    /// only update the bindings.
     void update_bindings();
 
     void apply_pipeline();

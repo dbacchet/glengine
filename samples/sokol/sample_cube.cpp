@@ -11,33 +11,7 @@
 #include "gl_renderable.h"
 
 #include "uv_grid_256.png.h"
-#include "stb/stb_image.h"
 
-sg_image create_texture() {
-    int img_width, img_height, num_channels;
-    const int desired_channels = 4;
-    stbi_set_flip_vertically_on_load(true);
-    stbi_uc *pixels = stbi_load_from_memory(uv_grid_256_png, (int)uv_grid_256_png_len, &img_width, &img_height,
-                                            &num_channels, desired_channels);
-    if (pixels) {
-        sg_image img = sg_make_image((sg_image_desc){
-            .width = img_width,
-            .height = img_height,
-            .pixel_format = SG_PIXELFORMAT_RGBA8,
-            .min_filter = SG_FILTER_LINEAR,
-            .mag_filter = SG_FILTER_LINEAR,
-            .content.subimage[0][0] =
-                {
-                    .ptr = pixels,
-                    .size = img_width * img_height * 4,
-                },
-            .label = "grid-256-png",
-        });
-        stbi_image_free(pixels);
-        return img;
-    }
-    return {SG_INVALID_ID};
-}
 
 int main() {
 
@@ -71,7 +45,7 @@ int main() {
         eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     auto *box_mtl_flat = eng.create_material<glengine::MaterialFlat>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     auto *box_mtl_flat_textured = eng.create_material<glengine::MaterialFlatTextured>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
-    box_mtl_flat_textured->tex_diffuse = create_texture();
+    box_mtl_flat_textured->tex_diffuse = eng.resource_manager().get_or_create_image(uv_grid_256_png, uv_grid_256_png_len);
     auto *box_mtl_diffuse =
         eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     auto *box_mtl_diffuse_textured =
