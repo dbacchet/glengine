@@ -35,8 +35,8 @@ struct State {
     } offscreen;
     struct {
         sg_pass_action pass_action = {0}; // only the pass action since the target is teh default framebuffer
-        sg_pipeline pip;
-        sg_bindings bind;
+        sg_pipeline pip = {0};
+        sg_bindings bind = {0};
     } fsq;
     sg_imgui_t sg_imgui;
 };
@@ -72,40 +72,37 @@ void create_offscreen_pass(glengine::State &state, int width, int height) {
                                     .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
                                     .wrap_v = SG_WRAP_CLAMP_TO_EDGE,
                                     .label = "depth image"};
-    state.offscreen.pass.pass_desc = (sg_pass_desc){.color_attachments =
-                                                        {
-                                                            [0].image = sg_make_image(&color_img_desc),
-                                                        },
-                                                    .depth_stencil_attachment.image = sg_make_image(&depth_img_desc),
-                                                    .label = "offscreen pass"};
+    state.offscreen.pass.pass_desc = {0}; // can't use struct initializer because arrays are not supported in c++
+    state.offscreen.pass.pass_desc.color_attachments[0].image = sg_make_image(&color_img_desc);
+    state.offscreen.pass.pass_desc.depth_stencil_attachment.image = sg_make_image(&depth_img_desc);
+    state.offscreen.pass.pass_desc.label = "offscreen pass";
     state.offscreen.pass.pass_id = sg_make_pass(&state.offscreen.pass.pass_desc);
     // pass action for offscreen pass
-    state.offscreen.pass.pass_action =
-        (sg_pass_action){.colors = {
-                             [0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}},
-                         }};
+    state.offscreen.pass.pass_action = {};
+    state.offscreen.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
     // also need to update the fullscreen-quad texture bindings
     state.fsq.bind.fs_images[0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
 }
 
 // create the final fullscreen quad rendering pass
 void create_fsq_pass(glengine::State &state, int width, int height) {
-    state.fsq.pass_action = {.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}}};
+    state.fsq.pass_action = {0};
+    state.fsq.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
     // fulscreen quad rendering
     float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
     sg_buffer quad_vbuf = sg_make_buffer(
         (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
     // the pipeline object to render the fullscreen quad
-    state.fsq.pip =
-        sg_make_pipeline((sg_pipeline_desc){.layout = {.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2},
-                                            .shader = sg_make_shader(fsq_shader_desc()),
-                                            .primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP,
-                                            .label = "fullscreen quad pipeline"});
+    sg_pipeline_desc fsq_pip_desc = {0};
+    fsq_pip_desc.layout.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2;
+    fsq_pip_desc.shader = sg_make_shader(fsq_shader_desc());
+    fsq_pip_desc.primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP;
+    fsq_pip_desc.label = "fullscreen quad pipeline";
+    state.fsq.pip = sg_make_pipeline(fsq_pip_desc);
     // resource bindings to render a fullscreen quad
-    state.fsq.bind = (sg_bindings){.vertex_buffers[0] = quad_vbuf,
-                                   .fs_images = {
-                                       [SLOT_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image,
-                                   }};
+    state.fsq.bind = {0};
+    state.fsq.bind.vertex_buffers[0] = quad_vbuf;
+    state.fsq.bind.fs_images[SLOT_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
 }
 
 int save_screenshot(const char *filename) {
@@ -325,7 +322,7 @@ bool GLEngine::render() {
     MICROPROFILE_ENTERI("glengine", "imgui", MP_AUTO);
     ImGui_ImplGlfw_NewFrame();
     simgui_new_frame(fbsize.x, fbsize.y, delta_time);
-    // statistics and debug  
+    // statistics and debug
     if (_config.show_imgui_statistics) {
         ImGui::ShowMetricsWindow();
     }
@@ -402,9 +399,10 @@ Mesh *GLEngine::create_mesh() {
     return mesh;
 }
 
-Mesh *GLEngine::create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_, sg_usage usage) {
+Mesh *GLEngine::create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_,
+                            sg_usage usage) {
     Mesh *mesh = create_mesh();
-    mesh->init(vertices_,indices_,usage);
+    mesh->init(vertices_, indices_, usage);
     return mesh;
 }
 

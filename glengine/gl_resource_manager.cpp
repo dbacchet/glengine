@@ -66,22 +66,20 @@ sg_image ResourceManager::get_or_create_image(const char *filename) {
     int img_width, img_height, num_channels;
     const int desired_channels = 4;
     stbi_set_flip_vertically_on_load(true);
-    stbi_uc *pixels = stbi_load(filename, &img_width, &img_height,
-                                            &num_channels, desired_channels);
+    stbi_uc *pixels = stbi_load(filename, &img_width, &img_height, &num_channels, desired_channels);
     if (pixels) {
-        sg_image img = get_or_create_image((sg_image_desc){
-            .width = img_width,
-            .height = img_height,
-            .pixel_format = SG_PIXELFORMAT_RGBA8,
-            .min_filter = SG_FILTER_LINEAR,
-            .mag_filter = SG_FILTER_LINEAR,
-            .content.subimage[0][0] =
-                {
-                    .ptr = pixels,
-                    .size = img_width * img_height * 4,
-                },
-            .label = filename,
-        });
+        sg_image_desc img_desc = {0};
+        img_desc.width = img_width;
+        img_desc.height = img_height;
+        img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+        img_desc.min_filter = SG_FILTER_LINEAR;
+        img_desc.mag_filter = SG_FILTER_LINEAR;
+        img_desc.content.subimage[0][0] = {
+            .ptr = pixels,
+            .size = img_width * img_height * 4,
+        };
+        img_desc.label = filename;
+        sg_image img = get_or_create_image(img_desc);
         stbi_image_free(pixels);
         return img;
     }
@@ -92,24 +90,22 @@ sg_image ResourceManager::get_or_create_image(const uint8_t *data, int32_t len) 
     int img_width, img_height, num_channels;
     const int desired_channels = 4;
     stbi_set_flip_vertically_on_load(true);
-    stbi_uc *pixels = stbi_load_from_memory(data, len, &img_width, &img_height,
-                                            &num_channels, desired_channels);
+    stbi_uc *pixels = stbi_load_from_memory(data, len, &img_width, &img_height, &num_channels, desired_channels);
     if (pixels) {
         char label[32];
-        sprintf(label, "ptr:%p len:%d",data, len);
-        sg_image img = get_or_create_image((sg_image_desc){
-            .width = img_width,
-            .height = img_height,
-            .pixel_format = SG_PIXELFORMAT_RGBA8,
-            .min_filter = SG_FILTER_LINEAR,
-            .mag_filter = SG_FILTER_LINEAR,
-            .content.subimage[0][0] =
-                {
-                    .ptr = pixels,
-                    .size = img_width * img_height * 4,
-                },
-            .label = label,
-        });
+        sprintf(label, "ptr:%p len:%d", data, len);
+        sg_image_desc img_desc = {0};
+        img_desc.width = img_width;
+        img_desc.height = img_height;
+        img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+        img_desc.min_filter = SG_FILTER_LINEAR;
+        img_desc.mag_filter = SG_FILTER_LINEAR;
+        img_desc.content.subimage[0][0] = {
+            .ptr = pixels,
+            .size = img_width * img_height * 4,
+        };
+        img_desc.label = label;
+        sg_image img = get_or_create_image(img_desc);
         stbi_image_free(pixels);
         return img;
     }

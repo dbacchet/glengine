@@ -176,19 +176,18 @@ class GltfLoader {
             const tinygltf::Image &img = model.images[i];
             log_debug("gltf loader: texture with index %d, name '%s', and uri '%s'\n", i, img.name.c_str(),
                       img.uri.c_str());
-            _tx_map[i] = sg_make_image((sg_image_desc){
-                .width = img.width,
-                .height = img.height,
-                .pixel_format = SG_PIXELFORMAT_RGBA8,
-                .min_filter = SG_FILTER_LINEAR,
-                .mag_filter = SG_FILTER_LINEAR,
-                .content.subimage[0][0] =
-                    {
-                        .ptr = img.image.data(),
-                        .size = (int)img.image.size(),
-                    },
-                .label = img.uri.c_str(),
-            });
+            sg_image_desc img_desc = {0};
+            img_desc.width = img.width;
+            img_desc.height = img.height;
+            img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+            img_desc.min_filter = SG_FILTER_LINEAR;
+            img_desc.mag_filter = SG_FILTER_LINEAR;
+            img_desc.content.subimage[0][0] = {
+                .ptr = img.image.data(),
+                .size = (int)img.image.size(),
+            };
+            img_desc.label = img.uri.c_str();
+            _tx_map[i] = sg_make_image(img_desc);
         }
         return true;
     }
