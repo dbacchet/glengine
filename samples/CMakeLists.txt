@@ -1,1 +1,1 @@
-add_subdirectory(sokol)
+add_subdirectory(glengine)
