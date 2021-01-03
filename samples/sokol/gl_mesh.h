@@ -22,7 +22,7 @@ class Mesh {
     bool init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_ = {},
               sg_usage usage = SG_USAGE_IMMUTABLE);
     // update the opengl buffers to reflect the vertices and indices arrays
-    bool update();
+    bool update_buffers();
 
     void update_bindings(sg_bindings &bind);
 

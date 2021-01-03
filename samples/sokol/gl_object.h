@@ -18,6 +18,12 @@ class Object final {
     bool init(const std::vector<Renderable> &renderables);
     bool add_renderable(const Renderable *r, uint32_t num);
 
+    /// update both buffer data and bindings for _all_ renderables with a dynamic mesh.
+    /// Note: this is potentially very expensive: consider update_bindings() in case the buffers have not been changed
+    void update();
+    /// update the bindings for buffers and samplers
+    void update_bindings();
+
     // ////////// //
     // scenegraph //
     // ////////// //

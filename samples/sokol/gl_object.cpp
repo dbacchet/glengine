@@ -39,6 +39,18 @@ bool Object::add_renderable(const Renderable *r, uint32_t num) {
     return true;
 }
 
+void Object::update() {
+    for (auto &r : _renderables) {
+        r.update();
+    }
+}
+
+void Object::update_bindings() {
+    for (auto &r : _renderables) {
+        r.update_bindings();
+    }
+}
+
 void Object::add_child(Object *ro) {
     if (!ro) {
         return;

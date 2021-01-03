@@ -50,12 +50,12 @@ void Mesh::setup_mesh() {
                                                    .content = nullptr,
                                                    .label = "mesh-indices"});
         }
-        update();
+        update_buffers();
     }
 }
 
 // update the data in the buffers. buffers have to be already allocated
-bool Mesh::update() {
+bool Mesh::update_buffers() {
     // in case the new data is bigger than the actual buffers, create a bigger one
     int32_t new_vbuf_size = int32_t(vertices.size() * sizeof(Vertex));
     int32_t new_ibuf_size = int32_t(indices.size() * sizeof(uint32_t));
@@ -77,7 +77,7 @@ bool Mesh::update() {
                                                .label = "mesh-vertices"});
         ibuf_size = new_ibuf_size;
     }
-    // update content
+    // update_buffers content
     sg_update_buffer(vbuf, vertices.data(), int(vertices.size() * sizeof(Vertex)));
     if (ibuf.id != SG_INVALID_ID) {
         sg_update_buffer(ibuf, indices.data(), int(indices.size() * sizeof(uint32_t)));

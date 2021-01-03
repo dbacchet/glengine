@@ -16,6 +16,12 @@ void Renderable::init(Mesh *msh, Material *mtl) {
     update_bindings();
 }
 
+void Renderable::update() {
+    assert(mesh && "invalid mesh pointer");
+    mesh->update_buffers();
+    update_bindings();
+}
+
 void Renderable::update_bindings() {
     assert(mesh && "invalid mesh pointer");
     assert(material && "invalid material pointer");

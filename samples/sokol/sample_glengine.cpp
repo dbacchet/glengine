@@ -1,13 +1,8 @@
 #include "math/vmath.h"
 #include "math/math_utils.h"
 
-#include "gl_types.h"
-#include "gl_context.h"
-#include "gl_camera.h"
-#include "gl_camera_manipulator.h"
-#include "gl_mesh.h"
 #include "gl_engine.h"
-#include "gl_object.h"
+#include "gl_mesh.h"
 #include "gl_prefabs.h"
 #include "gl_material_diffuse.h"
 #include "gl_material_diffuse_textured.h"
@@ -16,41 +11,7 @@
 #include "gl_material_vertexcolor.h"
 
 #include "imgui/imgui.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string>
-#include <vector>
-#include <unordered_map>
-
 #include "uv_grid_256.png.h"
-#include "stb/stb_image.h"
-
-sg_image create_texture() {
-    int img_width, img_height, num_channels;
-    const int desired_channels = 4;
-    stbi_set_flip_vertically_on_load(true);
-    stbi_uc *pixels = stbi_load_from_memory(uv_grid_256_png, (int)uv_grid_256_png_len, &img_width, &img_height,
-                                            &num_channels, desired_channels);
-    if (pixels) {
-        sg_image img = sg_make_image((sg_image_desc){
-            .width = img_width,
-            .height = img_height,
-            .pixel_format = SG_PIXELFORMAT_RGBA8,
-            .min_filter = SG_FILTER_LINEAR,
-            .mag_filter = SG_FILTER_LINEAR,
-            .content.subimage[0][0] =
-                {
-                    .ptr = pixels,
-                    .size = img_width * img_height * 4,
-                },
-            .label = "grid-256-png",
-        });
-        stbi_image_free(pixels);
-        return img;
-    }
-    return {SG_INVALID_ID};
-}
 
 std::vector<glengine::Vertex> triangle_vertices = {{{-0.6f, -0.4f, 0.0f}, {255, 0, 0, 255}},
                                                    {{0.6f, -0.4f, 0.0f}, {0, 255, 0, 255}},
@@ -131,9 +92,8 @@ int main(void) {
 
     // change object attributes
     auto *box2_mtl = (glengine::MaterialDiffuseTextured *)box2_renderable.material;
-    box2_mtl->tex_diffuse = create_texture();
-    box2_renderable.update_bindings();
-    box2._renderables[0].update_bindings();
+    box2_mtl->tex_diffuse = rm.get_or_create_image(uv_grid_256_png, uv_grid_256_png_len);
+    box2.update_bindings(); // since we changed only material attributes, only update the bindings
     // basic object hierarchy
     auto sg0 = eng.create_object({box0_renderable.mesh, eng.create_material<glengine::MaterialDiffuse>(
                                                             SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32)},
@@ -220,8 +180,7 @@ int main(void) {
             bm.indices.push_back(bm.vertices.size());
             bm.vertices.push_back({{-2.0f, 0.0f, zoffs}, {100, 100, 100, 255}});
         }
-        bm.update();
-        box4._renderables[0].update_bindings();
+        box4.update(); // since we changed the content of buffers, call the full update() on box4
         box4.set_transform(
             math::create_transformation({0.0f, 0.0f, 3.0f}, math::quat_from_euler_321(0.0f, 0.0f, 0.0f)));
         // axis
