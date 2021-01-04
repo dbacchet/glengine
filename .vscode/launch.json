@@ -20,7 +20,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build/samples/glengine/sample_gltf",
+        "program": "${workspaceFolder}/build/samples/glengine/sample_torus",
         "args": ["~/models/fiat_500_body.gltf"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/build",
