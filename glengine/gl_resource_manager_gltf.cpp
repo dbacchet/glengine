@@ -246,6 +246,11 @@ class GltfLoader {
                                                                                     SG_INDEXTYPE_UINT32);
             material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
             return material;
+        } else {
+            auto material = _eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES,
+                                                                            SG_INDEXTYPE_UINT32);
+            material->color = {(uint8_t)(pbr.baseColorFactor[0]*255),(uint8_t)(pbr.baseColorFactor[1]*255),(uint8_t)(pbr.baseColorFactor[2]*255),255};
+            return material;
         }
         return nullptr;
     }
@@ -298,7 +303,7 @@ std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename) {
     GltfLoader ml(filename, eng);
     ml.load_textures(model);
     log_debug("loaded %d textures\n", (int)ml._tx_map.size());
-    ml.parse_materials(model, false);
+    ml.parse_materials(model, true);
     // this loader makes the assumption that the entire scene is a single model
     math::Matrix4f root_tf = math::matrix4_identity<float>();
     root_tf = math::create_transformation(
