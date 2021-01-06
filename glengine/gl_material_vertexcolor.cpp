@@ -15,7 +15,7 @@ bool MaterialVertexColor::init(ResourceManager &rm, sg_primitive_type primitive,
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     pip_desc.layout.attrs[ATTR_vs_vertexcolor_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3;
-    pip_desc.layout.attrs[ATTR_vs_vertexcolor_vertex_col].format = SG_VERTEXFORMAT_BYTE4N;
+    pip_desc.layout.attrs[ATTR_vs_vertexcolor_vertex_col].format = SG_VERTEXFORMAT_UBYTE4N;
     pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
     pip_desc.depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true};
     pip_desc.blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};

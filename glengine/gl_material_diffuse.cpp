@@ -15,7 +15,7 @@ bool MaterialDiffuse::init(ResourceManager &rm, sg_primitive_type primitive, sg_
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     pip_desc.layout.attrs[ATTR_vs_diffuse_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3;
-    pip_desc.layout.attrs[ATTR_vs_diffuse_vertex_color].format = SG_VERTEXFORMAT_BYTE4N;
+    pip_desc.layout.attrs[ATTR_vs_diffuse_vertex_color].format = SG_VERTEXFORMAT_UBYTE4N;
     pip_desc.layout.attrs[ATTR_vs_diffuse_vertex_normal].format = SG_VERTEXFORMAT_FLOAT3;
     pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
     pip_desc.depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true};

@@ -15,7 +15,7 @@ bool MaterialFlatTextured::init(ResourceManager &rm, sg_primitive_type primitive
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     pip_desc.layout.attrs[ATTR_vs_flat_textured_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3;
-    pip_desc.layout.attrs[ATTR_vs_flat_textured_vertex_color].format = SG_VERTEXFORMAT_BYTE4N;
+    pip_desc.layout.attrs[ATTR_vs_flat_textured_vertex_color].format = SG_VERTEXFORMAT_UBYTE4N;
     pip_desc.layout.attrs[ATTR_vs_flat_textured_vertex_normal].format = SG_VERTEXFORMAT_FLOAT3;
     pip_desc.layout.attrs[ATTR_vs_flat_textured_vertex_texcoord].format = SG_VERTEXFORMAT_FLOAT2;
     pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
