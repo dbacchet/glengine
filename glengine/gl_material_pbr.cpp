@@ -95,9 +95,9 @@ void MaterialPBR::apply_uniforms(const common_uniform_params_t &params) {
     sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_light_params, &lparams, sizeof(lparams));
     metallic_params_t mparams{
         .base_color_factor = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f},
-        .emissive_factor = {0.5f, 0.5f, 0.5f},
-        .metallic_factor = 0.5f,
-        .roughness_factor = 0.3f,
+        .emissive_factor = emissive_factor,
+        .metallic_factor = metallic_factor,
+        .roughness_factor = roughness_factor,
     };
     sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_metallic_params, &mparams, sizeof(mparams));
 }

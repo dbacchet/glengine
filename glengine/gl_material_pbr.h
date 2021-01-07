@@ -23,6 +23,10 @@ class MaterialPBR : public Material {
 
     virtual void apply_uniforms(const common_uniform_params_t &params) override;
 
+
+    math::Vector3f emissive_factor = {0.0f,0.0f,0.0f};
+    float metallic_factor = 1.0f;
+    float roughness_factor = 1.0f;
     sg_image tex_diffuse = {0};
     sg_image tex_metallic_roughness = {0};
     sg_image tex_normal = {0};

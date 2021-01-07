@@ -251,12 +251,15 @@ class GltfLoader {
         if (pbr.baseColorTexture.index >= 0) {
             material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
         }
+        material->roughness_factor = pbr.roughnessFactor;
+        material->metallic_factor = pbr.metallicFactor;
         if (pbr.metallicRoughnessTexture.index >= 0) {
             material->tex_metallic_roughness = _tx_map[pbr.baseColorTexture.index];
         }
         if (mtl.normalTexture.index >= 0) {
             material->tex_normal = _tx_map[mtl.normalTexture.index];
         }
+        material->emissive_factor = {(float)mtl.emissiveFactor[0],(float)mtl.emissiveFactor[1],(float)mtl.emissiveFactor[2]};
         if (mtl.emissiveTexture.index >= 0) {
             material->tex_emissive = _tx_map[mtl.emissiveTexture.index];
         }
