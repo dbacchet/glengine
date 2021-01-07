@@ -33,6 +33,8 @@ add_library(glengine STATIC gl_camera.h
                             gl_material_flat.h
                             gl_material_flat_textured.cpp
                             gl_material_flat_textured.h
+                            gl_material_pbr.cpp
+                            gl_material_pbr.h
                             gl_material_vertexcolor.cpp
                             gl_material_vertexcolor.h
                             gl_mesh.cpp
