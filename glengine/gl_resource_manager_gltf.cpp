@@ -6,6 +6,7 @@
 #include "gl_mesh.h"
 #include "gl_material_diffuse.h"
 #include "gl_material_diffuse_textured.h"
+#include "gl_material_pbr.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -174,8 +175,9 @@ class GltfLoader {
     bool load_textures(const tinygltf::Model &model) {
         for (uint32_t i = 0; i < model.images.size(); i++) {
             const tinygltf::Image &img = model.images[i];
-            log_debug("gltf loader: texture with index %d, name '%s', and uri '%s'\n", i, img.name.c_str(),
+            log_debug("gltf loader: texture with index %d, name '%s', and uri '%s'", i, img.name.c_str(),
                       img.uri.c_str());
+            // log_debug("image %d %d %d",img.component, img.bits, img.pixel_type);
             sg_image_desc img_desc = {0};
             img_desc.width = img.width;
             img_desc.height = img.height;
@@ -199,6 +201,11 @@ class GltfLoader {
                 log_info("Material '%s', index %d", mtl.name.c_str(), i);
                 log_info("  Emissive factor %f %f %f", mtl.emissiveFactor[0], mtl.emissiveFactor[1],
                          mtl.emissiveFactor[2]);
+                log_info("  emissive texture idx %d coords %d", mtl.emissiveTexture.index,
+                         mtl.emissiveTexture.texCoord);
+                log_info("  occlusion texture idx %d coords %d", mtl.occlusionTexture.index,
+                         mtl.occlusionTexture.texCoord);
+                log_info("  normal texture idx %d coords %d", mtl.normalTexture.index, mtl.normalTexture.texCoord);
                 log_info("  Alpha Mode '%s'", mtl.alphaMode.c_str());
                 log_info("  Alpha cutoff '%f'", mtl.alphaCutoff);
                 log_info("  double-sided '%d'", (int)mtl.doubleSided);
@@ -210,7 +217,6 @@ class GltfLoader {
                          pbr.baseColorTexture.texCoord);
                 log_info("    metallic factor %f", pbr.metallicFactor);
                 log_info("    roughness factor %f", pbr.roughnessFactor);
-                log_info("    metallicroughness texture");
                 log_info("    metallic roughness texture idx %d coords %d", pbr.metallicRoughnessTexture.index,
                          pbr.metallicRoughnessTexture.texCoord);
             }
@@ -241,17 +247,37 @@ class GltfLoader {
         //     return m;
         auto &pbr = mtl.pbrMetallicRoughness;
         // set diffuse texture and select shader
+        auto material = _eng.create_material<glengine::MaterialPBR>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
         if (pbr.baseColorTexture.index >= 0) {
-            auto material = _eng.create_material<glengine::MaterialDiffuseTextured>(SG_PRIMITIVETYPE_TRIANGLES,
-                                                                                    SG_INDEXTYPE_UINT32);
             material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
-            return material;
-        } else {
-            auto material = _eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES,
-                                                                            SG_INDEXTYPE_UINT32);
-            material->color = {(uint8_t)(pbr.baseColorFactor[0]*255),(uint8_t)(pbr.baseColorFactor[1]*255),(uint8_t)(pbr.baseColorFactor[2]*255),255};
-            return material;
         }
+        if (pbr.metallicRoughnessTexture.index >= 0) {
+            material->tex_metallic_roughness = _tx_map[pbr.baseColorTexture.index];
+        }
+        if (mtl.normalTexture.index >= 0) {
+            material->tex_normal = _tx_map[mtl.normalTexture.index];
+        }
+        if (mtl.emissiveTexture.index >= 0) {
+            material->tex_emissive = _tx_map[mtl.emissiveTexture.index];
+        }
+        if (mtl.occlusionTexture.index >= 0) {
+            material->tex_occlusion = _tx_map[mtl.occlusionTexture.index];
+        }
+        return material;
+        // if (pbr.baseColorTexture.index >= 0) {
+        //     // auto material = _eng.create_material<glengine::MaterialDiffuseTextured>(SG_PRIMITIVETYPE_TRIANGLES,
+        //     //                                                                         SG_INDEXTYPE_UINT32);
+        //     auto material = _eng.create_material<glengine::MaterialPBR>(SG_PRIMITIVETYPE_TRIANGLES,
+        //                                                                             SG_INDEXTYPE_UINT32);
+        //     material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
+        //     return material;
+        // } else {
+        //     auto material = _eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES,
+        //                                                                     SG_INDEXTYPE_UINT32);
+        //     material->color =
+        //     {(uint8_t)(pbr.baseColorFactor[0]*255),(uint8_t)(pbr.baseColorFactor[1]*255),(uint8_t)(pbr.baseColorFactor[2]*255),255};
+        //     return material;
+        // }
         return nullptr;
     }
 
