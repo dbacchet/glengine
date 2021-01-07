@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     glengine::GLEngine eng;
     eng.init({1280, 720, true});
 
-    eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f).set_distance(50.0f);
+    eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f).set_distance(5.0f);
 
     // /////// //
     // objects //

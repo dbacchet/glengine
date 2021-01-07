@@ -86,7 +86,7 @@ vec3 get_normal() {
     t = normalize(t - ng * dot(ng, t));
     vec3 b = normalize(cross(ng, t));
     mat3 tbn = mat3(t, b, ng);
-    vec2 n_xy = texture(normal_texture, v_uv).xw * 2.0 - 1.0;
+    vec2 n_xy = texture(normal_texture, v_uv).xy * 2.0 - 1.0;
     vec3 n = vec3(n_xy.x, n_xy.y, sqrt(1.0 - n_xy.x*n_xy.x - n_xy.y*n_xy.y));
     n = normalize(tbn * n);
     return n;
@@ -179,10 +179,10 @@ vec3 get_point_shade(vec3 point_to_light, material_info_t material_info, vec3 no
         vec3 spec_contrib = F * Vis * D;
 
         // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
-        return (diffuse_contrib + spec_contrib);
+        /* return (diffuse_contrib + spec_contrib); */
         return angular_info.n_dot_l * (diffuse_contrib + spec_contrib);
     }
-    return vec3(0.0, 0.0, 1.0);
+    return vec3(0.0, 0.0, 0.0);
 }
 
 float get_range_attenuation(float range, float distance) {
@@ -228,11 +228,11 @@ void main() {
 
     const vec3 f0 = vec3(0.04);
 
-    // Roughness is stored in the 'a' channel, metallic is stored in the 'r' channel.
+    // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
     // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
     vec4 mr_sample = texture(metallic_roughness_texture, v_uv);
-    float perceptual_roughness = clamp(mr_sample.w * roughness_factor, 0.0, 1.0);
-    float metallic = clamp(mr_sample.x * metallic_factor, 0.0, 1.0);
+    float perceptual_roughness = clamp(mr_sample.y * roughness_factor, 0.0, 1.0);
+    float metallic = clamp(mr_sample.z * metallic_factor, 0.0, 1.0);
 
     vec4 base_color = srgb_to_linear(texture(base_color_texture, v_uv)) * base_color_factor;
     vec3 diffuse_color = base_color.rgb * (vec3(1.0)-f0) * (1.0 - metallic);
@@ -259,18 +259,25 @@ void main() {
     // lighting
     vec3 normal = get_normal();
 
-    if (v_pos.x<0) {
-        /* normal = texture(normal_texture, v_uv).xyz; */
-        normal = v_nrm;
-    }
+    // if (v_pos.x<0) {
+    //     /* normal = texture(normal_texture, v_uv).xyz; */
+    //     normal = v_nrm;
+    // }
     vec3 view = normalize(v_eye_pos - v_pos);
     vec3 color = apply_point_light(material_info, normal, view);
     color *= texture(occlusion_texture, v_uv).r;
     color += srgb_to_linear(texture(emissive_texture, v_uv)).rgb * emissive_factor;
-    /* if (v_pos.x>0) { */
-    /*     color = normal; */
-    /* } */
-    frag_color = vec4(color,1.0);//vec4(tone_map(color), 1.0);
+    float ratio = 1;
+    frag_color = ratio*vec4(tone_map(color), 1.0);
+
+    // diffuse 
+    vec3 light_dir = normalize(light_pos - v_pos);
+    // float diff = max(dot(norm, light_dir), 0.0); // classical approach: no light for angles >90deg
+    float diff = (dot(normal, light_dir) + 1.0)/2.0; // modified (non-physically correct) approach: consider all 180deg
+    vec4 tmp_color = texture(base_color_texture, v_uv);// * color;
+    if(tmp_color.a < 0.1)
+        discard;
+    frag_color += (1-ratio)*vec4(vec3(diff),1.0) * tmp_color;
 }
 @end
 

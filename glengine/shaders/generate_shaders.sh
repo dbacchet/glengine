@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 CURR_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 
 OS_PREFIX="win32"

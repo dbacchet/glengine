@@ -61,3 +61,5 @@ TODO
 - [] object selection (ID buffer)
 - [] consistent color spaces (sRGB for both meshes and textures)
 - [] better object/mesh/material update semantics. Now it's tricky with shared and copied components (ex. in the renderable material and mesh are pointers to values created externally, but `bind` is a local object, and since the renderable is _copied_ it cannot be updated in the original Renderable instance created when constructing the Object, but has to be modified in the object itself)
+- [] implement PBR materials and add support to gltf importer
+- [] resize offscreen context on window/fbuffer resize
