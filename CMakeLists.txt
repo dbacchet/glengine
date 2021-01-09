@@ -29,6 +29,7 @@ enable_testing()
 add_subdirectory(3rdparty)
 add_subdirectory(common)
 add_subdirectory(glengine)
+add_subdirectory(RHMQ)
 add_subdirectory(samples)
 # add_subdirectory(testing)
 

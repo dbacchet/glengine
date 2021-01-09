@@ -14,3 +14,5 @@
 
 # GLFW
 add_subdirectory(glfw-3.3.2)
+# ZMQ
+add_subdirectory(libzmq)

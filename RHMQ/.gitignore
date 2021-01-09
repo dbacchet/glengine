@@ -1,0 +1,10 @@
+/thirdparty/thrift/thrift/
+/thirdparty/thrift/test/gen-cpp/
+/thirdparty/thrift/test/gen-py/
+/thirdparty/thrift/test/UnityServer
+*.skeleton.cpp
+x64/
+.vs/
+.vscode/
+*.user
+*.pyc

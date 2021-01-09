@@ -20,7 +20,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build_debug/samples/glengine/sample_gltf",
+        "program": "${workspaceFolder}/build_pcloud/samples/pcloud/sample_pcloud",
         "args": ["../resources/models/ue4_mannequin.glb"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/build",
