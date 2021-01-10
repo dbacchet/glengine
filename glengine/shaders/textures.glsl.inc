@@ -1,100 +1,110 @@
+// textures
 // General Material
 uniform sampler2D u_NormalSampler;
-uniform float u_NormalScale;
-uniform int u_NormalUVSet;
-uniform mat3 u_NormalUVTransform;
-
-uniform vec3 u_EmissiveFactor;
 uniform sampler2D u_EmissiveSampler;
-uniform int u_EmissiveUVSet;
-uniform mat3 u_EmissiveUVTransform;
-
 uniform sampler2D u_OcclusionSampler;
-uniform int u_OcclusionUVSet;
-uniform float u_OcclusionStrength;
-uniform mat3 u_OcclusionUVTransform;
-
 // Metallic Roughness Material
 uniform sampler2D u_BaseColorSampler;
-uniform int u_BaseColorUVSet;
-uniform mat3 u_BaseColorUVTransform;
-
 uniform sampler2D u_MetallicRoughnessSampler;
-uniform int u_MetallicRoughnessUVSet;
-uniform mat3 u_MetallicRoughnessUVTransform;
-
 // Specular Glossiness Material
 uniform sampler2D u_DiffuseSampler;
-uniform int u_DiffuseUVSet;
-uniform mat3 u_DiffuseUVTransform;
-
 uniform sampler2D u_SpecularGlossinessSampler;
-uniform int u_SpecularGlossinessUVSet;
-uniform mat3 u_SpecularGlossinessUVTransform;
-
 // IBL
-uniform int u_MipCount;
 uniform samplerCube u_LambertianEnvSampler;
 uniform samplerCube u_GGXEnvSampler;
 uniform sampler2D u_GGXLUT;
 uniform samplerCube u_CharlieEnvSampler;
 uniform sampler2D u_CharlieLUT;
-
 //clearcoat
 uniform sampler2D u_ClearcoatSampler;
-uniform int u_ClearcoatUVSet;
-uniform mat3 u_ClearcoatUVTransform;
-
 uniform sampler2D u_ClearcoatRoughnessSampler;
-uniform int u_ClearcoatRoughnessUVSet;
-uniform mat3 u_ClearcoatRoughnessUVTransform;
-
 uniform sampler2D u_ClearcoatNormalSampler;
-uniform int u_ClearcoatNormalUVSet;
-uniform mat3 u_ClearcoatNormalUVTransform;
-
 //sheen
 uniform sampler2D u_SheenColorIntensitySampler;
-uniform int u_SheenColorIntensityUVSet;
-uniform mat3 u_SheenColorIntensityUVTransform;
-
 //specular
 uniform sampler2D u_MetallicRoughnessSpecularSampler;
-uniform int u_MetallicRougnessSpecularTextureUVSet;
-uniform mat3 u_MetallicRougnessSpecularUVTransform;
-
 //subsurface
 uniform sampler2D u_SubsurfaceColorSampler;
-uniform int u_SubsurfaceColorUVSet;
-uniform mat3 u_SubsurfaceColorUVTransform;
-
 uniform sampler2D u_SubsurfaceThicknessSampler;
-uniform int u_SubsurfaceThicknessUVSet;
-uniform mat3 u_SubsurfaceThicknessUVTransform;
-
 //thin film
 uniform sampler2D u_ThinFilmLUT;
-
 uniform sampler2D u_ThinFilmSampler;
-uniform int u_ThinFilmUVSet;
-uniform mat3 u_ThinFilmUVTransform;
-
 uniform sampler2D u_ThinFilmThicknessSampler;
-uniform int u_ThinFilmThicknessUVSet;
-uniform mat3 u_ThinFilmThicknessUVTransform;
-
 // Thickness:
 uniform sampler2D u_ThicknessSampler;
-uniform int u_ThicknessUVSet;
-uniform mat3 u_ThicknessUVTransform;
-
 // Anisotropy:
 uniform sampler2D u_AnisotropySampler;
-uniform int u_AnisotropyUVSet;
-uniform mat3 u_AnisotropyUVTransform;
 uniform sampler2D u_AnisotropyDirectionSampler;
-uniform int u_AnisotropyDirectionUVSet;
-uniform mat3 u_AnisotropyDirectionUVTransform;
+
+// texture parameters
+uniform TextureParams {
+    // General Material
+    float u_NormalScale;
+    // mat3 u_NormalUVTransform;
+    vec3 u_EmissiveFactor;
+    // mat3 u_EmissiveUVTransform;
+    float u_OcclusionStrength;
+    // mat3 u_OcclusionUVTransform;
+    // Metallic Roughness Material
+    // mat3 u_BaseColorUVTransform;
+    // mat3 u_MetallicRoughnessUVTransform;
+    // Specular Glossiness Material
+    // mat3 u_DiffuseUVTransform;
+    // mat3 u_SpecularGlossinessUVTransform;
+    // IBL
+    float u_MipCount;
+    //clearcoat
+    // mat3 u_ClearcoatUVTransform;
+    // mat3 u_ClearcoatRoughnessUVTransform;
+    // mat3 u_ClearcoatNormalUVTransform;
+    //sheen
+    // mat3 u_SheenColorIntensityUVTransform;
+    //specular
+    // mat3 u_MetallicRougnessSpecularUVTransform;
+    //subsurface
+    // mat3 u_SubsurfaceColorUVTransform;
+    // mat3 u_SubsurfaceThicknessUVTransform;
+    //thin film
+    // mat3 u_ThinFilmUVTransform;
+    // mat3 u_ThinFilmThicknessUVTransform;
+    // Thickness:
+    // mat3 u_ThicknessUVTransform;
+    // Anisotropy:
+    // mat3 u_AnisotropyUVTransform;
+    // mat3 u_AnisotropyDirectionUVTransform;
+};
+
+// int params can not be uniforms in sokol; hardcode
+// General Material
+int u_NormalUVSet = 0;
+int u_EmissiveUVSet = 0;
+int u_OcclusionUVSet = 0;
+// Metallic Roughness Material
+int u_BaseColorUVSet = 0;
+int u_MetallicRoughnessUVSet = 0;
+// Specular Glossiness Material
+int u_DiffuseUVSet = 0;
+int u_SpecularGlossinessUVSet = 0;
+//clearcoat
+int u_ClearcoatUVSet = 0;
+int u_ClearcoatRoughnessUVSet = 0;
+int u_ClearcoatNormalUVSet = 0;
+//sheen
+int u_SheenColorIntensityUVSet = 0;
+//specular
+int u_MetallicRougnessSpecularTextureUVSet = 0;
+//subsurface
+int u_SubsurfaceColorUVSet = 0;
+int u_SubsurfaceThicknessUVSet = 0;
+//thin film
+int u_ThinFilmUVSet = 0;
+int u_ThinFilmThicknessUVSet = 0;
+// Thickness:
+int u_ThicknessUVSet = 0;
+// Anisotropy:
+int u_AnisotropyUVSet = 0;
+int u_AnisotropyDirectionUVSet = 0;
+
 
 vec2 getNormalUV()
 {
