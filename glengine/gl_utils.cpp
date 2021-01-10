@@ -1,4 +1,9 @@
+#include "gl_utils.h"
+#include "gl_object.h"
+#include "gl_mesh.h"
+
 #include <cstdint>
+#include <limits>
 
 namespace glengine {
 uint32_t murmur_hash2_32(const void *key, int len, uint32_t seed) {
@@ -75,6 +80,42 @@ uint64_t murmur_hash2_64(const void *key, int len, uint64_t seed) {
     h *= m;
     h ^= h >> r;
     return h;
+}
+
+// struct Extents {
+//     math::Vector3f bl;
+//     math::Vector3f tr;
+// };
+void calc_object_extents(const glengine::Object *obj, bool with_children, math::Vector3f &bl, math::Vector3f &tr) {
+    for (const auto &r : obj->_renderables) {
+        const auto m = r.mesh;
+        if (m) {
+            for (const auto &v : m->vertices) {
+                bl.x = std::min(bl.x, v.pos.x);
+                bl.y = std::min(bl.y, v.pos.y);
+                bl.z = std::min(bl.z, v.pos.z);
+                tr.x = std::max(tr.x, v.pos.x);
+                tr.y = std::max(tr.y, v.pos.y);
+                tr.z = std::max(tr.z, v.pos.z);
+            }
+        }
+        // recurse into children
+        if (with_children) {
+            for (const auto &c : obj->_children) {
+                calc_object_extents(c, with_children, bl, tr);
+            }
+        }
+    }
+}
+
+// return the bounding box of this object
+AABB calc_bounding_box(const glengine::Object *obj, bool include_children) {
+    math::Vector3f bl = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
+                         std::numeric_limits<float>::max()}; // bottom left
+    math::Vector3f tr = {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(),
+                         std::numeric_limits<float>::lowest()}; // top right
+    calc_object_extents(obj, include_children, bl, tr);
+    return AABB{(tr+bl)/2.0f, tr-bl};
 }
 
 } // namespace glengine

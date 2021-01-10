@@ -8,6 +8,7 @@
 #include "gl_material_flat_textured.h"
 #include "gl_material_vertexcolor.h"
 #include "gl_renderable.h"
+#include "gl_utils.h"
 
 namespace glengine {
 std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename);
@@ -16,7 +17,7 @@ std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename);
 int main(int argc, char *argv[]) {
 
     std::string gltf_filename = "";
-    if (argc>1) {
+    if (argc > 1) {
         gltf_filename = argv[1];
     }
 
@@ -37,9 +38,15 @@ int main(int argc, char *argv[]) {
         auto *gltf_obj = eng.create_object();
         auto gltf_renderables = glengine::create_from_gltf(eng, gltf_filename.c_str());
         printf("loaded %d renderables from gltf file\n", (int)gltf_renderables.size());
-        gltf_obj->add_renderable(gltf_renderables.data(),gltf_renderables.size());
+        gltf_obj->add_renderable(gltf_renderables.data(), gltf_renderables.size());
+
+        // approximate camera placement using object extent
+        auto aabb = glengine::calc_bounding_box(gltf_obj, true);
+        printf("object bbox - center (%f,%f,%f) - size (%f,%f,%f)\n", aabb.center.x, aabb.center.y, aabb.center.z,
+               aabb.size.x, aabb.size.y, aabb.size.z);
+        eng._camera_manipulator.set_center(aabb.center);
+        eng._camera_manipulator.set_distance(1.5f * math::length(aabb.size));
     }
-    
     // ///////// //
     // main loop //
     // ///////// //
