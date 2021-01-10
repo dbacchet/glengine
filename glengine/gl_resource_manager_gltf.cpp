@@ -7,6 +7,7 @@
 #include "gl_material_diffuse.h"
 #include "gl_material_diffuse_textured.h"
 #include "gl_material_pbr.h"
+#include "gl_material_refpbr.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -247,7 +248,7 @@ class GltfLoader {
         //     return m;
         auto &pbr = mtl.pbrMetallicRoughness;
         // set diffuse texture and select shader
-        auto material = _eng.create_material<glengine::MaterialPBR>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+        auto material = _eng.create_material<glengine::MaterialRefPBR>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
         if (pbr.baseColorTexture.index >= 0) {
             material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
         }
@@ -270,7 +271,7 @@ class GltfLoader {
         // if (pbr.baseColorTexture.index >= 0) {
         //     // auto material = _eng.create_material<glengine::MaterialDiffuseTextured>(SG_PRIMITIVETYPE_TRIANGLES,
         //     //                                                                         SG_INDEXTYPE_UINT32);
-        //     auto material = _eng.create_material<glengine::MaterialPBR>(SG_PRIMITIVETYPE_TRIANGLES,
+        //     auto material = _eng.create_material<glengine::MaterialRefPBR>(SG_PRIMITIVETYPE_TRIANGLES,
         //                                                                             SG_INDEXTYPE_UINT32);
         //     material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
         //     return material;
