@@ -89,8 +89,8 @@ void MaterialRefPBR::apply_uniforms(const common_uniform_params_t &params) {
     vs_params_t vs_params{.model = params.model, .view = params.view, .projection = params.projection};
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
     Light_t lparams{
-        .light_position = {10.0f, 10.0f, 10.0f},
-        .light_intensity = 5.0f,
+        .light_position = {15.0f, 10.0f, 10.0f},
+        .light_intensity = 10.0f,
         // .light_range = 200.0f,
         .light_color = {1.0f, 1.0f, 1.0f},
     };
