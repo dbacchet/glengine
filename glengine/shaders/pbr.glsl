@@ -12,11 +12,16 @@
 #define HAS_EMISSIVE_MAP
 #define HAS_OCCLUSION_MAP
 #define USE_PUNCTUAL
-/* #define DEBUG_OUTPUT */
-/* #define DEBUG_NORMAL */
+// #define DEBUG_OUTPUT
+// #define DEBUG_NORMAL
+// #define DEBUG_METALLIC
+// #define DEBUG_ROUGHNESS
+// #define DEBUG_NORMAL // OK
+// #define DEBUG_TANGENT
+// #define DEBUG_BASECOLOR // OK
 
 // #define DEBUG_BASECOLOR
-#define ALPHAMODE_OPAQUE
+// #define ALPHAMODE_OPAQUE
 /* #define MATERIAL_UNLIT */
 @end
 
@@ -112,9 +117,9 @@ uniform Light
 {
     vec3 light_position;
     float light_intensity;
+    float light_range;
     vec3 light_color;
-    // vec3 light_direction;
-    // float light_range;
+    vec3 light_direction;
     //
     //
     // float light_innerConeCos;
@@ -122,6 +127,7 @@ uniform Light
     // float light_outerConeCos;
     // int light_type;
 };
+const int light_type = LightType_Directional;
 
 #ifdef USE_PUNCTUAL
 #define LIGHT_COUNT 1
@@ -623,23 +629,22 @@ void main()
     {
         // Light light = u_Lights[i];
 
+        vec3 pointToLight = -light_direction;
         float rangeAttenuation = 1.0;
         float spotAttenuation = 1.0;
 
-        // if(light_type != LightType_Directional)
-        // {
-        vec3 pointToLight = light_position - v_Position;
-        // }
+        if(light_type != LightType_Directional)
+        {
+            pointToLight = light_position - v_Position;
+        }
 
         // // Compute range and spot light attenuation.
-        // if (light_type != LightType_Directional)
-        // {
-        //     pointToLight = -light_direction;
-        //     rangeAttenuation = getRangeAttenuation(light_range, length(pointToLight));
-        // }
+        if (light_type != LightType_Directional)
+        {
+            rangeAttenuation = getRangeAttenuation(light_range, length(pointToLight));
+        }
         // if (light_type == LightType_Spot)
         // {
-        //     pointToLight = -light_direction;
         //     spotAttenuation = getSpotAttenuation(pointToLight, light_direction, light_outerConeCos, light_innerConeCos);
         // }
 
