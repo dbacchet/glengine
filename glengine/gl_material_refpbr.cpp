@@ -79,29 +79,35 @@ bool MaterialRefPBR::init(ResourceManager &rm, sg_primitive_type primitive, sg_i
 
 void MaterialRefPBR::update_bindings(sg_bindings &bind) {
     bind.fs_images[SLOT_u_BaseColorSampler] = tex_diffuse;
-    // bind.fs_images[SLOT_u_MetallicRoughnessSampler] = tex_metallic_roughness;
-    // bind.fs_images[SLOT_normal_texture] = tex_normal;
-    // bind.fs_images[SLOT_occlusion_texture] = tex_occlusion;
-    // bind.fs_images[SLOT_emissive_texture] = tex_emissive;
+    bind.fs_images[SLOT_u_MetallicRoughnessSampler] = tex_metallic_roughness;
+    bind.fs_images[SLOT_u_NormalSampler] = tex_normal;
+    bind.fs_images[SLOT_u_OcclusionSampler] = tex_occlusion;
+    bind.fs_images[SLOT_u_EmissiveSampler] = tex_emissive;
 }
 
 void MaterialRefPBR::apply_uniforms(const common_uniform_params_t &params) {
     vs_params_t vs_params{.model = params.model, .view = params.view, .projection = params.projection};
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
-    // Light_t lparams{
-    //     .light_position = {10.0f, 10.0f, 10.0f},
-    //     .light_intensity = 700.0f,
-    //     // .light_range = 200.0f,
-    //     .light_color = {1.0f, 1.0f, 1.0f},
-    // };
-    // sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_Light, &lparams, sizeof(lparams));
-    // metallic_params_t mparams{
-    //     .base_color_factor = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f},
-    //     .emissive_factor = emissive_factor,
-    //     .metallic_factor = metallic_factor,
-    //     .roughness_factor = roughness_factor,
-    // };
-    // sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_metallic_params, &mparams, sizeof(mparams));
+    Light_t lparams{
+        .light_position = {10.0f, 10.0f, 10.0f},
+        .light_intensity = 5.0f,
+        // .light_range = 200.0f,
+        .light_color = {1.0f, 1.0f, 1.0f},
+    };
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_Light, &lparams, sizeof(lparams));
+    fs_params_t mparams{
+        .u_BaseColorFactor = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f},
+        .u_MetallicFactor = metallic_factor,
+        .u_RoughnessFactor = roughness_factor,
+    };
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fs_params, &mparams, sizeof(mparams));
+    TextureParams_t tparams{
+        .u_NormalScale = 1.0f,
+        .u_EmissiveFactor = emissive_factor,
+        .u_OcclusionStrength = 1.0f,
+        .u_MipCount = 1,
+    };
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_TextureParams, &tparams, sizeof(tparams));
 }
 
 } // namespace glengine
