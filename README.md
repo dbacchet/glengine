@@ -1,6 +1,8 @@
 GLEngine
 ========
 
+Note: the code in this branch is not maintained, and kept for compatibility reasons. Please use the `master` branch
+
 basic visualizer for rapid prototyping
 
 ## Renderables and scene graph
