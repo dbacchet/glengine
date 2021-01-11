@@ -2,7 +2,7 @@
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
+// #include "imgui/imgui_impl_opengl3.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -74,7 +74,7 @@ Context init_context(const Config &config, const char *title, void *user_pointer
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(context.window, true);
-    ImGui_ImplOpenGL3_Init(NULL);
+    // ImGui_ImplOpenGL3_Init(NULL);
 
     return context;
 }
@@ -93,7 +93,7 @@ void set_callbacks(const Context &ctx, void *user_pointer, const Callbacks &call
 
 void destroy_context(Context &c) {
     // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
+    // ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 

@@ -3,20 +3,16 @@
 #include "gl_context.h"
 #include "gl_camera.h"
 #include "gl_camera_manipulator.h"
-#include "gl_renderer.h"
-#include "gl_object.h"
 #include "gl_resource_manager.h"
-#include "imgui/imgui.h"
+#include "gl_object.h"
 
 #include <cstdint>
-#include <unordered_map>
 #include <functional>
-#include <limits>
+#include <vector>
 
 namespace glengine {
 
-class Mesh;
-class Shader;
+struct State;
 
 class GLEngine {
   public:
@@ -33,19 +29,54 @@ class GLEngine {
     bool terminate();
 
     /// get resource manager
-    ResourceManager& resource_manager() {
-        return _resource_manager;
-    }
+    ResourceManager &resource_manager() { return _resource_manager; }
 
-    // ///////////// //
-    // renderobjects //
-    // ///////////// //
-    /// create a new (empty) renderobject
-    Object *create_renderobject(Object *parent=nullptr, ID id=NULL_ID);
-    /// create a new renderobject and add the given renderable
-    Object *create_renderobject(const Renderable &renderable, Object *parent=nullptr, ID id=NULL_ID);
-    /// create a new renderobject, given an array of renderables
-    Object *create_renderobject(const std::vector<Renderable> &renderables, Object *parent=nullptr, ID id=NULL_ID);
+    // /////// //
+    // objects //
+    // /////// //
+    /// create a new (empty) object
+    Object *create_object(Object *parent = nullptr, ID id = NULL_ID);
+    /// create a new object and add the given renderable
+    Object *create_object(const Renderable &renderable, Object *parent = nullptr, ID id = NULL_ID);
+    /// create a new object, given an array of renderables
+    Object *create_object(const std::vector<Renderable> &renderables, Object *parent = nullptr, ID id = NULL_ID);
+
+    // ////// //
+    // meshes //
+    // ////// //
+    /// create a new (empty) mesh
+    /// the mesh will _not_ be initialized, and the user is responsible for that
+    Mesh *create_mesh();
+    /// create a new mesh given vertices and (optionally) indices
+    /// the mesh will be initialized, and the given usage (immutable, dynamic, stream) set
+    Mesh *create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_={}, sg_usage usage = SG_USAGE_IMMUTABLE);
+    // prefab meshes
+    /// axis gizmo
+    Mesh *create_axis_mesh();
+    /// quad that extends -1..1
+    Mesh *create_quad_mesh();
+    /// solid box
+    Mesh *create_box_mesh(const math::Vector3f &size = {1.0f, 1.0f, 1.0f});
+    /// sphere
+    Mesh *create_sphere_mesh(float radius = 1.0f, uint32_t subdiv = 10);
+    /// grid
+    Mesh *create_grid_mesh(float len = 100.0f, float step = 5.0f);
+
+    // ///////// //
+    // materials //
+    // ///////// //
+    /// create a material
+    template <typename MtlT>
+    MtlT *create_material(sg_primitive_type primitive, sg_index_type idx_type = SG_INDEXTYPE_NONE) {
+        MtlT *mtl = new MtlT();
+        if (mtl && mtl->init(_resource_manager, primitive, idx_type)) {
+            _resource_manager.register_material(mtl);
+            return mtl;
+        } else {
+            delete mtl;
+            return nullptr;
+        }
+    }
 
     // // //
     // UI //
@@ -53,42 +84,19 @@ class GLEngine {
     /// add a function to be called during the UI rendering
     void add_ui_function(std::function<void(void)> fun);
 
-    // ///////// //
-    // selection //
-    // ///////// //
-    /// get the current cursor coordinates
-    math::Vector2i cursor_pos() const;
-    /// get the id of the object at the given (screen) coordinates.
-    /// \return object id or NULL_ID if none
-    ID object_at_screen_coord(const math::Vector2i &cursor_pos) const;
-
-    void save_screenshot(const char *filename);
-
     // protected:
     Config _config;
     Context _context;
     Camera _camera;
     CameraManipulator _camera_manipulator;
     ResourceManager _resource_manager;
-    Renderer _renderer;
-
-    GLuint _g_buffer = 0;              // framebuffer id
-    GLuint _ssao_framebuffer = 0;      // SSAO framebuffer id
-    GLuint _gb_position = INVALID_BUFFER; // framebuffer position attachment handle
-    GLuint _gb_normal = INVALID_BUFFER; // framebuffer normal attachment handle
-    GLuint _gb_albedo = INVALID_BUFFER; // framebuffer albedo attachment handle
-    GLuint _gb_id = INVALID_BUFFER;    // framebuffer object_id attachment handle
-    GLuint _gb_depth = INVALID_BUFFER; // framebuffer depth+stencil attachment handle
-    GLuint _ssao_color_texture = INVALID_BUFFER; // ssao framebuffer color attachment handle
-    GLuint _ssao_noise_texture = INVALID_BUFFER; // texture used to randomly rotate the ssao kernel
-    Mesh *_ss_quad = nullptr;
-    std::vector<ID> _id_buffer; // buffer containing the id of the object in every pixel
 
     Object *_root = nullptr;
 
-    std::vector<std::function<void(void)>> _ui_functions;
+    uint64_t _curr_time = 0;
+    State *_state = nullptr; ///< persistent state needed by the renderer
 
-    void resize_buffers();
+    std::vector<std::function<void(void)>> _ui_functions;
 };
 
 } // namespace glengine

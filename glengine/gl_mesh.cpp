@@ -1,107 +1,93 @@
 #include "gl_mesh.h"
 
-#include "gl_context.h"
+// #include "gl_context.h"
 #include "gl_types.h"
 
-#include "gl_shader.h"
-#include "gl_texture.h"
+// #include "gl_shader.h"
+// #include "gl_texture.h"
 
 #include <vector>
 
 namespace glengine {
 
-Mesh::Mesh(ID id, const std::string &name)
-: Resource(id, name) {}
-
-bool Mesh::init(const std::vector<Vertex> &vertices_, GLenum primitive_) {
-    return init(vertices_, std::vector<uint32_t>(), primitive_);
-}
-
-bool Mesh::init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_, GLenum primitive_) {
-    if (vao != 0) {
-        // mesh was already allocated
-        return false;
-    }
+bool Mesh::init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_, sg_usage usage) {
     vertices = vertices_;
     indices = indices_;
-    primitive = primitive_;
+    _usage = usage;
     setup_mesh();
     return true;
 }
 
-bool Mesh::update() {
-    if (vao == 0) {
-        // mesh _not_ already allocated
-        return false;
-    }
-    update_mesh_data();
-    return true;
-}
-
 void Mesh::setup_mesh() {
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
+    vbuf_size = int(vertices.size() * sizeof(Vertex));
+    ibuf_size = int(indices.size() * sizeof(uint32_t));
+    if (_usage == SG_USAGE_IMMUTABLE) {
+        // init with info and content
+        vbuf = sg_make_buffer((sg_buffer_desc){.size = vbuf_size,
+                                               .type = SG_BUFFERTYPE_VERTEXBUFFER,
+                                               .usage = _usage,
+                                               .content = vertices.data(),
+                                               .label = "mesh-vertices"});
 
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+        if (indices.size() > 0) {
+            ibuf = sg_make_buffer((sg_buffer_desc){.size = ibuf_size,
+                                                   .type = SG_BUFFERTYPE_INDEXBUFFER,
+                                                   .usage = _usage,
+                                                   .content = indices.data(),
+                                                   .label = "mesh-indices"});
+        }
+    } else { // dynamic and streaming mesh buffers have to be declared and initialized in 2 steps
+        vbuf = sg_make_buffer((sg_buffer_desc){.size = vbuf_size,
+                                               .type = SG_BUFFERTYPE_VERTEXBUFFER,
+                                               .usage = _usage,
+                                               .content = nullptr,
+                                               .label = "mesh-vertices"});
 
-    if (indices.size() > 0) {
-        glGenBuffers(1, &ebo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
+        if (indices.size() > 0) {
+            ibuf = sg_make_buffer((sg_buffer_desc){.size = ibuf_size,
+                                                   .type = SG_BUFFERTYPE_INDEXBUFFER,
+                                                   .usage = _usage,
+                                                   .content = nullptr,
+                                                   .label = "mesh-indices"});
+        }
+        update_buffers();
     }
-
-    // Attributes use fixed location in glengine to make the mesh setup independent from the specific shader;
-    // all shaders use conventional locations for the vertex attributes.
-    // In case there is a strong coupling between attribute location and
-    //  glUseProgram(shader);
-    //  GLuint vpos_location = glGetAttribLocation(shader, "vPos");
-    //  glEnableVertexAttribArray(vpos_location);
-    //  glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
-
-    constexpr GLuint vpos_location = 0;  // position
-    constexpr GLuint vcol_location = 1;  // color
-    constexpr GLuint vnorm_location = 2; // normal
-    constexpr GLuint vtex0_location = 3; // texture0 coords
-    // vertex positions
-    glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
-    // vertex color
-    glEnableVertexAttribArray(vcol_location);
-    glVertexAttribPointer(vcol_location, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void *)offsetof(Vertex, color));
-    // vertex normal
-    glEnableVertexAttribArray(vnorm_location);
-    glVertexAttribPointer(vnorm_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, normal));
-    // texture coords
-    glEnableVertexAttribArray(vtex0_location);
-    glVertexAttribPointer(vtex0_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, tex_coords));
-
-    glBindVertexArray(0);
 }
 
 // update the data in the buffers. buffers have to be already allocated
-void Mesh::update_mesh_data() {
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    GLint size = 0;
-    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    if (size > int(vertices.size() * sizeof(Vertex))) { // reuse existing memory
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), &vertices[0]);
-    } else { // reallocate the memory
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+bool Mesh::update_buffers() {
+    // in case the new data is bigger than the actual buffers, create a bigger one
+    int32_t new_vbuf_size = int32_t(vertices.size() * sizeof(Vertex));
+    int32_t new_ibuf_size = int32_t(indices.size() * sizeof(uint32_t));
+    if (new_vbuf_size > vbuf_size) {
+        sg_destroy_buffer(vbuf);
+        vbuf = sg_make_buffer((sg_buffer_desc){.size = new_vbuf_size,
+                                               .type = SG_BUFFERTYPE_VERTEXBUFFER,
+                                               .usage = _usage,
+                                               .content = nullptr,
+                                               .label = "mesh-vertices"});
+        vbuf_size = new_vbuf_size;
     }
+    if (new_ibuf_size > ibuf_size) {
+        sg_destroy_buffer(ibuf);
+        ibuf = sg_make_buffer((sg_buffer_desc){.size = new_ibuf_size,
+                                               .type = SG_BUFFERTYPE_INDEXBUFFER,
+                                               .usage = _usage,
+                                               .content = nullptr,
+                                               .label = "mesh-vertices"});
+        ibuf_size = new_ibuf_size;
+    }
+    // update_buffers content
+    sg_update_buffer(vbuf, vertices.data(), int(vertices.size() * sizeof(Vertex)));
+    if (ibuf.id != SG_INVALID_ID) {
+        sg_update_buffer(ibuf, indices.data(), int(indices.size() * sizeof(uint32_t)));
+    }
+    return true;
+}
 
-    if (indices.size() > 0) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-        if (size > int(indices.size() * sizeof(uint32_t))) { // reuse existing memory
-            glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(uint32_t), &indices[0]);
-        } else { // reallocate the memory
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
-        }
-    }
-    glBindVertexArray(0);
+void Mesh::update_bindings(sg_bindings &bind) {
+    bind.vertex_buffers[0] = vbuf;
+    bind.index_buffer = ibuf;
 }
 
 } // namespace glengine
