@@ -40,38 +40,12 @@ uniform sampler2D u_AnisotropyDirectionSampler;
 uniform TextureParams {
     // General Material
     float u_NormalScale;
-    // mat3 u_NormalUVTransform;
     vec3 u_EmissiveFactor;
-    // mat3 u_EmissiveUVTransform;
     float u_OcclusionStrength;
-    // mat3 u_OcclusionUVTransform;
     // Metallic Roughness Material
-    // mat3 u_BaseColorUVTransform;
-    // mat3 u_MetallicRoughnessUVTransform;
     // Specular Glossiness Material
-    // mat3 u_DiffuseUVTransform;
-    // mat3 u_SpecularGlossinessUVTransform;
     // IBL
     float u_MipCount;
-    //clearcoat
-    // mat3 u_ClearcoatUVTransform;
-    // mat3 u_ClearcoatRoughnessUVTransform;
-    // mat3 u_ClearcoatNormalUVTransform;
-    //sheen
-    // mat3 u_SheenColorIntensityUVTransform;
-    //specular
-    // mat3 u_MetallicRougnessSpecularUVTransform;
-    //subsurface
-    // mat3 u_SubsurfaceColorUVTransform;
-    // mat3 u_SubsurfaceThicknessUVTransform;
-    //thin film
-    // mat3 u_ThinFilmUVTransform;
-    // mat3 u_ThinFilmThicknessUVTransform;
-    // Thickness:
-    // mat3 u_ThicknessUVTransform;
-    // Anisotropy:
-    // mat3 u_AnisotropyUVTransform;
-    // mat3 u_AnisotropyDirectionUVTransform;
 };
 
 // int params can not be uniforms in sokol; hardcode
