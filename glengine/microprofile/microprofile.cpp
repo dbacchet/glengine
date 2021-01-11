@@ -3269,6 +3269,7 @@ void MicroProfileFlip_CB(void* pContext, MicroProfileOnFreeze FreezeCB)
 
 						if((S.FrameGroupThreadValid[idx_thread/32] & (1 << (idx_thread%32))) != 0)
 						{
+                            uint64_t tmp = pFrameGroupThread[j].nTicksExclusive; // unused temp value to tell the compiler that this var is actually needed even with -O3. Dirty workaroud for a crash with gcc9
 							pFrameGroup[j].nTicks += pFrameGroupThread[j].nTicks;
 							pFrameGroup[j].nTicksExclusive += pFrameGroupThread[j].nTicksExclusive;
 							pFrameGroup[j].nCount += pFrameGroupThread[j].nCount;

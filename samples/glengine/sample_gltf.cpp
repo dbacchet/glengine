@@ -1,52 +1,67 @@
 #include "math/vmath.h"
 
-#include "gl_types.h"
 #include "gl_engine.h"
+#include "gl_mesh.h"
+#include "gl_prefabs.h"
+#include "gl_material_diffuse.h"
+#include "gl_material_flat.h"
+#include "gl_material_flat_textured.h"
+#include "gl_material_vertexcolor.h"
+#include "gl_renderable.h"
+#include "gl_utils.h"
 
-#include <cstdlib>
-#include <cstdio>
+namespace glengine {
+std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename);
+}
 
 int main(int argc, char *argv[]) {
 
+    std::string gltf_filename = "";
+    if (argc > 1) {
+        gltf_filename = argv[1];
+    }
+
     glengine::GLEngine eng;
     eng.init({1280, 720, true});
-    auto &rm = eng.resource_manager();
 
-    // renderables
-    glengine::Renderable grid_renderable = {rm.create_grid_mesh("grid", 50.0f, 1.0f),
-                                            rm.create_material("grid_mtl", glengine::StockShader::VertexColor)};
-    glengine::Renderable axis_renderable = {rm.create_axis_mesh("axis"),
-                                            rm.create_material("axis_mtl", glengine::StockShader::VertexColor)};
-    std::vector<glengine::Renderable> model_renderables = rm.create_mesh_from_file(argv[1]);
+    eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f).set_distance(5.0f);
 
-    // render objects
-    auto &grid = *eng.create_renderobject(grid_renderable);
-    auto &axis = *eng.create_renderobject(axis_renderable);
-    auto &model = *eng.create_renderobject(model_renderables, nullptr, 101);
-    // model.set_scale({0.2,0.2,0.2});
+    // /////// //
+    // objects //
+    // /////// //
+    // grid
+    auto *grid = eng.create_object({eng.create_grid_mesh(100.0f, 2.0f),
+                                    eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_LINES)});
 
-    (void)grid; // unused var
+    // load a gltf file if passed in the command line
+    if (gltf_filename != "") {
+        auto *gltf_obj = eng.create_object();
+        auto gltf_renderables = glengine::create_from_gltf(eng, gltf_filename.c_str());
+        printf("loaded %d renderables from gltf file\n", (int)gltf_renderables.size());
+        gltf_obj->add_renderable(gltf_renderables.data(), gltf_renderables.size());
 
-    eng._camera_manipulator.set_azimuth(0.3f).set_elevation(1.0f).set_distance(50.0f);
+        // approximate camera placement using object extent
+        auto aabb = glengine::calc_bounding_box(gltf_obj, true);
+        printf("object bbox - center (%f,%f,%f) - size (%f,%f,%f)\n", aabb.center.x, aabb.center.y, aabb.center.z,
+               aabb.size.x, aabb.size.y, aabb.size.z);
+        eng._camera_manipulator.set_center(aabb.center);
+        eng._camera_manipulator.set_distance(1.5f * math::length(aabb.size));
 
-    eng.add_ui_function([&]() {
-        ImGui::Begin("Object Info");
-        auto id = eng.object_at_screen_coord(eng.cursor_pos());
-        ImGui::Text("Object id: %d", id);
-        if (ImGui::Button("take screenshot")) {
-            eng.save_screenshot("screenshot.png");
+        if (argc>2) {
+            float scale = std::atof(argv[2]);
+            gltf_obj->set_scale({scale,scale,scale});
+            // gltf_obj->set_transform(math::Matrix4f({-1,0,0,0, 0,1,0,0, 0,0,-1,0, 0,0,0,1}));
         }
-        ImGui::End();
-    });
-
+    }
+    // ///////// //
+    // main loop //
+    // ///////// //
+    int cnt = 0;
     while (eng.render()) {
-        float t = glfwGetTime();
-        // axis
-        axis.set_transform( math::create_transformation({0.0f, -1.0f, 2.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 2.1f)));
-        model.set_transform( math::create_transformation({0.0f, 0.0f, 0.0f}, math::quat_from_euler_321(0.0f, 0.0f, t * 0.5f)));
+        cnt++;
     }
 
     eng.terminate();
-
     return 0;
 }
+

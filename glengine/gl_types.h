@@ -1,7 +1,5 @@
 #pragma once
 
-#include "gl_context.h" // this is needed for OpenGL types
-
 #include "math/vmath.h"
 
 #include <cstdint>
@@ -12,7 +10,6 @@ namespace glengine {
 
 using ID = uint32_t; ///< id used for every object managed by the engine
 constexpr ID NULL_ID = std::numeric_limits<ID>::max();
-constexpr GLuint INVALID_BUFFER = std::numeric_limits<GLuint>::max();
 
 struct Color {
     uint8_t r = 180;
@@ -36,14 +33,16 @@ struct Vertex {
 class Resource {
   protected:
     Resource(ID id_, const std::string &name_)
-    : id(id_), name(name_) {}
+    : id(id_)
+    , name(name_) {}
 
     ID id = NULL_ID;       ///< resource id. Unique per class of resource
     std::string name = ""; ///< resource name. Not guaranteed to be unique
 };
 
-/// murmur hash function, 32bit, based on the code made by Austin Appleby (http://code.google.com/p/smhasher/)
-uint32_t murmur_hash2_32(const void *key, int len, uint32_t seed = 0);
-uint32_t murmur_hash2_32(const char *str, uint32_t seed = 0);
-
+struct common_uniform_params_t {
+    math::Matrix4f model;
+    math::Matrix4f view;
+    math::Matrix4f projection;
+};
 } // namespace glengine

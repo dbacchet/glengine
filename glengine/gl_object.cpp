@@ -1,8 +1,7 @@
 #include "gl_object.h"
 #include "gl_camera.h"
 #include "gl_mesh.h"
-#include "gl_renderer.h"
-#include "gl_shader.h"
+#include "gl_logger.h"
 
 #include "microprofile/microprofile.h"
 
@@ -12,17 +11,20 @@
 namespace glengine {
 
 Object::Object(Object *parent, ID id)
-: _id(id), _parent(parent) {
+: _id(id)
+, _parent(parent) {
     if (_parent) {
         parent->add_child(this);
     }
 }
 
 Object::~Object() {
+    log_debug("Destroying object %p",this);
     if (_parent) {
         _parent->detach_child(this);
     }
-    while (_children.size()>0) { // have to iterate this way because a regulare iterator gets invalidated when deleting
+    // have to iterate this way because a regular iterator gets invalidated when deleting
+    while (_children.size() > 0) {
         delete *_children.begin();
     }
 }
@@ -33,8 +35,20 @@ bool Object::init(const std::vector<Renderable> &renderables) {
 }
 
 bool Object::add_renderable(const Renderable *r, uint32_t num) {
-    _renderables.insert(_renderables.end(), r, r+num);
+    _renderables.insert(_renderables.end(), r, r + num);
     return true;
+}
+
+void Object::update() {
+    for (auto &r : _renderables) {
+        r.update();
+    }
+}
+
+void Object::update_bindings() {
+    for (auto &r : _renderables) {
+        r.update_bindings();
+    }
 }
 
 void Object::add_child(Object *ro) {
@@ -60,16 +74,24 @@ Object *Object::detach_child(Object *ro) {
     return nullptr;
 }
 
-bool Object::draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &parent_tf) {
-    MICROPROFILE_SCOPEI("renderobject","draw",MP_AUTO);
+bool Object::draw(const Camera &cam, const math::Matrix4f &parent_tf) {
+    // MICROPROFILE_SCOPEI("renderobject", "draw", MP_AUTO);
     math::Matrix4f curr_tf = parent_tf * _transform * _scale;
     if (_visible) {
         for (auto &go : _renderables) {
-            MICROPROFILE_SCOPEI("renderobject","render_renderables",MP_AUTO);
-            renderer.render_items.push_back({&cam, &go, curr_tf, _id});
+            // MICROPROFILE_SCOPEI("renderobject", "render_renderables", MP_AUTO);
+            // renderer.render_items.push_back({&cam, &go, curr_tf, _id});
+            go.apply_pipeline();
+            go.apply_bindings();
+            glengine::common_uniform_params_t obj_params;
+            obj_params.model = curr_tf;
+            obj_params.view = cam.inverse_transform();
+            obj_params.projection = cam.projection();
+            go.apply_uniforms(obj_params);
+            go.draw();
         }
         for (auto &c : _children) {
-            c->draw(renderer, cam, curr_tf);
+            c->draw(cam, curr_tf);
         }
     }
     return true;

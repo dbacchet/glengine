@@ -6,10 +6,10 @@
 
 // default: log level to info
 #ifndef LOG_LEVEL
-#define LOG_LEVEL 3
+#define LOG_LEVEL 4
 #endif
 
-// defaulf: use only the file name, not the full path
+// default: use only the file name, not the full path
 #ifndef LOG_FULL_FILENAME
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #else
@@ -47,7 +47,7 @@
 #define log_warning(MSG, ...) printf(LOG_COLOR_YELLOW  "[WARN ] " LOG_COLOR_RESET MSG "  " LOG_COLOR_GRAY " at %s (%s:%d) " LOG_COLOR_DEFAULT_FG "\n", ##__VA_ARGS__, __func__, __FILENAME__, __LINE__)
 #define log_error(MSG, ...)   printf(LOG_COLOR_RED     "[ERROR] " LOG_COLOR_RESET MSG "  " LOG_COLOR_GRAY " at %s (%s:%d) " LOG_COLOR_DEFAULT_FG "\n", ##__VA_ARGS__, __func__, __FILENAME__, __LINE__)
 
-#if !defined(_DEBUG) && LOG_LEVEL < 4
+#if defined(NDEBUG) || LOG_LEVEL < 4
 #undef log_debug
 #define log_debug(MSG, ...)
 #endif

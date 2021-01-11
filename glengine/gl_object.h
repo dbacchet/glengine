@@ -10,11 +10,6 @@
 
 namespace glengine {
 
-class Mesh;
-class Shader;
-class Material;
-class Renderer;
-
 class Object final {
   public:
     Object(Object *parent = nullptr, ID id = NULL_ID);
@@ -23,7 +18,11 @@ class Object final {
     bool init(const std::vector<Renderable> &renderables);
     bool add_renderable(const Renderable *r, uint32_t num);
 
-    bool draw(Renderer &renderer, const Camera &cam, const math::Matrix4f &parent_tf=math::matrix4_identity<float>());
+    /// update both buffer data and bindings for _all_ renderables with a dynamic mesh.
+    /// Note: this is potentially very expensive: consider update_bindings() in case the buffers have not been changed
+    void update();
+    /// update the bindings for buffers and samplers
+    void update_bindings();
 
     // ////////// //
     // scenegraph //
@@ -39,12 +38,14 @@ class Object final {
     // attributes //
     // ////////// //
     math::Matrix4f transform() const { return _transform; }
-    math::Vector3f scale() const { return {_transform(0, 0), _transform(1, 1), _transform(2, 2)}; }
+    math::Vector3f scale() const { return {_scale(0, 0), _scale(1, 1), _scale(2, 2)}; }
     bool visible() const { return _visible; }
 
     Object &set_transform(const math::Matrix4f &tf);
     Object &set_scale(const math::Vector3f &scl);
     Object &set_visible(bool flag);
+
+    bool draw(const Camera &cam, const math::Matrix4f &parent_tf);
 
     // //// //
     // data //
