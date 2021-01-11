@@ -7,7 +7,7 @@
 #include "gl_material_diffuse.h"
 #include "gl_material_diffuse_textured.h"
 #include "gl_material_pbr.h"
-#include "gl_material_refpbr.h"
+#include "gl_material_pbr_ibl.h"
 
 #include "math/vmath.h"
 #include "stb/stb_image.h"
@@ -50,6 +50,7 @@ math::Matrix4f extract_transform(const tinygltf::Node &node) {
         }
         if (r.size() >= 4) {
             rotation = {float(r[3]), float(r[0]), float(r[1]), float(r[2])};
+            log_info("model rotation %f %f %f %f", float(r[0]), float(r[1]), float(r[2]), float(r[3]));
         }
         tf = math::create_translation(translation) * math::create_transformation({0.0f, 0.0f, 0.0f}, rotation) *
              math::create_scaling(scale);
@@ -67,6 +68,9 @@ class GltfLoader {
     bool load_mesh(const tinygltf::Model &model, const tinygltf::Mesh &mesh, const math::Matrix4f &tf) {
         for (size_t pi = 0; pi < mesh.primitives.size(); ++pi) {
             tinygltf::Primitive primitive = mesh.primitives[pi];
+            // for (const auto & attr : primitive.attributes) {
+            //     log_warning("prim attr: %s %d", attr.first.c_str(), attr.second);
+            // }
             if (primitive.mode != TINYGLTF_MODE_TRIANGLES || primitive.attributes.count("POSITION") == 0) {
                 printf("SKIP (only triangles are supported for now)!\n");
                 continue;
@@ -92,6 +96,18 @@ class GltfLoader {
                     const tinygltf::Buffer &norm_buffer = model.buffers[norm_bufferView.buffer];
                     normals = (math::Vector3f *)(norm_buffer.data.data() + norm_bufferView.byteOffset +
                                                  norm_accessor.byteOffset);
+                }
+            }
+            // tangent
+            math::Vector4f *tangents = nullptr;
+            if (primitive.attributes.count("TANGENT") != 0) {
+                const tinygltf::Accessor &tang_accessor = model.accessors[primitive.attributes["TANGENT"]];
+                if (tang_accessor.type == TINYGLTF_TYPE_VEC3 ||
+                    tang_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT) {
+                    const tinygltf::BufferView &tang_bufferView = model.bufferViews[tang_accessor.bufferView];
+                    const tinygltf::Buffer &tang_buffer = model.buffers[tang_bufferView.buffer];
+                    tangents = (math::Vector4f *)(tang_buffer.data.data() + tang_bufferView.byteOffset +
+                                                  tang_accessor.byteOffset);
                 }
             }
             // texcoord
@@ -133,7 +149,9 @@ class GltfLoader {
                 auto pos = tf * positions[vi];
                 auto norm = normals ? rot * normals[vi] : math::Vector3f{0.0f, 0.0f, 0.0f};
                 auto tc0 = texcoords ? math::Vector2f{texcoords[vi].s, texcoords[vi].t} : math::Vector2f{0.0f, 0.0f};
-                md.vertices.push_back({pos, {150, 150, 150, 255}, norm, tc0});
+                auto tang = tangents ? rot * tangents[vi] : math::Vector4f{0.0f, 0.0f, 0.0f, 1.0f};
+                // printf("(%5.3f,%5.3f,%5.3f) ", tang.x, tang.y, tang.z);
+                md.vertices.push_back({pos, {150, 150, 150, 255}, norm, tc0, {tang.x, tang.y, tang.z}});
             }
             if (indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
                 for (uint32_t ii = 0; ii < indexAccessor.count; ii++) {
@@ -230,58 +248,52 @@ class GltfLoader {
 
     glengine::Material *create_material(const tinygltf::Material &mtl) {
         std::string mtl_name = material_fullname(mtl);
-        //     if (_rm.has_material(mtl_name.c_str())) {
-        //         return *_rm.get_material(mtl_name.c_str()).begin();
-        //     }
-        //     auto m = _rm.create_material(mtl_name.c_str(), _rm.get_stock_shader(glengine::StockShader::Diffuse));
-        //     auto &pbr = mtl.pbrMetallicRoughness;
-        //     m->base_color_factor = {(float)pbr.baseColorFactor[0], (float)pbr.baseColorFactor[1],
-        //     (float)pbr.baseColorFactor[2], (float)pbr.baseColorFactor[3]}; m->emissive_factor =
-        //     {(float)mtl.emissiveFactor[0], (float)mtl.emissiveFactor[1], (float)mtl.emissiveFactor[2]};
-        //     m->metallic_factor = pbr.metallicFactor;
-        //     m->roughness_factor = pbr.roughnessFactor;
-        //     // set diffuse texture and select shader
-        //     if (pbr.baseColorTexture.index>=0) {
-        //         m->_textures[(uint8_t)Material::TextureType::BaseColor] = _tx_map[pbr.baseColorTexture.index];
-        //         m->_shader = _rm.get_stock_shader(glengine::StockShader::DiffuseTextured);
-        //     }
-        //     return m;
+        bool is_unlit = false;
+        for (auto &ext : mtl.extensions) {
+            if (ext.first == "KHR_materials_unlit") {
+                is_unlit = true;
+                log_info("material %s is using KHR_materials_unlit extension - disabling PBR", mtl_name.c_str());
+            }
+        }
         auto &pbr = mtl.pbrMetallicRoughness;
-        // set diffuse texture and select shader
-        auto material = _eng.create_material<glengine::MaterialRefPBR>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
-        if (pbr.baseColorTexture.index >= 0) {
-            material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
+        if (is_unlit) {
+            if (pbr.baseColorTexture.index >= 0) {
+                auto material = _eng.create_material<glengine::MaterialDiffuseTextured>(SG_PRIMITIVETYPE_TRIANGLES,
+                                                                                        SG_INDEXTYPE_UINT32);
+                material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
+                return material;
+            } else {
+                auto material =
+                    _eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+                material->color = {(uint8_t)(pbr.baseColorFactor[0] * 255), (uint8_t)(pbr.baseColorFactor[1] * 255),
+                                   (uint8_t)(pbr.baseColorFactor[2] * 255), 255};
+                return material;
+            }
+        } else {
+            // PBR
+            auto material =
+                _eng.create_material<glengine::MaterialPBRIBL>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+            if (pbr.baseColorTexture.index >= 0) {
+                material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
+            }
+            material->roughness_factor = pbr.roughnessFactor;
+            material->metallic_factor = pbr.metallicFactor;
+            if (pbr.metallicRoughnessTexture.index >= 0) {
+                material->tex_metallic_roughness = _tx_map[pbr.metallicRoughnessTexture.index];
+            }
+            if (mtl.normalTexture.index >= 0) {
+                material->tex_normal = _tx_map[mtl.normalTexture.index];
+            }
+            material->emissive_factor = {(float)mtl.emissiveFactor[0], (float)mtl.emissiveFactor[1],
+                                         (float)mtl.emissiveFactor[2]};
+            if (mtl.emissiveTexture.index >= 0) {
+                material->tex_emissive = _tx_map[mtl.emissiveTexture.index];
+            }
+            if (mtl.occlusionTexture.index >= 0) {
+                material->tex_occlusion = _tx_map[mtl.occlusionTexture.index];
+            }
+            return material;
         }
-        material->roughness_factor = pbr.roughnessFactor;
-        material->metallic_factor = pbr.metallicFactor;
-        if (pbr.metallicRoughnessTexture.index >= 0) {
-            material->tex_metallic_roughness = _tx_map[pbr.baseColorTexture.index];
-        }
-        if (mtl.normalTexture.index >= 0) {
-            material->tex_normal = _tx_map[mtl.normalTexture.index];
-        }
-        material->emissive_factor = {(float)mtl.emissiveFactor[0],(float)mtl.emissiveFactor[1],(float)mtl.emissiveFactor[2]};
-        if (mtl.emissiveTexture.index >= 0) {
-            material->tex_emissive = _tx_map[mtl.emissiveTexture.index];
-        }
-        if (mtl.occlusionTexture.index >= 0) {
-            material->tex_occlusion = _tx_map[mtl.occlusionTexture.index];
-        }
-        return material;
-        // if (pbr.baseColorTexture.index >= 0) {
-        //     // auto material = _eng.create_material<glengine::MaterialDiffuseTextured>(SG_PRIMITIVETYPE_TRIANGLES,
-        //     //                                                                         SG_INDEXTYPE_UINT32);
-        //     auto material = _eng.create_material<glengine::MaterialRefPBR>(SG_PRIMITIVETYPE_TRIANGLES,
-        //                                                                             SG_INDEXTYPE_UINT32);
-        //     material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
-        //     return material;
-        // } else {
-        //     auto material = _eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES,
-        //                                                                     SG_INDEXTYPE_UINT32);
-        //     material->color =
-        //     {(uint8_t)(pbr.baseColorFactor[0]*255),(uint8_t)(pbr.baseColorFactor[1]*255),(uint8_t)(pbr.baseColorFactor[2]*255),255};
-        //     return material;
-        // }
         return nullptr;
     }
 

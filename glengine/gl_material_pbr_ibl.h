@@ -8,13 +8,13 @@
 
 namespace glengine {
 
-class MaterialRefPBR : public Material {
+class MaterialPBRIBL : public Material {
   public:
-    MaterialRefPBR()
+    MaterialPBRIBL()
     : Material() {
         color = {255, 255, 255, 255};
     }
-    virtual ~MaterialRefPBR() = default;
+    virtual ~MaterialPBRIBL() = default;
 
     virtual bool init(ResourceManager &rm, sg_primitive_type primitive,
                       sg_index_type idx_type = SG_INDEXTYPE_NONE) override;

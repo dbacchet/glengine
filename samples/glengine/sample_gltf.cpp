@@ -46,6 +46,12 @@ int main(int argc, char *argv[]) {
                aabb.size.x, aabb.size.y, aabb.size.z);
         eng._camera_manipulator.set_center(aabb.center);
         eng._camera_manipulator.set_distance(1.5f * math::length(aabb.size));
+
+        if (argc>2) {
+            float scale = std::atof(argv[2]);
+            gltf_obj->set_scale({scale,scale,scale});
+            // gltf_obj->set_transform(math::Matrix4f({-1,0,0,0, 0,1,0,0, 0,0,-1,0, 0,0,0,1}));
+        }
     }
     // ///////// //
     // main loop //

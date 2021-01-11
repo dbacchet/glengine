@@ -1,7 +1,7 @@
 #include "gl_material_pbr.h"
 
 #include "gl_resource_manager.h"
-#include "shaders/generated/multipass-pbr.glsl.h"
+#include "shaders/generated/pbr.glsl.h"
 
 #include "sokol_gfx.h"
 
@@ -52,10 +52,11 @@ bool MaterialPBR::init(ResourceManager &rm, sg_primitive_type primitive, sg_inde
     const int offscreen_sample_count = sg_query_features().msaa_render_targets ? 4 : 1;
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
-    pip_desc.layout.attrs[ATTR_vs_pbr_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3;
-    pip_desc.layout.attrs[ATTR_vs_pbr_vertex_color].format = SG_VERTEXFORMAT_UBYTE4N;
-    pip_desc.layout.attrs[ATTR_vs_pbr_vertex_normal].format = SG_VERTEXFORMAT_FLOAT3;
-    pip_desc.layout.attrs[ATTR_vs_pbr_vertex_texcoord].format = SG_VERTEXFORMAT_FLOAT2;
+    pip_desc.layout.attrs[ATTR_vs_pbr_a_Position].format = SG_VERTEXFORMAT_FLOAT3;
+    pip_desc.layout.attrs[ATTR_vs_pbr_a_Color].format = SG_VERTEXFORMAT_UBYTE4N;
+    pip_desc.layout.attrs[ATTR_vs_pbr_a_Normal].format = SG_VERTEXFORMAT_FLOAT3;
+    pip_desc.layout.attrs[ATTR_vs_pbr_a_UV1].format = SG_VERTEXFORMAT_FLOAT2;
+    pip_desc.layout.attrs[ATTR_vs_pbr_a_Tangent].format = SG_VERTEXFORMAT_FLOAT3;
     pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
     pip_desc.depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true};
     pip_desc.blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
@@ -73,33 +74,42 @@ bool MaterialPBR::init(ResourceManager &rm, sg_primitive_type primitive, sg_inde
     tex_normal = placeholders.normal;
     tex_occlusion = placeholders.white;
     tex_emissive = placeholders.black;
-    color = {255,255,255,255};
+    color = {255, 255, 255, 255};
     return true;
 }
 
 void MaterialPBR::update_bindings(sg_bindings &bind) {
-    bind.fs_images[SLOT_base_color_texture] = tex_diffuse;
-    bind.fs_images[SLOT_metallic_roughness_texture] = tex_metallic_roughness;
-    bind.fs_images[SLOT_normal_texture] = tex_normal;
-    bind.fs_images[SLOT_occlusion_texture] = tex_occlusion;
-    bind.fs_images[SLOT_emissive_texture] = tex_emissive;
+    bind.fs_images[SLOT_u_BaseColorSampler] = tex_diffuse;
+    bind.fs_images[SLOT_u_MetallicRoughnessSampler] = tex_metallic_roughness;
+    bind.fs_images[SLOT_u_NormalSampler] = tex_normal;
+    bind.fs_images[SLOT_u_OcclusionSampler] = tex_occlusion;
+    bind.fs_images[SLOT_u_EmissiveSampler] = tex_emissive;
 }
 
 void MaterialPBR::apply_uniforms(const common_uniform_params_t &params) {
     vs_params_t vs_params{.model = params.model, .view = params.view, .projection = params.projection};
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
-    light_params_t lparams{.light_pos = {10.0f, 10.0f, 10.0f},
-                           .light_range = 200.0f,
-                           .light_color = {1.0f, 1.0f, 1.0f},
-                           .light_intensity = 700.0f};
-    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_light_params, &lparams, sizeof(lparams));
-    metallic_params_t mparams{
-        .base_color_factor = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f},
-        .emissive_factor = emissive_factor,
-        .metallic_factor = metallic_factor,
-        .roughness_factor = roughness_factor,
+    Light_t lparams{
+        .light_position = {15.0f, 10.0f, 10.0f},
+        .light_intensity = 5.0f,
+        .light_range = 200.0f,
+        .light_color = {1.0f, 1.0f, 1.0f},
+        .light_direction = {-0.7398999929428101, -0.642799973487854, -0.19830000400543213},
     };
-    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_metallic_params, &mparams, sizeof(mparams));
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_Light, &lparams, sizeof(lparams));
+    fs_params_t mparams{
+        .u_MetallicFactor = metallic_factor,
+        .u_RoughnessFactor = roughness_factor,
+        .u_BaseColorFactor = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f},
+    };
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fs_params, &mparams, sizeof(mparams));
+    TextureParams_t tparams{
+        .u_NormalScale = 1.0f,
+        .u_EmissiveFactor = emissive_factor,
+        .u_OcclusionStrength = 1.0f,
+        .u_MipCount = 1,
+    };
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_TextureParams, &tparams, sizeof(tparams));
 }
 
 } // namespace glengine
