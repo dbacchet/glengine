@@ -7,8 +7,11 @@
 #include "gl_material_flat.h"
 #include "gl_material_flat_textured.h"
 #include "gl_material_vertexcolor.h"
+#include "gl_material_pbr.h"
+#include "gl_material_pbr_ibl.h"
 #include "gl_renderable.h"
 #include "gl_utils.h"
+#include "imgui/imgui.h"
 
 namespace glengine {
 std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename);
@@ -34,8 +37,10 @@ int main(int argc, char *argv[]) {
                                     eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_LINES)});
 
     // load a gltf file if passed in the command line
+    glengine::Object *gltf_obj = nullptr;
+    bool rotate = false;
     if (gltf_filename != "") {
-        auto *gltf_obj = eng.create_object();
+        gltf_obj = eng.create_object();
         auto gltf_renderables = glengine::create_from_gltf(eng, gltf_filename.c_str());
         printf("loaded %d renderables from gltf file\n", (int)gltf_renderables.size());
         gltf_obj->add_renderable(gltf_renderables.data(), gltf_renderables.size());
@@ -47,18 +52,33 @@ int main(int argc, char *argv[]) {
         eng._camera_manipulator.set_center(aabb.center);
         eng._camera_manipulator.set_distance(1.5f * math::length(aabb.size));
 
-        if (argc>2) {
+        if (argc > 2) {
             float scale = std::atof(argv[2]);
-            gltf_obj->set_scale({scale,scale,scale});
+            gltf_obj->set_scale({scale, scale, scale});
             // gltf_obj->set_transform(math::Matrix4f({-1,0,0,0, 0,1,0,0, 0,0,-1,0, 0,0,0,1}));
         }
+
+        // edit the first material
+        auto *mat = gltf_obj->_renderables[0].material;
+
+        eng.add_ui_function([&]() {
+            ImGui::Begin("Object Info");
+            auto *m = (glengine::MaterialPBRIBL*)mat;
+            ImGui::DragFloat("metallic factor",&m->metallic_factor, 0.01, 0, 1);
+            ImGui::DragFloat("roughness factor",&m->roughness_factor, 0.01, 0, 1);
+            ImGui::Checkbox("rotate", &rotate);
+            ImGui::End();
+        });
     }
     // ///////// //
     // main loop //
     // ///////// //
     int cnt = 0;
     while (eng.render()) {
-        cnt++;
+        if (gltf_obj && rotate) {
+            gltf_obj->set_transform(math::create_transformation<float>({0,0,0},math::quat_from_euler_321<float>(0,0,cnt/50.0f)));
+            cnt++;
+        }
     }
 
     eng.terminate();

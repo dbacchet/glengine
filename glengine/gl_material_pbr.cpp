@@ -37,7 +37,7 @@ void create_placeholder_textures() {
     placeholders.black = sg_make_image(img);
     // normal
     for (int i = 0; i < 64; i++) {
-        pixels[i] = 0xFF0000FF;
+        pixels[i] = 0xFFFF8080;
     }
     placeholders.normal = sg_make_image(img);
 }
@@ -67,6 +67,7 @@ bool MaterialPBR::init(ResourceManager &rm, sg_primitive_type primitive, sg_inde
     // placeholder textures
     if (!have_placeholders) {
         create_placeholder_textures();
+        have_placeholders = true;
     }
 
     tex_diffuse = placeholders.white;
@@ -91,7 +92,7 @@ void MaterialPBR::apply_uniforms(const common_uniform_params_t &params) {
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
     Light_t lparams{
         .light_position = {15.0f, 10.0f, 10.0f},
-        .light_intensity = 5.0f,
+        .light_intensity = 2.0f,
         .light_range = 200.0f,
         .light_color = {1.0f, 1.0f, 1.0f},
         .light_direction = {-0.7398999929428101, -0.642799973487854, -0.19830000400543213},
