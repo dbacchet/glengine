@@ -40,7 +40,7 @@ void create_placeholder_textures() {
     placeholders.black = sg_make_image(img);
     // normal
     for (int i = 0; i < 64; i++) {
-        pixels[i] = 0xFF0000FF;
+        pixels[i] = 0xFFFF8080;
     }
     placeholders.normal = sg_make_image(img);
 }
@@ -72,6 +72,7 @@ bool MaterialPBRIBL::init(ResourceManager &rm, sg_primitive_type primitive, sg_i
         placeholders.lut = rm.get_or_create_image("../resources/textures/lut_ggx.png");
         placeholders.env_diffuse = rm.get_or_create_image("../resources/textures/doge2-diffuse-RGBM.png");
         placeholders.env_specular = rm.get_or_create_image("../resources/textures/doge2-specular-RGBM.png");
+        have_placeholders = true;
     }
 
     tex_diffuse = placeholders.white;
@@ -109,7 +110,7 @@ void MaterialPBRIBL::apply_uniforms(const common_uniform_params_t &params) {
         .uEmissive = 1.0f,
         .uEnvSpecular = 1.0f,
         .uLightDirection = {-0.7398999929428101, -0.642799973487854, -0.19830000400543213},
-        .uLightColor = {0.1f, 0.1f, 0.1f},
+        .uLightColor = {0.001f, 0.001f, 0.001f},
     };
     sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fs_params, &fparams, sizeof(fparams));
 
