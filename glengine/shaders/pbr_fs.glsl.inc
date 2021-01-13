@@ -12,41 +12,12 @@ in vec2 v_UVCoord2;
 in vec4 v_Color;
 in vec3 v_eye_pos;
 
-@include tonemapping.glsl.inc
-@include textures.glsl.inc
-@include functions.glsl.inc
-@include brdf.glsl.inc
-@include punctual.glsl.inc
-@include ibl.glsl.inc
-
-out vec4 g_finalColor;
-
-uniform Light
-{
-    vec3 light_position;
-    float light_intensity;
-    float light_range;
-    vec3 light_color;
-    vec3 light_direction;
-    //
-    //
-    // float light_innerConeCos;
-    //
-    // float light_outerConeCos;
-    // int light_type;
-};
-const int light_type = LightType_Directional;
-
-#ifdef USE_PUNCTUAL
-#define LIGHT_COUNT 1
-// uniform Light u_Lights[LIGHT_COUNT];
-#endif
-
 uniform fs_params {
 // Metallic Roughness
 float u_MetallicFactor;
 float u_RoughnessFactor;
 vec4 u_BaseColorFactor;
+float u_Exposure;
 /*  */
 /* // Specular Glossiness */
 /* vec3 u_SpecularFactor; */
@@ -98,6 +69,37 @@ vec4 u_BaseColorFactor;
 
 /* vec3 u_Camera; */
 };
+
+
+@include tonemapping.glsl.inc
+@include textures.glsl.inc
+@include functions.glsl.inc
+@include brdf.glsl.inc
+@include punctual.glsl.inc
+@include ibl.glsl.inc
+
+out vec4 g_finalColor;
+
+uniform Light
+{
+    vec3 light_position;
+    float light_intensity;
+    float light_range;
+    vec3 light_color;
+    vec3 light_direction;
+    //
+    // float light_innerConeCos;
+    //
+    // float light_outerConeCos;
+    // int light_type;
+};
+const int light_type = LightType_Directional;
+
+#ifdef USE_PUNCTUAL
+#define LIGHT_COUNT 1
+// uniform Light u_Lights[LIGHT_COUNT];
+#endif
+
 
 struct MaterialInfo
 {
@@ -666,9 +668,7 @@ void main()
 #endif
 
     // regular shading
-    // g_finalColor = vec4(toneMap(color), baseColor.a);
-    g_finalColor = vec4(color, baseColor.a);
-    // g_finalColor = vec4(1,0,0,1);
+    g_finalColor = vec4(toneMap(color), baseColor.a);
 
 #else // debug output
 

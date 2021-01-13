@@ -14,6 +14,7 @@
 #define HAS_OCCLUSION_MAP
 /* #define USE_PUNCTUAL */
 #define USE_IBL
+#define USE_HDR
 
 // #define DEBUG_OUTPUT
 // #define DEBUG_METALLIC // OK

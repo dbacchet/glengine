@@ -272,7 +272,7 @@ class GltfLoader {
         } else {
             // PBR
             auto material =
-                _eng.create_material<glengine::MaterialPBR>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+                _eng.create_material<glengine::MaterialPBRIBL>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
             if (pbr.baseColorTexture.index >= 0) {
                 material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
             }
