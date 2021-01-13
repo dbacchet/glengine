@@ -104,7 +104,7 @@ template <typename T> inline void Vector2<T>::operator/=(T rhs) {
 }
 
 template <typename T> inline bool Vector2<T>::operator==(const Vector2<T> &rhs) const {
-    return (std::abs(x - rhs.x) < VMATH_EPSILON) && (std::abs(y - rhs.y) < VMATH_EPSILON);
+    return (std::fabs(x - rhs.x) < VMATH_EPSILON) && (std::fabs(y - rhs.y) < VMATH_EPSILON);
 }
 
 template <typename T> inline bool Vector2<T>::operator!=(const Vector2<T> &rhs) const {
