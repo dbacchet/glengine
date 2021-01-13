@@ -95,7 +95,7 @@ void MaterialPBR::apply_uniforms(const common_uniform_params_t &params) {
         .light_intensity = 2.0f,
         .light_range = 200.0f,
         .light_color = {1.0f, 1.0f, 1.0f},
-        .light_direction = {-0.7398999929428101, -0.642799973487854, -0.19830000400543213},
+        .light_direction = {-0.7398999929428101, 0.19830000400543213, -0.642799973487854},
     };
     sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_Light, &lparams, sizeof(lparams));
     fs_params_t mparams{

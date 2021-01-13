@@ -19,13 +19,12 @@
 // #define DEBUG_METALLIC // OK
 // #define DEBUG_ROUGHNESS // OK
 // #define DEBUG_NORMAL // OK
-#define DEBUG_TANGENT
-// #define DEBUG_BITANGENT
+// #define DEBUG_TANGENT // OK
+// #define DEBUG_BITANGENT // OK
 // #define DEBUG_BASECOLOR // OK
 
-// #define DEBUG_BASECOLOR
 // #define ALPHAMODE_OPAQUE
-/* #define MATERIAL_UNLIT */
+// #define MATERIAL_UNLIT
 @end
 
 @vs vs_pbr
