@@ -210,6 +210,7 @@ bool advance_time(RHMQ_Socket *sim_control_socket) {
     // send message to sim control server
     int send_bytes = sim_control_socket->Send(fbb.GetBufferPointer(), fbb.GetSize());
     if (send_bytes == -1) {
+        log_error("error sending sim control request");
         return false;
     }
     // receive message from sim control server
@@ -242,12 +243,12 @@ int main(int argc, char *argv[]) {
     /// \todo get them from the config file
     std::string endpoint_lidar = "tcp://192.168.0.105:30008";
     std::string endpoint_vsensor = "tcp://192.168.0.105:30009";
-    std::string endpoint_simcontrol_req = "tcp://192.168.0.105:30000";
+    std::string endpoint_simcontrol_req = "tcp://192.168.0.105:30001";
     // additional publishers that need receivers (every data producer needs to have a subscriber in order to step time)
-    std::vector<std::string> dummy_endpoints = {"tcp://192.168.0.105:30004", "tcp://192.168.0.105:30006"};
+    std::vector<std::string> dummy_endpoints = {"tcp://192.168.0.105:30005", "tcp://192.168.0.105:30006", "tcp://192.168.0.105:30007"};
 
     // RHMQ
-    bool sync = false;
+    bool sync = true;
     // create the receivers
     int zmq_type = sync ? ZMQ_PULL : ZMQ_SUB;
     threads.push_back(std::thread(thread_fun, endpoint_lidar, zmq_type, handle_pointcloud_message));
