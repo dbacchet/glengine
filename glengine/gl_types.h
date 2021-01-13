@@ -24,8 +24,6 @@ struct Vertex {
     math::Vector3f normal = {0, 0, 1};
     math::Vector2f tex_coords = {0, 0};
     math::Vector3f tangent = {1, 0, 0};
-    math::Vector3f bitangent = {0, 1, 0};
-    uint8_t padding[4] = {}; // padding to have a multiple of 16bytes
 };
 
 /// base class used for all the resources managed by the engine,
