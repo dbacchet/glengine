@@ -272,7 +272,7 @@ class GltfLoader {
         } else {
             // PBR
             auto material =
-                _eng.create_material<glengine::MaterialPBRIBL>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
+                _eng.create_material<glengine::MaterialPBR>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
             if (pbr.baseColorTexture.index >= 0) {
                 material->tex_diffuse = _tx_map[pbr.baseColorTexture.index];
             }
@@ -350,6 +350,7 @@ std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename) {
     math::Matrix4f root_tf = math::matrix4_identity<float>();
     root_tf = math::create_transformation(
         {0, 0, 0}, math::quat_from_euler_321<float>(M_PI_2, 0, 0)); // because by default gltf are y-up
+    // root_tf = math::matrix4_identity<float>();
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
         assert((scene.nodes[i] >= 0) && (scene.nodes[i] < int(model.nodes.size())));
         ml.load_node(model, model.nodes[scene.nodes[i]], root_tf);

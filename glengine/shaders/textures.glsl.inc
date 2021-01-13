@@ -10,8 +10,10 @@ uniform sampler2D u_MetallicRoughnessSampler;
 uniform sampler2D u_DiffuseSampler;
 uniform sampler2D u_SpecularGlossinessSampler;
 // IBL
-uniform samplerCube u_LambertianEnvSampler;
-uniform samplerCube u_GGXEnvSampler;
+// uniform samplerCube u_LambertianEnvSampler;
+// uniform samplerCube u_GGXEnvSampler;
+uniform sampler2D u_LambertianEnvSampler;
+uniform sampler2D u_GGXEnvSampler;
 uniform sampler2D u_GGXLUT;
 uniform samplerCube u_CharlieEnvSampler;
 uniform sampler2D u_CharlieLUT;
