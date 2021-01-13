@@ -55,6 +55,8 @@ int main(int argc, char *argv[]) {
         if (argc > 2) {
             float scale = std::atof(argv[2]);
             gltf_obj->set_scale({scale, scale, scale});
+            eng._camera_manipulator.center() *= scale;
+            eng._camera_manipulator.distance() *= scale;
         }
 
         // edit the first material
