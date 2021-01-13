@@ -41,14 +41,14 @@ The previous version of the library can be found in the followin branches:
 * `glengine_opengl`: version implemented directly in OpenGL 3.3+; supports deferred rendering and object selection with a similar API
 * `glengine_simplified`: version implemented in OpenGL 3.3+ with only forward rendering and a simplified API
 
-TO BE ADDED
-===========
+
+# Internals
 
 resource ownership
 ------------------
-if created by the engine is managed by the engine
-if created by the user has to be managed by the user
-renderables are ephemeral and _copied_ into the glengine::Object. Make sure to always update the one in the object, not a temporary object created when _constructing_ the object itself 
+* if created by the engine is managed by the engine
+* if created by the user has to be managed by the user
+* renderables are ephemeral and _copied_ into the glengine::Object. Make sure to always update the one in the final object, not a temporary object created when _constructing_ the object itself 
 
 why sokol
 ---------
@@ -59,14 +59,15 @@ why sokol
 
 TODO
 ----
-- [] dynamic meshes (update mesh data)
-- [] generate mipmaps
+- [x] dynamic meshes (update mesh data)
+- [ ] generate mipmaps
 - [x] gltf import
 - [x] support PBR materials (using gltf as reference)
-- [] object selection (ID buffer)
-- [] re-implement SSAO
-- [] consistent color spaces (sRGB for both meshes and textures)
-- [] better object/mesh/material update semantics. Now it's tricky with shared and copied components (ex. in the renderable material and mesh are pointers to values created externally, but `bind` is a local object, and since the renderable is _copied_ it cannot be updated in the original Renderable instance created when constructing the Object, but has to be modified in the object itself)
-- [] improve PBR materials and move to cgltf
-- [] use HDR diffuse and specular images for IBL
-- [] resize offscreen context on window/fbuffer resize
+- [ ] object selection (ID buffer)
+- [ ] re-implement SSAO
+- [ ] consistent color spaces (sRGB for both meshes and textures in all shaders)
+- [x] improve PBR materials
+- [ ] move to cgltf
+- [x] use HDR diffuse and specular images for IBL
+- [ ] resize offscreen context on window/fbuffer resize
+- [ ] support translucent materials
