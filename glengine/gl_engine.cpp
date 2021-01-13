@@ -263,7 +263,7 @@ bool GLEngine::init(const Config &config) {
     sg_setup((sg_desc){0});
     stm_setup();
     // use sokol-imgui with all default-options
-    simgui_desc_t simgui_desc = {};
+    simgui_desc_t simgui_desc = {.ini_filename = "imgui.ini"};
     simgui_desc.dpi_scale = _context.window_state.framebuffer_size.x / _context.window_state.window_size.x;
     simgui_setup(&simgui_desc);
 
