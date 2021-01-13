@@ -92,7 +92,7 @@ void MaterialPBR::apply_uniforms(const common_uniform_params_t &params) {
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &vs_params, sizeof(vs_params));
     Light_t lparams{
         .light_position = {15.0f, 10.0f, 10.0f},
-        .light_intensity = 2.0f,
+        .light_intensity = 1.0f,
         .light_range = 200.0f,
         .light_color = {1.0f, 1.0f, 1.0f},
         .light_direction = {-0.7398999929428101, 0.19830000400543213, -0.642799973487854},
@@ -102,6 +102,7 @@ void MaterialPBR::apply_uniforms(const common_uniform_params_t &params) {
         .u_MetallicFactor = metallic_factor,
         .u_RoughnessFactor = roughness_factor,
         .u_BaseColorFactor = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f},
+        .u_Exposure = 1.0f,
     };
     sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fs_params, &mparams, sizeof(mparams));
     TextureParams_t tparams{
