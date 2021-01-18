@@ -80,8 +80,8 @@ float u_Exposure;
 @include ibl.glsl.inc
 
 layout(location=0) out vec4 out_frag_color;
-// layout(location=1) out vec4 out_frag_normal;
-// layout(location=2) out vec4 out_frag_depth;
+layout(location=1) out vec4 out_frag_normal;
+layout(location=2) out vec4 out_frag_depth;
 
 uniform Light
 {
@@ -439,8 +439,8 @@ void main()
     vec3 t = normalInfo.t;
     vec3 b = normalInfo.b;
 
-    // out_frag_normal = vec4(n*0.5+0.5,1.0);
-    // out_frag_depth = encodeDepth(proj_pos.z/proj_pos.w);
+    out_frag_normal = vec4(n*0.5+0.5,1.0);
+    out_frag_depth = encodeDepth(proj_pos.z/proj_pos.w);
 #ifdef MATERIAL_UNLIT
     out_frag_color = (vec4(linearTosRGB(baseColor.rgb), baseColor.a));
     return;

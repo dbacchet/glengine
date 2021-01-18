@@ -7,10 +7,8 @@
 
 namespace {
 
+/// \todo remove this hidden global struct
 struct Placeholders {
-    sg_image white;
-    sg_image normal;
-    sg_image black;
     sg_image lut;
     sg_image env_diffuse;
     sg_image env_specular;
@@ -18,32 +16,6 @@ struct Placeholders {
 
 Placeholders placeholders;
 bool have_placeholders = false;
-
-void create_placeholder_textures() {
-    // create placeholder textures
-    uint32_t pixels[64];
-    sg_image_desc img = {
-        .width = 8,
-        .height = 8,
-        .pixel_format = SG_PIXELFORMAT_RGBA8,
-    };
-    img.content.subimage[0][0] = {.ptr = pixels, .size = sizeof(pixels)};
-    // white
-    for (int i = 0; i < 64; i++) {
-        pixels[i] = 0xFFFFFFFF;
-    }
-    placeholders.white = sg_make_image(img);
-    // black
-    for (int i = 0; i < 64; i++) {
-        pixels[i] = 0xFF000000;
-    }
-    placeholders.black = sg_make_image(img);
-    // normal
-    for (int i = 0; i < 64; i++) {
-        pixels[i] = 0xFFFF8080;
-    }
-    placeholders.normal = sg_make_image(img);
-}
 
 } // namespace
 
@@ -70,18 +42,17 @@ bool MaterialPBRIBL::init(GLEngine &eng, sg_primitive_type primitive, sg_index_t
     pip = rm.get_or_create_pipeline(pip_desc);
     // placeholder textures
     if (!have_placeholders) {
-        create_placeholder_textures();
         placeholders.lut = rm.get_or_create_image("../resources/textures/lut_ggx.png");
         placeholders.env_diffuse = rm.get_or_create_image("../resources/textures/doge2-diffuse-RGBM.png");
         placeholders.env_specular = rm.get_or_create_image("../resources/textures/doge2-specular-RGBM.png");
         have_placeholders = true;
     }
 
-    tex_diffuse = placeholders.white;
-    tex_metallic_roughness = placeholders.white;
-    tex_normal = placeholders.normal;
-    tex_occlusion = placeholders.white;
-    tex_emissive = placeholders.black;
+    tex_diffuse = rm.default_image(ResourceManager::White);
+    tex_metallic_roughness = rm.default_image(ResourceManager::White);
+    tex_normal = rm.default_image(ResourceManager::Normal);
+    tex_occlusion = rm.default_image(ResourceManager::White);
+    tex_emissive = rm.default_image(ResourceManager::Black);
     color = {255, 255, 255, 255};
     return true;
 }

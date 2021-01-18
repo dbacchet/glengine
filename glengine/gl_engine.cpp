@@ -37,8 +37,10 @@ struct State {
         sg_pass_action pass_action = {0}; // only the pass action since the target is teh default framebuffer
         sg_pipeline pip = {0};
         sg_bindings bind = {0};
+        bool debug = false;
     } fsq;
     sg_imgui_t sg_imgui;
+    sg_image default_textures[glengine::ResourceManager::DefaultImageNum] = {0};
 };
 
 } // namespace glengine
@@ -46,13 +48,13 @@ struct State {
 namespace {
 
 // called initially and when window size changes
-void create_offscreen_pass(glengine::State &state, int width, int height) {
+void create_offscreen_pass(glengine::State &state, int width, int height, int msaa_samples) {
     // destroy previous resource (can be called for invalid id)
     sg_destroy_pass(state.offscreen.pass.pass_id);
     sg_destroy_image(state.offscreen.pass.pass_desc.color_attachments[0].image);
     sg_destroy_image(state.offscreen.pass.pass_desc.depth_stencil_attachment.image);
     // create offscreen rendertarget images and pass
-    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? 4 : 1;
+    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? msaa_samples : 1;
     sg_image_desc color_img_desc = {.render_target = true,
                                     .width = width,
                                     .height = height,
@@ -103,6 +105,9 @@ void create_fsq_pass(glengine::State &state, int width, int height) {
     state.fsq.bind = {0};
     state.fsq.bind.vertex_buffers[0] = quad_vbuf;
     state.fsq.bind.fs_images[SLOT_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
+    state.fsq.bind.fs_images[SLOT_tex_normal] = state.default_textures[glengine::ResourceManager::Normal];
+    state.fsq.bind.fs_images[SLOT_tex_depth] = state.default_textures[glengine::ResourceManager::White];
+    state.fsq.bind.fs_images[SLOT_tex_ssao] = state.default_textures[glengine::ResourceManager::White];
 }
 
 int save_screenshot(const char *filename) {
@@ -254,8 +259,6 @@ bool GLEngine::init(const Config &config) {
                                           window_size_callback,
                                           framebuffer_size_callback //
                                       });
-    // resource manager
-    _resource_manager.init();
     // state needed by the sokol renderer
     _state = new State;
 
@@ -269,11 +272,19 @@ bool GLEngine::init(const Config &config) {
 
     sg_imgui_init(&_state->sg_imgui);
 
+    // resource manager
+    _resource_manager.init();
+    // add standard resources
+    for (int i=0; i<ResourceManager::DefaultImageNum; i++) {
+        _state->default_textures[i] = _resource_manager.default_image((ResourceManager::DefaultImage)i);
+    }
+
     // ////// //
     // passes //
     // ////// //
     // create offscreen pass
-    create_offscreen_pass(*_state, _context.window_state.window_size.x, _context.window_state.window_size.y);
+    create_offscreen_pass(*_state, _context.window_state.window_size.x, _context.window_state.window_size.y,
+                          _config.msaa_samples);
     // final pass
     create_fsq_pass(*_state, _context.window_state.window_size.x, _context.window_state.window_size.y);
 
@@ -316,6 +327,8 @@ bool GLEngine::render() {
     sg_begin_default_pass(&_state->fsq.pass_action, fbsize.x, fbsize.y);
     sg_apply_pipeline(_state->fsq.pip);
     sg_apply_bindings(&_state->fsq.bind);
+    fsq_params_t fsq_params = {_state->fsq.debug ? 1.0f : 0.0f, _camera.near_plane(), _camera.far_plane()};
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fsq_params, &fsq_params, sizeof(fsq_params));
     sg_draw(0, 4, 1);
 
     // Start the Dear ImGui frame
@@ -330,6 +343,7 @@ bool GLEngine::render() {
         int img_width = 200;
         int img_height = img_width * (float)fbsize.y / fbsize.x;
         ImGui::Begin("fb images");
+        ImGui::Checkbox("Debug visualization", &_state->fsq.debug);
         ImGui::Text("offscreen color attach 0");
         ImGui::Image(
             (void *)(uintptr_t)_state->offscreen.pass.pass_desc.color_attachments[0].image.id,

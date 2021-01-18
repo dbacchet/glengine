@@ -21,9 +21,9 @@ uniform fsq_params {
     float zfar;
 };
 uniform sampler2D tex0;
-// uniform sampler2D tex_normal;
-// uniform sampler2D tex_depth;
-// uniform sampler2D tex_ssao;
+uniform sampler2D tex_normal;
+uniform sampler2D tex_depth;
+uniform sampler2D tex_ssao;
 
 in vec2 uv0;
 
@@ -31,27 +31,27 @@ out vec4 frag_color;
 
 void main() {
     vec3 col = texture(tex0, uv0).xyz;
-    // // apply ssao
-    // col *= texture(tex_ssao, uv0).x;
+    // apply ssao
+    col *= texture(tex_ssao, uv0).x;
 
-    // if (debug_view>0.5) {
-    //     if (uv0.x<=0.5 && uv0.y>0.5) {
-    //         // top left: normal color
-    //         col = texture(tex0, vec2((uv0.x)*2.0,(uv0.y-0.5)*2.0)).rgb;
-    //     } else if (uv0.x>0.5 && uv0.y>0.5) {
-    //         // top right: normal
-    //         col = texture(tex_normal, vec2((uv0.x-0.5)*2.0,(uv0.y-0.5)*2.0)).rgb;
-    //     } else if (uv0.x<=0.5 && uv0.y<0.5) {
-    //         // bottom left: depth
-    //         vec4 depth_col = texture(tex_depth, vec2((uv0.x)*2.0,(uv0.y)*2.0));
-    //         float depth = decodeDepth(depth_col);
-    //         float z_eye = 2.0 * znear / (zfar + znear - depth * (zfar - znear)); // scaled down by f to have it in the range 0..1
-    //         col = vec3(z_eye,z_eye,z_eye);
-    //     } else if (uv0.x>0.5 && uv0.y<0.5) {
-    //         // bottom right: ssao
-    //         col = texture(tex_ssao, vec2((uv0.x-0.5)*2.0,(uv0.y)*2.0)).rgb;
-    //     }
-    // }
+    if (debug_view>0.5) {
+        if (uv0.x<=0.5 && uv0.y>0.5) {
+            // top left: normal color
+            col = texture(tex0, vec2((uv0.x)*2.0,(uv0.y-0.5)*2.0)).rgb;
+        } else if (uv0.x>0.5 && uv0.y>0.5) {
+            // top right: normal
+            col = texture(tex_normal, vec2((uv0.x-0.5)*2.0,(uv0.y-0.5)*2.0)).rgb;
+        } else if (uv0.x<=0.5 && uv0.y<0.5) {
+            // bottom left: depth
+            vec4 depth_col = texture(tex_depth, vec2((uv0.x)*2.0,(uv0.y)*2.0));
+            float depth = decodeDepth(depth_col);
+            float z_eye = 2.0 * znear / (zfar + znear - depth * (zfar - znear)); // scaled down by f to have it in the range 0..1
+            col = vec3(z_eye,z_eye,z_eye);
+        } else if (uv0.x>0.5 && uv0.y<0.5) {
+            // bottom right: ssao
+            col = texture(tex_ssao, vec2((uv0.x-0.5)*2.0,(uv0.y)*2.0)).rgb;
+        }
+    }
     frag_color = vec4(col, 1.0);
 }
 @end
