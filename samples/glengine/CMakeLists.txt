@@ -10,3 +10,6 @@ target_link_libraries(sample_torus PUBLIC glengine)
 add_executable(sample_gltf sample_gltf.cpp)
 target_link_libraries(sample_gltf PUBLIC glengine)
 
+add_executable(benchmark_app benchmark_app.cpp)
+target_link_libraries(benchmark_app PUBLIC glengine)
+
