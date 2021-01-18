@@ -4,9 +4,7 @@
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
 #include "gl_material_diffuse.h"
-#include "gl_material_diffuse_textured.h"
 #include "gl_material_flat.h"
-#include "gl_material_flat_textured.h"
 #include "gl_material_vertexcolor.h"
 #include "gl_renderable.h"
 

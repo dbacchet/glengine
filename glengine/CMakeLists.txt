@@ -27,12 +27,8 @@ add_library(glengine STATIC gl_camera.h
                             gl_material.h
                             gl_material_diffuse.cpp
                             gl_material_diffuse.h
-                            gl_material_diffuse_textured.cpp
-                            gl_material_diffuse_textured.h
                             gl_material_flat.cpp
                             gl_material_flat.h
-                            gl_material_flat_textured.cpp
-                            gl_material_flat_textured.h
                             gl_material_pbr.cpp
                             gl_material_pbr.h
                             gl_material_pbr_ibl.cpp

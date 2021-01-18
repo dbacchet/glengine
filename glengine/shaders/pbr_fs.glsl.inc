@@ -11,6 +11,7 @@ in vec2 v_UVCoord1;
 in vec2 v_UVCoord2;
 in vec4 v_Color;
 in vec3 v_eye_pos;
+in vec4 proj_pos;
 
 uniform fs_params {
 // Metallic Roughness
@@ -70,7 +71,7 @@ float u_Exposure;
 /* vec3 u_Camera; */
 };
 
-
+@include common.glsl.inc
 @include tonemapping.glsl.inc
 @include textures.glsl.inc
 @include functions.glsl.inc
@@ -78,7 +79,9 @@ float u_Exposure;
 @include punctual.glsl.inc
 @include ibl.glsl.inc
 
-out vec4 g_finalColor;
+layout(location=0) out vec4 out_frag_color;
+// layout(location=1) out vec4 out_frag_normal;
+// layout(location=2) out vec4 out_frag_depth;
 
 uniform Light
 {
@@ -430,16 +433,18 @@ void main()
     baseColor.a = 1.0;
 #endif
 
-#ifdef MATERIAL_UNLIT
-    g_finalColor = (vec4(linearTosRGB(baseColor.rgb), baseColor.a));
-    return;
-#endif
-
     vec3 v = normalize(v_eye_pos - v_Position);
     NormalInfo normalInfo = getNormalInfo(v);
     vec3 n = normalInfo.n;
     vec3 t = normalInfo.t;
     vec3 b = normalInfo.b;
+
+    // out_frag_normal = vec4(n*0.5+0.5,1.0);
+    // out_frag_depth = encodeDepth(proj_pos.z/proj_pos.w);
+#ifdef MATERIAL_UNLIT
+    out_frag_color = (vec4(linearTosRGB(baseColor.rgb), baseColor.a));
+    return;
+#endif
 
     float NdotV = clampedDot(n, v);
     float TdotV = clampedDot(t, v);
@@ -668,7 +673,7 @@ void main()
 #endif
 
     // regular shading
-    g_finalColor = vec4(toneMap(color), baseColor.a);
+    out_frag_color = vec4(toneMap(color), baseColor.a);
 
 #else // debug output
 

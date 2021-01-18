@@ -12,7 +12,7 @@
 #define HAS_NORMAL_MAP
 #define HAS_EMISSIVE_MAP
 #define HAS_OCCLUSION_MAP
-#define USE_PUNCTUAL
+// #define USE_PUNCTUAL
 // #define USE_IBL
 #define USE_HDR
 
@@ -28,28 +28,30 @@
 // #define MATERIAL_UNLIT
 @end
 
-@vs vs_pbr
-
+@block vertex_shader
 @include_block common_defines
-
 @include pbr_vs.glsl.inc
+@end
 
+@block fragment_shader
+@include_block common_defines
+@include pbr_fs.glsl.inc
 @end
 
 
+// /// //
+// PBR //
+// /// //
 
-
-
-
+@vs vs_pbr
+#define USE_PUNCTUAL
+@include_block vertex_shader
+@end
 
 @fs fs_pbr
-
-@include_block common_defines
-
-@include pbr_fs.glsl.inc
-
+#define USE_PUNCTUAL
+@include_block fragment_shader
 @end
-
 
 @program offscreen_pbr vs_pbr fs_pbr
 
