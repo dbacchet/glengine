@@ -35,13 +35,13 @@ in vec3 frag_normal;
 in vec4 proj_pos;
 
 layout(location=0) out vec4 out_frag_color;
-// layout(location=1) out vec4 out_frag_normal;
-// layout(location=2) out vec4 out_frag_depth;
+layout(location=1) out vec4 out_frag_normal;
+layout(location=2) out vec4 out_frag_depth;
 
 void main() {
     out_frag_color = color;
-    // out_frag_normal = vec4(frag_normal*0.5+0.5,1.0);
-    // out_frag_depth = encodeDepth(proj_pos.z/proj_pos.w);
+    out_frag_normal = vec4(frag_normal*0.5+0.5,1.0);
+    out_frag_depth = encodeDepth(proj_pos.z/proj_pos.w);
 }
 @end
 
