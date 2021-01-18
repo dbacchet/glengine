@@ -348,10 +348,14 @@ bool GLEngine::render() {
     sg_end_pass();
     MICROPROFILE_LEAVE();
     // finalize frame
+    MICROPROFILE_ENTERI("glengine", "commit", MP_AUTO);
     sg_commit();
+    MICROPROFILE_LEAVE();
 
+    MICROPROFILE_ENTERI("glengine", "swapbuffers", MP_AUTO);
     glfwSwapBuffers(_context.window);
     glfwPollEvents();
+    MICROPROFILE_LEAVE();
 
     MicroProfileFlip(0);
 
