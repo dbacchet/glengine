@@ -17,6 +17,7 @@ struct Config {
     // debug flags
     bool show_framebuffer_texture = false;
     bool show_imgui_statistics = false;
+    uint16_t msaa_samples = 4;
 };
 
 

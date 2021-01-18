@@ -1,6 +1,6 @@
 #include "gl_material_pbr.h"
 
-#include "gl_resource_manager.h"
+#include "gl_engine.h"
 #include "shaders/generated/pbr.glsl.h"
 
 #include "sokol_gfx.h"
@@ -46,10 +46,11 @@ void create_placeholder_textures() {
 
 namespace glengine {
 
-bool MaterialPBR::init(ResourceManager &rm, sg_primitive_type primitive, sg_index_type idx_type) {
+bool MaterialPBR::init(GLEngine &eng, sg_primitive_type primitive, sg_index_type idx_type) {
+    ResourceManager &rm = eng.resource_manager();
     sg_shader offscreen_vertexcolor = rm.get_or_create_shader(*offscreen_pbr_shader_desc());
 
-    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? 4 : 1;
+    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? eng._config.msaa_samples : 1;
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     pip_desc.layout.attrs[ATTR_vs_pbr_a_Position].format = SG_VERTEXFORMAT_FLOAT3;

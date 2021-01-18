@@ -16,7 +16,7 @@ class MaterialPBR : public Material {
     }
     virtual ~MaterialPBR() = default;
 
-    virtual bool init(ResourceManager &rm, sg_primitive_type primitive,
+    virtual bool init(GLEngine &eng, sg_primitive_type primitive,
                       sg_index_type idx_type = SG_INDEXTYPE_NONE) override;
 
     virtual void update_bindings(sg_bindings &bind) override;

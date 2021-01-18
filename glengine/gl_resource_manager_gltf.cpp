@@ -5,7 +5,6 @@
 #include "gl_object.h"
 #include "gl_mesh.h"
 #include "gl_material_diffuse.h"
-#include "gl_material_diffuse_textured.h"
 #include "gl_material_pbr.h"
 #include "gl_material_pbr_ibl.h"
 
