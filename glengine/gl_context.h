@@ -18,6 +18,7 @@ struct Config {
     bool show_framebuffer_texture = false;
     bool show_imgui_statistics = false;
     uint16_t msaa_samples = 4;
+    bool use_mrt = false;
 };
 
 

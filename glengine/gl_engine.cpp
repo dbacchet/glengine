@@ -47,69 +47,6 @@ struct State {
 
 namespace {
 
-// called initially and when window size changes
-void create_offscreen_pass(glengine::State &state, int width, int height, int msaa_samples) {
-    // destroy previous resource (can be called for invalid id)
-    sg_destroy_pass(state.offscreen.pass.pass_id);
-    sg_destroy_image(state.offscreen.pass.pass_desc.color_attachments[0].image);
-    sg_destroy_image(state.offscreen.pass.pass_desc.depth_stencil_attachment.image);
-    // create offscreen rendertarget images and pass
-    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? msaa_samples : 1;
-    sg_image_desc color_img_desc = {.render_target = true,
-                                    .width = width,
-                                    .height = height,
-                                    .sample_count = offscreen_sample_count,
-                                    .min_filter = SG_FILTER_LINEAR,
-                                    .mag_filter = SG_FILTER_LINEAR,
-                                    .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
-                                    .wrap_v = SG_WRAP_CLAMP_TO_EDGE,
-                                    .label = "color image"};
-    sg_image_desc depth_img_desc = {.render_target = true,
-                                    .width = width,
-                                    .height = height,
-                                    .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL,
-                                    .sample_count = offscreen_sample_count,
-                                    .min_filter = SG_FILTER_LINEAR,
-                                    .mag_filter = SG_FILTER_LINEAR,
-                                    .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
-                                    .wrap_v = SG_WRAP_CLAMP_TO_EDGE,
-                                    .label = "depth image"};
-    state.offscreen.pass.pass_desc = {0}; // can't use struct initializer because arrays are not supported in c++
-    state.offscreen.pass.pass_desc.color_attachments[0].image = sg_make_image(&color_img_desc);
-    state.offscreen.pass.pass_desc.depth_stencil_attachment.image = sg_make_image(&depth_img_desc);
-    state.offscreen.pass.pass_desc.label = "offscreen pass";
-    state.offscreen.pass.pass_id = sg_make_pass(&state.offscreen.pass.pass_desc);
-    // pass action for offscreen pass
-    state.offscreen.pass.pass_action = {};
-    state.offscreen.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
-    // also need to update the fullscreen-quad texture bindings
-    state.fsq.bind.fs_images[0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
-}
-
-// create the final fullscreen quad rendering pass
-void create_fsq_pass(glengine::State &state, int width, int height) {
-    state.fsq.pass_action = {0};
-    state.fsq.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
-    // fulscreen quad rendering
-    float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
-    sg_buffer quad_vbuf = sg_make_buffer(
-        (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
-    // the pipeline object to render the fullscreen quad
-    sg_pipeline_desc fsq_pip_desc = {0};
-    fsq_pip_desc.layout.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2;
-    fsq_pip_desc.shader = sg_make_shader(fsq_shader_desc());
-    fsq_pip_desc.primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP;
-    fsq_pip_desc.label = "fullscreen quad pipeline";
-    state.fsq.pip = sg_make_pipeline(fsq_pip_desc);
-    // resource bindings to render a fullscreen quad
-    state.fsq.bind = {0};
-    state.fsq.bind.vertex_buffers[0] = quad_vbuf;
-    state.fsq.bind.fs_images[SLOT_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
-    state.fsq.bind.fs_images[SLOT_tex_normal] = state.default_textures[glengine::ResourceManager::Normal];
-    state.fsq.bind.fs_images[SLOT_tex_depth] = state.default_textures[glengine::ResourceManager::White];
-    state.fsq.bind.fs_images[SLOT_tex_ssao] = state.default_textures[glengine::ResourceManager::White];
-}
-
 int save_screenshot(const char *filename) {
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
@@ -275,7 +212,7 @@ bool GLEngine::init(const Config &config) {
     // resource manager
     _resource_manager.init();
     // add standard resources
-    for (int i=0; i<ResourceManager::DefaultImageNum; i++) {
+    for (int i = 0; i < ResourceManager::DefaultImageNum; i++) {
         _state->default_textures[i] = _resource_manager.default_image((ResourceManager::DefaultImage)i);
     }
 
@@ -283,10 +220,9 @@ bool GLEngine::init(const Config &config) {
     // passes //
     // ////// //
     // create offscreen pass
-    create_offscreen_pass(*_state, _context.window_state.window_size.x, _context.window_state.window_size.y,
-                          _config.msaa_samples);
+    create_offscreen_pass();
     // final pass
-    create_fsq_pass(*_state, _context.window_state.window_size.x, _context.window_state.window_size.y);
+    create_fsq_pass();
 
     // create root of the scene
     _root = new Object();
@@ -344,11 +280,21 @@ bool GLEngine::render() {
         int img_height = img_width * (float)fbsize.y / fbsize.x;
         ImGui::Begin("fb images");
         ImGui::Checkbox("Debug visualization", &_state->fsq.debug);
-        ImGui::Text("offscreen color attach 0");
-        ImGui::Image(
-            (void *)(uintptr_t)_state->offscreen.pass.pass_desc.color_attachments[0].image.id,
-            ImVec2(img_width, img_height), ImVec2(0, 1),
-            ImVec2(1, 0)); // (ImVec2){64,64}, (ImVec2){0,0}, (ImVec2){1,1}, (ImVec4){1,1,1,1}, (ImVec4){1,1,1,1});
+        if (_state->offscreen.pass.pass_desc.color_attachments[0].image.id) {
+            ImGui::Text("offscreen attach 0 (color)");
+            ImGui::Image((void *)(uintptr_t)_state->offscreen.pass.pass_desc.color_attachments[0].image.id,
+                         ImVec2(img_width, img_height), ImVec2(0, 1), ImVec2(1, 0));
+        }
+        if (_state->offscreen.pass.pass_desc.color_attachments[1].image.id) {
+            ImGui::Text("offscreen attach 1 (normal)");
+            ImGui::Image((void *)(uintptr_t)_state->offscreen.pass.pass_desc.color_attachments[1].image.id,
+                         ImVec2(img_width, img_height), ImVec2(0, 1), ImVec2(1, 0));
+        }
+        if (_state->offscreen.pass.pass_desc.color_attachments[2].image.id) {
+            ImGui::Text("offscreen attach 2 (depth)");
+            ImGui::Image((void *)(uintptr_t)_state->offscreen.pass.pass_desc.color_attachments[2].image.id,
+                         ImVec2(img_width, img_height), ImVec2(0, 1), ImVec2(1, 0));
+        }
         ImGui::End();
     }
     // user ui functions
@@ -461,6 +407,104 @@ Mesh *GLEngine::create_grid_mesh(float len, float step) {
 
 void GLEngine::add_ui_function(std::function<void(void)> fun) {
     _ui_functions.push_back(fun);
+}
+
+// called initially and when window size changes
+void GLEngine::create_offscreen_pass() {
+    glengine::State &state = *_state;
+    const int width = _context.window_state.window_size.x;
+    const int height = _context.window_state.window_size.y;
+    const int msaa_samples = _config.msaa_samples;
+    // destroy previous resource (can be called for invalid id)
+    sg_destroy_pass(state.offscreen.pass.pass_id);
+    sg_destroy_image(state.offscreen.pass.pass_desc.color_attachments[0].image);
+    sg_destroy_image(state.offscreen.pass.pass_desc.color_attachments[1].image);
+    sg_destroy_image(state.offscreen.pass.pass_desc.color_attachments[2].image);
+    sg_destroy_image(state.offscreen.pass.pass_desc.depth_stencil_attachment.image);
+    // create offscreen rendertarget images and pass.
+    // This pass can use multiple rendertargets:
+    // - regular color
+    // - normals in view space (3 coords encoded in rgb using normal.x*0.5+0.5 like normal maps)
+    // - depth in view space (float encoded in rgba)
+    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? msaa_samples : 1;
+    sg_image_desc color_img_desc = {.render_target = true,
+                                    .width = width,
+                                    .height = height,
+                                    .sample_count = offscreen_sample_count,
+                                    .min_filter = SG_FILTER_LINEAR,
+                                    .mag_filter = SG_FILTER_LINEAR,
+                                    .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
+                                    .wrap_v = SG_WRAP_CLAMP_TO_EDGE,
+                                    .label = "color image"};
+    sg_image_desc depth_img_desc = {.render_target = true,
+                                    .width = width,
+                                    .height = height,
+                                    .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL,
+                                    .sample_count = offscreen_sample_count,
+                                    .min_filter = SG_FILTER_LINEAR,
+                                    .mag_filter = SG_FILTER_LINEAR,
+                                    .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
+                                    .wrap_v = SG_WRAP_CLAMP_TO_EDGE,
+                                    .label = "depth image"};
+    state.offscreen.pass.pass_desc = {0}; // can't use struct initializer because arrays are not supported in c++
+    state.offscreen.pass.pass_desc.color_attachments[0].image = sg_make_image(&color_img_desc); // color info
+    state.offscreen.pass.pass_desc.depth_stencil_attachment.image = sg_make_image(&depth_img_desc);
+    state.offscreen.pass.pass_desc.label = "offscreen pass";
+    // enable MRT
+    if (_config.use_mrt) {
+        sg_image_desc normal_rgba_img_desc = color_img_desc;
+        normal_rgba_img_desc.label = "normal rgba image";
+        sg_image_desc depth_rgba_img_desc = color_img_desc;
+        depth_rgba_img_desc.label = "depth rgba image";
+        state.offscreen.pass.pass_desc.color_attachments[1].image = sg_make_image(&normal_rgba_img_desc);
+        state.offscreen.pass.pass_desc.color_attachments[2].image = sg_make_image(&depth_rgba_img_desc);
+    }
+    state.offscreen.pass.pass_id = sg_make_pass(&state.offscreen.pass.pass_desc);
+    // pass action and update fullscreen quad bindings
+    state.offscreen.pass.pass_action = {};
+    state.offscreen.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
+    state.fsq.bind.fs_images[0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
+    if (_config.use_mrt) {
+        state.fsq.bind.fs_images[1] = state.offscreen.pass.pass_desc.color_attachments[1].image;
+        state.fsq.bind.fs_images[2] = state.offscreen.pass.pass_desc.color_attachments[2].image;
+        state.offscreen.pass.pass_action.colors[1] = {.action = SG_ACTION_CLEAR,
+                                                      .val = {0.5f, 0.5f, 0.5f, 1.0f}}; // null normal
+        state.offscreen.pass.pass_action.colors[2] = {.action = SG_ACTION_CLEAR,
+                                                      .val = {1.0f, 1.0f, 1.0f, 1.0f}}; // far plane
+    }
+}
+
+// create the final fullscreen quad rendering pass
+void GLEngine::create_fsq_pass() {
+    glengine::State &state = *_state;
+    const int width = _context.window_state.window_size.x;
+    const int height = _context.window_state.window_size.y;
+    state.fsq.pass_action = {0};
+    state.fsq.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
+    // fulscreen quad rendering
+    float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+    sg_buffer quad_vbuf = sg_make_buffer(
+        (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
+    // the pipeline object to render the fullscreen quad
+    sg_pipeline_desc fsq_pip_desc = {0};
+    fsq_pip_desc.layout.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2;
+    fsq_pip_desc.shader = sg_make_shader(fsq_shader_desc());
+    fsq_pip_desc.primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP;
+    fsq_pip_desc.label = "fullscreen quad pipeline";
+    state.fsq.pip = sg_make_pipeline(fsq_pip_desc);
+    // resource bindings to render a fullscreen quad
+    state.fsq.bind = {0};
+    state.fsq.bind.vertex_buffers[0] = quad_vbuf;
+    state.fsq.bind.fs_images[SLOT_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
+    if (_config.use_mrt) {
+        state.fsq.bind.fs_images[SLOT_tex_normal] = state.offscreen.pass.pass_desc.color_attachments[1].image;
+        state.fsq.bind.fs_images[SLOT_tex_depth] = state.offscreen.pass.pass_desc.color_attachments[2].image;
+        state.fsq.bind.fs_images[SLOT_tex_ssao] = state.default_textures[glengine::ResourceManager::White];
+    } else {
+        state.fsq.bind.fs_images[SLOT_tex_normal] = state.default_textures[glengine::ResourceManager::Normal];
+        state.fsq.bind.fs_images[SLOT_tex_depth] = state.default_textures[glengine::ResourceManager::White];
+        state.fsq.bind.fs_images[SLOT_tex_ssao] = state.default_textures[glengine::ResourceManager::White];
+    }
 }
 
 } // namespace glengine

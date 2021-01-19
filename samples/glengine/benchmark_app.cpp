@@ -1,15 +1,7 @@
 #include "math/vmath.h"
 
 #include "gl_engine.h"
-// #include "gl_mesh.h"
-// #include "gl_prefabs.h"
 #include "gl_material_diffuse.h"
-// #include "gl_material_flat.h"
-// #include "gl_material_flat_textured.h"
-// #include "gl_material_vertexcolor.h"
-// #include "gl_material_pbr.h"
-// #include "gl_material_pbr_ibl.h"
-// #include "gl_renderable.h"
 #include "gl_utils.h"
 #include "imgui/imgui.h"
 #include "sokol_time.h"
@@ -35,7 +27,8 @@ int main(int argc, char *argv[]) {
 
     glengine::GLEngine eng;
     // standard resolution and disable vsync
-    eng.init({1280, 720, false});
+    glengine::Config config {.window_width = 1280, .window_height = 720, .vsync = false, .use_mrt = true};
+    eng.init(config);
 
     eng._camera_manipulator.set_azimuth(-0.7f).set_elevation(1.3f).set_distance(4.0f);
 
