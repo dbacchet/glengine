@@ -84,6 +84,10 @@ class GLEngine {
     /// add a function to be called during the UI rendering
     void add_ui_function(std::function<void(void)> fun);
 
+
+    void create_offscreen_pass();
+    void create_fsq_pass();
+
     // protected:
     Config _config;
     Context _context;

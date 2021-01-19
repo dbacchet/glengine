@@ -12,6 +12,7 @@ bool MaterialDiffuse::init(GLEngine &eng, sg_primitive_type primitive, sg_index_
     sg_shader offscreen_vertexcolor = rm.get_or_create_shader(*offscreen_diffuse_shader_desc());
 
     const int offscreen_sample_count = sg_query_features().msaa_render_targets ? eng._config.msaa_samples : 1;
+    const int color_attachment_count = eng._config.use_mrt ? 3 : 1;
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     pip_desc.layout.attrs[ATTR_vs_diffuse_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3;
@@ -19,7 +20,7 @@ bool MaterialDiffuse::init(GLEngine &eng, sg_primitive_type primitive, sg_index_
     pip_desc.layout.attrs[ATTR_vs_diffuse_vertex_normal].format = SG_VERTEXFORMAT_FLOAT3;
     pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
     pip_desc.depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true};
-    pip_desc.blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
+    pip_desc.blend = {.color_attachment_count = color_attachment_count, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
     pip_desc.rasterizer = {
         .cull_mode = SG_CULLMODE_NONE, .face_winding = SG_FACEWINDING_CCW, .sample_count = offscreen_sample_count};
     pip_desc.label = "diffuse pipeline";
@@ -47,6 +48,7 @@ bool MaterialDiffuseTextured::init(GLEngine &eng, sg_primitive_type primitive, s
     sg_shader offscreen_vertexcolor = rm.get_or_create_shader(*offscreen_diffuse_textured_shader_desc());
 
     const int offscreen_sample_count = sg_query_features().msaa_render_targets ? eng._config.msaa_samples : 1;
+    const int color_attachment_count = eng._config.use_mrt ? 3 : 1;
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     pip_desc.layout.attrs[ATTR_vs_diffuse_textured_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3;
@@ -55,7 +57,7 @@ bool MaterialDiffuseTextured::init(GLEngine &eng, sg_primitive_type primitive, s
     pip_desc.layout.attrs[ATTR_vs_diffuse_textured_vertex_texcoord].format = SG_VERTEXFORMAT_FLOAT2;
     pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
     pip_desc.depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true};
-    pip_desc.blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
+    pip_desc.blend = {.color_attachment_count = color_attachment_count, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
     pip_desc.rasterizer = {
         .cull_mode = SG_CULLMODE_NONE, .face_winding = SG_FACEWINDING_CCW, .sample_count = offscreen_sample_count};
     pip_desc.label = "diffuse textured pipeline";
