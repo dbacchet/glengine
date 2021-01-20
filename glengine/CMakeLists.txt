@@ -21,6 +21,8 @@ add_library(glengine STATIC gl_camera.h
                             gl_camera_manipulator.h
                             gl_context.cpp
                             gl_context.h
+                            gl_effect_blur.cpp
+                            gl_effect_blur.h
                             gl_effect_ssao.cpp
                             gl_effect_ssao.h
                             gl_engine.cpp
