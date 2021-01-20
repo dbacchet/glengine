@@ -16,6 +16,7 @@
 #include "gl_prefabs.h"
 #include "shaders/generated/multipass-basic.glsl.h"
 #include "gl_effect_ssao.h"
+#include "gl_effect_blur.h"
 
 #include "stb/stb_image_write.h"
 #include "microprofile/microprofile.h"
@@ -37,6 +38,8 @@ struct State {
     struct {
         Pass pass;
         EffectSSAO effect;
+        Pass blur_pass;
+        EffectBlur effect_blur;
         bool enabled = true;
     } ssao;
     struct {
@@ -278,6 +281,17 @@ bool GLEngine::render() {
         }
         sg_end_pass();
         MICROPROFILE_LEAVE();
+        MICROPROFILE_ENTERI("glengine", "ssao blur pass", MP_AUTO);
+        sg_begin_pass(_state->ssao.blur_pass.pass_id, &_state->ssao.blur_pass.pass_action);
+        if (_state->ssao.enabled) {
+
+            sg_apply_pipeline(_state->ssao.effect_blur.pip);
+            sg_apply_bindings(_state->ssao.effect_blur.bind);
+            _state->ssao.effect_blur.apply_uniforms();
+            sg_draw(0, 4, 1);
+        }
+        sg_end_pass();
+        MICROPROFILE_LEAVE();
     }
 
     // ////////// //
@@ -511,6 +525,7 @@ void GLEngine::create_offscreen_pass() {
 
 // create ssao pass
 void GLEngine::create_ssao_pass() {
+    // ssao
     glengine::State &state = *_state;
     const int width = _context.window_state.window_size.x;
     const int height = _context.window_state.window_size.y;
@@ -533,13 +548,29 @@ void GLEngine::create_ssao_pass() {
     // pass action for ssao pass
     state.ssao.pass.pass_action = {};
     state.ssao.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 1.0f, 1.0f, 1.0f}};
-    // also need to update the fullscreen-quad texture bindings
-    state.fsq.bind.fs_images[3] = state.ssao.pass.pass_desc.color_attachments[0].image;
     // initialize the effect
     state.ssao.effect.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
     state.ssao.effect.tex_normal = state.offscreen.pass.pass_desc.color_attachments[1].image;
     state.ssao.effect.tex_depth = state.offscreen.pass.pass_desc.color_attachments[2].image;
     state.ssao.effect.update_bindings();
+    // blur
+    // destroy previous resource (can be called for invalid id)
+    sg_destroy_pass(state.ssao.blur_pass.pass_id);
+    sg_destroy_image(state.ssao.blur_pass.pass_desc.color_attachments[0].image);
+    color_img_desc.label = "blur color image";
+    state.ssao.blur_pass.pass_desc = {0};
+    state.ssao.blur_pass.pass_desc.color_attachments[0].image = sg_make_image(&color_img_desc); // final buffer
+    state.ssao.blur_pass.pass_desc.label = "ssao blur pass";
+    state.ssao.blur_pass.pass_id = sg_make_pass(&state.ssao.blur_pass.pass_desc);
+    // blur_pass action for ssao blur_pass
+    state.ssao.blur_pass.pass_action = {};
+    state.ssao.blur_pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 1.0f, 1.0f, 1.0f}};
+    // initialize the effect
+    state.ssao.effect_blur.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
+    state.ssao.effect_blur.tex = state.ssao.pass.pass_desc.color_attachments[0].image;
+    state.ssao.effect_blur.update_bindings();
+    // also need to update the fullscreen-quad texture bindings
+    state.fsq.bind.fs_images[3] = state.ssao.blur_pass.pass_desc.color_attachments[0].image;
 }
 
 // create the final fullscreen quad rendering pass
@@ -567,8 +598,8 @@ void GLEngine::create_fsq_pass() {
     if (_config.use_mrt) {
         state.fsq.bind.fs_images[SLOT_tex_normal] = state.offscreen.pass.pass_desc.color_attachments[1].image;
         state.fsq.bind.fs_images[SLOT_tex_depth] = state.offscreen.pass.pass_desc.color_attachments[2].image;
-        state.fsq.bind.fs_images[SLOT_tex_ssao] = state.ssao.pass.pass_desc.color_attachments[0].image.id
-                                                      ? state.ssao.pass.pass_desc.color_attachments[0].image
+        state.fsq.bind.fs_images[SLOT_tex_ssao] = state.ssao.blur_pass.pass_desc.color_attachments[0].image.id
+                                                      ? state.ssao.blur_pass.pass_desc.color_attachments[0].image
                                                       : state.default_textures[glengine::ResourceManager::White];
     } else {
         state.fsq.bind.fs_images[SLOT_tex_normal] = state.default_textures[glengine::ResourceManager::Normal];
