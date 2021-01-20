@@ -15,6 +15,7 @@
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
 #include "shaders/generated/multipass-basic.glsl.h"
+#include "gl_effect_ssao.h"
 
 #include "stb/stb_image_write.h"
 #include "microprofile/microprofile.h"
@@ -33,6 +34,11 @@ struct State {
     struct {
         Pass pass;
     } offscreen;
+    struct {
+        Pass pass;
+        EffectSSAO effect;
+        bool enabled = true;
+    } ssao;
     struct {
         sg_pass_action pass_action = {0}; // only the pass action since the target is teh default framebuffer
         sg_pipeline pip = {0};
@@ -221,13 +227,15 @@ bool GLEngine::init(const Config &config) {
     // ////// //
     // create offscreen pass
     create_offscreen_pass();
+    // ssao pass
+    create_ssao_pass();
     // final pass
     create_fsq_pass();
 
     // create root of the scene
     _root = new Object();
     // sensible defaults for the view
-    _camera.set_perspective(0.1, 1000.0, math::utils::deg2rad(45.0f));
+    _camera.set_perspective(1.0f, 100.0f, math::utils::deg2rad(45.0f));
     _camera.set_transform(math::create_lookat<float>({-10.0f, -1.0f, 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
 
     return true;
@@ -253,6 +261,22 @@ bool GLEngine::render() {
     _root->draw(_camera, math::matrix4_identity<float>());
 
     sg_end_pass();
+    MICROPROFILE_LEAVE();
+
+    // //// //
+    // ssao //
+    // //// //
+    MICROPROFILE_ENTERI("glengine", "ssao pass", MP_AUTO);
+    if (_config.use_mrt && _state->ssao.enabled) {
+        sg_begin_pass(_state->ssao.pass.pass_id, &_state->ssao.pass.pass_action);
+
+        sg_apply_pipeline(_state->ssao.effect.pip);
+        sg_apply_bindings(_state->ssao.effect.bind);
+        _state->ssao.effect.apply_uniforms();
+        sg_draw(0, 4, 1);
+
+        sg_end_pass();
+    }
     MICROPROFILE_LEAVE();
 
     // ////////// //
@@ -294,6 +318,14 @@ bool GLEngine::render() {
             ImGui::Text("offscreen attach 2 (depth)");
             ImGui::Image((void *)(uintptr_t)_state->offscreen.pass.pass_desc.color_attachments[2].image.id,
                          ImVec2(img_width, img_height), ImVec2(0, 1), ImVec2(1, 0));
+        }
+        ImGui::Text("SSAO");
+        ImGui::Checkbox("ssao enabled", &_state->ssao.enabled);
+        if (_state->ssao.enabled && _state->ssao.pass.pass_desc.color_attachments[0].image.id) {
+            ImGui::Image((void *)(uintptr_t)_state->ssao.pass.pass_desc.color_attachments[0].image.id,
+                         ImVec2(img_width, img_height), ImVec2(0, 1), ImVec2(1, 0));
+            ImGui::InputFloat("ssao bias", &_state->ssao.effect.bias);
+            ImGui::InputFloat("ssao radius", &_state->ssao.effect.radius);
         }
         ImGui::End();
     }
@@ -474,6 +506,39 @@ void GLEngine::create_offscreen_pass() {
     }
 }
 
+// create ssao pass
+void GLEngine::create_ssao_pass() {
+    glengine::State &state = *_state;
+    const int width = _context.window_state.window_size.x;
+    const int height = _context.window_state.window_size.y;
+    // destroy previous resource (can be called for invalid id)
+    sg_destroy_pass(state.ssao.pass.pass_id);
+    sg_destroy_image(state.ssao.pass.pass_desc.color_attachments[0].image);
+    sg_image_desc color_img_desc = {.render_target = true,
+                                    .width = width,
+                                    .height = height,
+                                    .sample_count = 1,
+                                    .min_filter = SG_FILTER_LINEAR,
+                                    .mag_filter = SG_FILTER_LINEAR,
+                                    .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
+                                    .wrap_v = SG_WRAP_CLAMP_TO_EDGE,
+                                    .label = "color image"};
+    state.ssao.pass.pass_desc = {0}; // can't use struct initializer because arrays are not supported in c++
+    state.ssao.pass.pass_desc.color_attachments[0].image = sg_make_image(&color_img_desc); // color info
+    state.ssao.pass.pass_desc.label = "ssao pass";
+    state.ssao.pass.pass_id = sg_make_pass(&state.ssao.pass.pass_desc);
+    // pass action for ssao pass
+    state.ssao.pass.pass_action = {};
+    state.ssao.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 1.0f, 1.0f, 1.0f}};
+    // also need to update the fullscreen-quad texture bindings
+    state.fsq.bind.fs_images[3] = state.ssao.pass.pass_desc.color_attachments[0].image;
+    // initialize the effect
+    state.ssao.effect.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
+    state.ssao.effect.tex_normal = state.offscreen.pass.pass_desc.color_attachments[1].image;
+    state.ssao.effect.tex_depth = state.offscreen.pass.pass_desc.color_attachments[2].image;
+    state.ssao.effect.update_bindings();
+}
+
 // create the final fullscreen quad rendering pass
 void GLEngine::create_fsq_pass() {
     glengine::State &state = *_state;
@@ -499,7 +564,9 @@ void GLEngine::create_fsq_pass() {
     if (_config.use_mrt) {
         state.fsq.bind.fs_images[SLOT_tex_normal] = state.offscreen.pass.pass_desc.color_attachments[1].image;
         state.fsq.bind.fs_images[SLOT_tex_depth] = state.offscreen.pass.pass_desc.color_attachments[2].image;
-        state.fsq.bind.fs_images[SLOT_tex_ssao] = state.default_textures[glengine::ResourceManager::White];
+        state.fsq.bind.fs_images[SLOT_tex_ssao] = state.ssao.pass.pass_desc.color_attachments[0].image.id
+                                                      ? state.ssao.pass.pass_desc.color_attachments[0].image
+                                                      : state.default_textures[glengine::ResourceManager::White];
     } else {
         state.fsq.bind.fs_images[SLOT_tex_normal] = state.default_textures[glengine::ResourceManager::Normal];
         state.fsq.bind.fs_images[SLOT_tex_depth] = state.default_textures[glengine::ResourceManager::White];
