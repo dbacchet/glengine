@@ -21,18 +21,18 @@ add_library(glengine STATIC gl_camera.h
                             gl_camera_manipulator.h
                             gl_context.cpp
                             gl_context.h
+                            gl_effect_blur.cpp
+                            gl_effect_blur.h
+                            gl_effect_ssao.cpp
+                            gl_effect_ssao.h
                             gl_engine.cpp
                             gl_engine.h
                             gl_logger.h
                             gl_material.h
                             gl_material_diffuse.cpp
                             gl_material_diffuse.h
-                            gl_material_diffuse_textured.cpp
-                            gl_material_diffuse_textured.h
                             gl_material_flat.cpp
                             gl_material_flat.h
-                            gl_material_flat_textured.cpp
-                            gl_material_flat_textured.h
                             gl_material_pbr.cpp
                             gl_material_pbr.h
                             gl_material_pbr_ibl.cpp

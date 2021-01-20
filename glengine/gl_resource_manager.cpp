@@ -11,6 +11,33 @@ namespace glengine {
 ResourceManager::~ResourceManager() {
     // nothing to be done here
 }
+void ResourceManager::init() {
+    log_debug("ResourceManager: init");
+    // create placeholder textures
+    log_debug("ResourceManager: create default textures");
+    uint32_t pixels[64];
+    sg_image_desc img = {
+        .width = 8,
+        .height = 8,
+        .pixel_format = SG_PIXELFORMAT_RGBA8,
+    };
+    img.content.subimage[0][0] = {.ptr = pixels, .size = sizeof(pixels)};
+    // white
+    for (int i = 0; i < 64; i++) {
+        pixels[i] = 0xFFFFFFFF;
+    }
+    _default_images[White] = sg_make_image(img);
+    // black
+    for (int i = 0; i < 64; i++) {
+        pixels[i] = 0xFF000000;
+    }
+    _default_images[Black] = sg_make_image(img);
+    // normal
+    for (int i = 0; i < 64; i++) {
+        pixels[i] = 0xFFFF8080;
+    }
+    _default_images[Normal] = sg_make_image(img);
+}
 
 void ResourceManager::terminate() {
     // cleanup meshes
@@ -31,6 +58,10 @@ void ResourceManager::terminate() {
     for (auto it : _images) {
         log_debug("Destroying image %u", it.second.id);
         sg_destroy_image(it.second);
+    }
+    for (int i=0; i<DefaultImageNum; i++) {
+        log_debug("Destroying (default) image %u", _default_images[i].id);
+        sg_destroy_image(_default_images[i]);
     }
     _images.clear();
     // cleanup pipeline resources
@@ -110,6 +141,10 @@ sg_image ResourceManager::get_or_create_image(const uint8_t *data, int32_t len) 
         return img;
     }
     return {SG_INVALID_ID};
+}
+
+sg_image ResourceManager::default_image(DefaultImage type) {
+    return _default_images[type];
 }
 
 sg_shader ResourceManager::get_or_create_shader(const sg_shader_desc &desc) {

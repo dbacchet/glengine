@@ -1,24 +1,26 @@
 #include "gl_material_vertexcolor.h"
 
-#include "gl_resource_manager.h"
+#include "gl_engine.h"
 #include "shaders/generated/multipass-vertexcolor.glsl.h"
 
 #include "sokol_gfx.h"
 
 namespace glengine {
 
-bool MaterialVertexColor::init(ResourceManager &rm, sg_primitive_type primitive, sg_index_type idx_type) {
-    // auto &rm = glengine::ResourceManager::get();
+bool MaterialVertexColor::init(GLEngine &eng, sg_primitive_type primitive, sg_index_type idx_type) {
+    ResourceManager &rm = eng.resource_manager();
     sg_shader offscreen_vertexcolor = rm.get_or_create_shader(*offscreen_vertexcolor_shader_desc());
 
-    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? 4 : 1;
+    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? eng._config.msaa_samples : 1;
+    const int color_attachment_count = eng._config.use_mrt ? 3 : 1;
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     pip_desc.layout.attrs[ATTR_vs_vertexcolor_vertex_pos].format = SG_VERTEXFORMAT_FLOAT3;
     pip_desc.layout.attrs[ATTR_vs_vertexcolor_vertex_col].format = SG_VERTEXFORMAT_UBYTE4N;
+    pip_desc.layout.attrs[ATTR_vs_vertexcolor_vertex_normal].format = SG_VERTEXFORMAT_FLOAT3;
     pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
     pip_desc.depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true};
-    pip_desc.blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
+    pip_desc.blend = {.color_attachment_count = color_attachment_count, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
     pip_desc.rasterizer = {
         .cull_mode = SG_CULLMODE_NONE, .face_winding = SG_FACEWINDING_CCW, .sample_count = offscreen_sample_count};
     pip_desc.label = "vertexcolor pipeline";
