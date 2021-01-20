@@ -1,55 +1,19 @@
 #include "gl_material_pbr.h"
 
-#include "gl_resource_manager.h"
+#include "gl_engine.h"
 #include "shaders/generated/pbr.glsl.h"
 
 #include "sokol_gfx.h"
 
-namespace {
-
-struct Placeholders {
-    sg_image white;
-    sg_image normal;
-    sg_image black;
-};
-
-Placeholders placeholders;
-bool have_placeholders = false;
-
-void create_placeholder_textures() {
-    // create placeholder textures
-    uint32_t pixels[64];
-    sg_image_desc img = {
-        .width = 8,
-        .height = 8,
-        .pixel_format = SG_PIXELFORMAT_RGBA8,
-    };
-    img.content.subimage[0][0] = {.ptr = pixels, .size = sizeof(pixels)};
-    // white
-    for (int i = 0; i < 64; i++) {
-        pixels[i] = 0xFFFFFFFF;
-    }
-    placeholders.white = sg_make_image(img);
-    // black
-    for (int i = 0; i < 64; i++) {
-        pixels[i] = 0xFF000000;
-    }
-    placeholders.black = sg_make_image(img);
-    // normal
-    for (int i = 0; i < 64; i++) {
-        pixels[i] = 0xFFFF8080;
-    }
-    placeholders.normal = sg_make_image(img);
-}
-
-} // namespace
 
 namespace glengine {
 
-bool MaterialPBR::init(ResourceManager &rm, sg_primitive_type primitive, sg_index_type idx_type) {
+bool MaterialPBR::init(GLEngine &eng, sg_primitive_type primitive, sg_index_type idx_type) {
+    ResourceManager &rm = eng.resource_manager();
     sg_shader offscreen_vertexcolor = rm.get_or_create_shader(*offscreen_pbr_shader_desc());
 
-    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? 4 : 1;
+    const int offscreen_sample_count = sg_query_features().msaa_render_targets ? eng._config.msaa_samples : 1;
+    const int color_attachment_count = eng._config.use_mrt ? 3 : 1;
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     pip_desc.layout.attrs[ATTR_vs_pbr_a_Position].format = SG_VERTEXFORMAT_FLOAT3;
@@ -59,22 +23,17 @@ bool MaterialPBR::init(ResourceManager &rm, sg_primitive_type primitive, sg_inde
     pip_desc.layout.attrs[ATTR_vs_pbr_a_Tangent].format = SG_VERTEXFORMAT_FLOAT3;
     pip_desc.shader = offscreen_vertexcolor, pip_desc.primitive_type = primitive, pip_desc.index_type = idx_type;
     pip_desc.depth_stencil = {.depth_compare_func = SG_COMPAREFUNC_LESS_EQUAL, .depth_write_enabled = true};
-    pip_desc.blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
+    pip_desc.blend = {.color_attachment_count = color_attachment_count, .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL};
     pip_desc.rasterizer = {
         .cull_mode = SG_CULLMODE_NONE, .face_winding = SG_FACEWINDING_CCW, .sample_count = offscreen_sample_count};
     pip_desc.label = "PBR pipeline";
     pip = rm.get_or_create_pipeline(pip_desc);
     // placeholder textures
-    if (!have_placeholders) {
-        create_placeholder_textures();
-        have_placeholders = true;
-    }
-
-    tex_diffuse = placeholders.white;
-    tex_metallic_roughness = placeholders.white;
-    tex_normal = placeholders.normal;
-    tex_occlusion = placeholders.white;
-    tex_emissive = placeholders.black;
+    tex_diffuse = rm.default_image(ResourceManager::White);
+    tex_metallic_roughness = rm.default_image(ResourceManager::White);
+    tex_normal = rm.default_image(ResourceManager::Normal);
+    tex_occlusion = rm.default_image(ResourceManager::White);
+    tex_emissive = rm.default_image(ResourceManager::Black);
     color = {255, 255, 255, 255};
     return true;
 }

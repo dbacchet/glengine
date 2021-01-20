@@ -57,6 +57,9 @@ class Camera {
     const math::Matrix4f &inverse_transform() const { return _inverse_transform; }
     const math::Matrix4f &projection() const { return _projection; }
 
+    float near_plane() const { return _near_plane; }
+    float far_plane() const { return _far_plane; }
+
   private:
     Projection _mode;    ///< projection mode (orthographic or perspective)
     float _fov;          ///< field-of-view angle (only used in perspective mode)

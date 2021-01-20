@@ -21,6 +21,7 @@ out vec2 v_UVCoord1;
 out vec2 v_UVCoord2;
 out vec4 v_Color;
 out vec3 v_eye_pos;
+out vec4 proj_pos;
 
 vec4 getPosition()
 {
@@ -71,4 +72,5 @@ void main()
     v_eye_pos = inverse(view)[3].xyz;
 
     gl_Position = projection * view * pos;
+    proj_pos = gl_Position;
 }

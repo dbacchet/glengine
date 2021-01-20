@@ -69,7 +69,7 @@ class GLEngine {
     template <typename MtlT>
     MtlT *create_material(sg_primitive_type primitive, sg_index_type idx_type = SG_INDEXTYPE_NONE) {
         MtlT *mtl = new MtlT();
-        if (mtl && mtl->init(_resource_manager, primitive, idx_type)) {
+        if (mtl && mtl->init(*this, primitive, idx_type)) {
             _resource_manager.register_material(mtl);
             return mtl;
         } else {
@@ -83,6 +83,11 @@ class GLEngine {
     // // //
     /// add a function to be called during the UI rendering
     void add_ui_function(std::function<void(void)> fun);
+
+
+    void create_offscreen_pass();
+    void create_ssao_pass();
+    void create_fsq_pass();
 
     // protected:
     Config _config;
