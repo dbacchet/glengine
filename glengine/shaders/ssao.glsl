@@ -13,18 +13,12 @@ void main() {
 }
 @end
 
-// based on the implementation described here: http://theorangeduck.com/page/pure-depth-ssao
 @fs fs_ssao
 @include common.glsl.inc
 uniform ssao_params {
     mat4 u_view;
     mat4 u_projection;
-    /* float znear; */
-    /* float zfar; */
-    /*  */
-    /* float total_strength; */
-    /* float area; */
-    /* float falloff; */
+    mat4 u_inv_projection;
     float radius;
     vec4 noise_scale;
     float bias;
@@ -58,20 +52,6 @@ out vec4 frag_color;
 /* } */
 
 void main() {
-    /* const float total_strength = 1.0; */
-    /* const float area = 0.0075; */
-    /* const float falloff = 0.000001; */
-    /* const float radius = 0.0002; */
-
-    /* const int samples = 16; */
-    /* vec3 sample_sphere[samples] = { */
-    /*     vec3(0.5381, 0.1856, -0.4319),   vec3(0.1379, 0.2486, 0.4430),   vec3(0.3371, 0.5679, -0.0057), */
-    /*     vec3(-0.6999, -0.0451, -0.0019), vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843), */
-    /*     vec3(-0.0146, 0.1402, 0.0762),   vec3(0.0100, -0.1924, -0.0344), vec3(-0.3577, -0.5301, -0.4358), */
-    /*     vec3(-0.3169, 0.1063, 0.0158),   vec3(0.0103, -0.5869, 0.0046),  vec3(-0.0897, -0.4940, 0.3287), */
-    /*     vec3(0.7119, -0.0154, -0.0918),  vec3(-0.0533, 0.0596, -0.5411), vec3(0.0352, -0.0631, 0.5460), */
-    /*     vec3(-0.4776, 0.2847, -0.0271)}; */
-
     // SSAO samples can be created with a function like this in c++:
     // std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
     // std::mt19937 gen(12345678);
@@ -111,42 +91,11 @@ void main() {
         vec3(0.118399, 0.159517, 0.213312), vec3(0.448766, -0.195609, 0.439006), vec3(0.226670, -0.640701, 0.026292),
         vec3(-0.501758, -0.642840, 0.231969));
 
-    // vec3 random = normalize(texture(tex_random_sampler, uv0 * 4.0).rgb);
-
-    // vec4 depth_rgba = texture(tex_depth_sampler, uv0);
-    // float depth = depth_to_linear_space(decodeDepth(depth_rgba), znear, zfar);
-
-    // vec3 position = vec3(uv0, depth);
-    // vec3 normal = normal_from_depth(depth, uv0);
-    // normal = texture(tex_normal_sampler, uv0).xyz*2-1;
-
-    // float radius_depth = radius;// / depth;
-    // float occlusion = 0.0;
-    // for (int i = 0; i < samples; i++) {
-
-    //     vec3 ray = radius_depth * reflect(sample_sphere[i], random);
-    //     vec3 hemi_ray = position + sign(dot(ray, normal)) * ray;
-    //     /* vec3 hemi_ray = position + ray; */
-
-    //     float occ_depth = texture(tex_depth_sampler, clamp(hemi_ray.xy, 0.0, 1.0)).r;
-    //     float difference = depth - occ_depth;
-
-    //     occlusion += step(falloff, difference) * (1.0 - smoothstep(falloff, area, difference));
-    // }
-
-    // float ao = 1.0 - total_strength * occlusion * (1.0 / samples);
-    // frag_color = vec4(ao, ao, ao, 1.0);
-    /* if (uv0.x>0.1) { */
-    /*     frag_color = texture(tex_normal_sampler, uv0); */
-    /* } */
-    /* if (uv0.x>0.5) */
-    /*     frag_color = vec4(normal*0.5+0.5, 1); */
-
     // get pos from depth texture
     vec4 depth_rgba = texture(tex_depth_sampler, uv0);
     float depth = decodeDepth(depth_rgba);
     vec3 pos_clipspace = vec3(uv0 * 2 - 1, depth);
-    vec3 frag_pos = view_pos_from_depth(pos_clipspace, inverse(u_projection));
+    vec3 frag_pos = view_pos_from_depth(pos_clipspace, u_inv_projection);
     /* vec3 normal = normalize(texture(g_normal_texture, uv0).rgb); */
     vec3 normal_world = texture(tex_normal_sampler, uv0).xyz * 2 - 1;
     vec3 normal = normalize(mat3(u_view) * normal_world); // normal in view space
@@ -159,7 +108,7 @@ void main() {
     float occlusion = 0.0;
     for (int i = 0; i < samples; ++i) {
         // get sample position
-        vec3 smpl = TBN * sample_sphere[i]; // from tangent to view-space
+        vec3 smpl = TBN * sample_sphere[i]; // align with the normal in view-space
         smpl = frag_pos + smpl * radius;
 
         // project sample position (to sample texture) (to get position on screen/texture)
@@ -171,7 +120,7 @@ void main() {
         // get sample depth
         vec4 sample_depth_rgba = texture(tex_depth_sampler, offset.xy);
         float sample_depth_cs = decodeDepth(sample_depth_rgba);
-        vec3 sample_pos_vs = view_pos_from_depth(vec3(offset.xy,sample_depth_cs), inverse(u_projection));
+        vec3 sample_pos_vs = view_pos_from_depth(vec3(offset.xy,sample_depth_cs), u_inv_projection);
         float sample_depth = sample_pos_vs.z;
 
         // range check & accumulate
