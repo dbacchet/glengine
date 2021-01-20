@@ -20,7 +20,7 @@ float depth_to_linear_space(float depth, float znear, float zfar) {
     return 2.0 * znear * zfar / (zfar + znear - depth * (zfar - znear));
 }
 
-// get the world position from the depth buffer
+// get the viewspace position from the depth buffer
 // pos_clipspace has the pos with x,y,z in the range -1..1, after perspective transfor 
 // (i.e. as calculated from `gl_Position = projection * view * model * vertex_pos;`)
 vec3 view_pos_from_depth(vec3 pos_clipspace, mat4 inverse_proj) {

@@ -266,18 +266,19 @@ bool GLEngine::render() {
     // //// //
     // ssao //
     // //// //
-    MICROPROFILE_ENTERI("glengine", "ssao pass", MP_AUTO);
-    if (_config.use_mrt && _state->ssao.enabled) {
+    if (_config.use_mrt) {
+        MICROPROFILE_ENTERI("glengine", "ssao pass", MP_AUTO);
         sg_begin_pass(_state->ssao.pass.pass_id, &_state->ssao.pass.pass_action);
+        if (_state->ssao.enabled) {
 
-        sg_apply_pipeline(_state->ssao.effect.pip);
-        sg_apply_bindings(_state->ssao.effect.bind);
-        _state->ssao.effect.apply_uniforms();
-        sg_draw(0, 4, 1);
-
+            sg_apply_pipeline(_state->ssao.effect.pip);
+            sg_apply_bindings(_state->ssao.effect.bind);
+            _state->ssao.effect.apply_uniforms();
+            sg_draw(0, 4, 1);
+        }
         sg_end_pass();
+        MICROPROFILE_LEAVE();
     }
-    MICROPROFILE_LEAVE();
 
     // ////////// //
     // final pass //
@@ -319,13 +320,15 @@ bool GLEngine::render() {
             ImGui::Image((void *)(uintptr_t)_state->offscreen.pass.pass_desc.color_attachments[2].image.id,
                          ImVec2(img_width, img_height), ImVec2(0, 1), ImVec2(1, 0));
         }
-        ImGui::Text("SSAO");
-        ImGui::Checkbox("ssao enabled", &_state->ssao.enabled);
-        if (_state->ssao.enabled && _state->ssao.pass.pass_desc.color_attachments[0].image.id) {
-            ImGui::Image((void *)(uintptr_t)_state->ssao.pass.pass_desc.color_attachments[0].image.id,
-                         ImVec2(img_width, img_height), ImVec2(0, 1), ImVec2(1, 0));
-            ImGui::InputFloat("ssao bias", &_state->ssao.effect.bias);
-            ImGui::InputFloat("ssao radius", &_state->ssao.effect.radius);
+        if (_config.use_mrt) {
+            ImGui::Text("SSAO");
+            ImGui::Checkbox("ssao enabled", &_state->ssao.enabled);
+            if (_state->ssao.enabled && _state->ssao.pass.pass_desc.color_attachments[0].image.id) {
+                ImGui::Image((void *)(uintptr_t)_state->ssao.pass.pass_desc.color_attachments[0].image.id,
+                             ImVec2(img_width, img_height), ImVec2(0, 1), ImVec2(1, 0));
+                ImGui::DragFloat("ssao bias", &_state->ssao.effect.bias, 0.001, -0.1, 0.1);
+                ImGui::DragFloat("ssao radius", &_state->ssao.effect.radius, 0.001, -1, 1);
+            }
         }
         ImGui::End();
     }
