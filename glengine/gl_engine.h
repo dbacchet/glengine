@@ -86,6 +86,7 @@ class GLEngine {
 
 
     void create_offscreen_pass();
+    void create_ssao_pass();
     void create_fsq_pass();
 
     // protected:
