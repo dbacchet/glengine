@@ -36,6 +36,7 @@ A few screenshot from the sample apps:
 ![PBR](resources/screenshot_pbr.png)
 ![PBR](resources/screenshot_boxes.png)
 ![PBR](resources/screenshot_primitives.png)
+![PBR](resources/screenshot_debug_view.png)
 
 The previous version of the library can be found in the followin branches:
 * `glengine_opengl`: version implemented directly in OpenGL 3.3+; supports deferred rendering and object selection with a similar API
@@ -64,7 +65,7 @@ TODO
 - [x] gltf import
 - [x] support PBR materials (using gltf as reference)
 - [ ] object selection (ID buffer)
-- [ ] re-implement SSAO
+- [x] re-implement SSAO
 - [ ] consistent color spaces (sRGB for both meshes and textures in all shaders)
 - [x] improve PBR materials
 - [ ] move to cgltf
