@@ -9,6 +9,8 @@
 #include "gl_material_vertexcolor.h"
 #include "gl_renderable.h"
 
+#include "sokol_time.h"
+
 #include "microprofile/microprofile.h"
 
 struct Obj {
@@ -26,6 +28,7 @@ template <typename T> T rand_range(T v1, T v2) {
 
 int main() {
     srand(12345678);
+    stm_setup();
 
     glengine::GLEngine eng;
     eng.init({1280, 720, true});
@@ -94,8 +97,9 @@ int main() {
     // main loop //
     // ///////// //
     int cnt = 0;
+    uint64_t start_time = stm_now();
     while (eng.render()) {
-        float t = glfwGetTime();
+        float t = float(stm_sec(stm_since(start_time))); 
 
         // update positions
         MICROPROFILE_ENTERI("sample_torus", "update tfs", MP_AUTO);
