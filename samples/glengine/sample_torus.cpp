@@ -10,6 +10,7 @@
 #include "gl_renderable.h"
 
 #include "sokol_time.h"
+#include "cmdline.h"
 
 #include "microprofile/microprofile.h"
 
@@ -26,12 +27,24 @@ template <typename T> T rand_range(T v1, T v2) {
     return v1 + T(double(rand()) / RAND_MAX * (v2 - v1));
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     srand(12345678);
     stm_setup();
 
+    cmdline::parser cl;
+    cl.add<uint32_t>("width", 'w', "window width", false, 1280, cmdline::range(16, 65535));
+    cl.add<uint32_t>("height", 'h', "window height", false, 720, cmdline::range(16, 65535));
+    cl.add("mrt", 'm', "use MRT and enable effects");
+    cl.add("novsync", 'n', "disable vsync");
+    cl.parse_check(argc, argv);
+
+    uint32_t width = cl.get<uint32_t>("width");
+    uint32_t height = cl.get<uint32_t>("height");
+    bool vsync = !cl.exist("novsync");
+    bool use_mrt = cl.exist("mrt");
+
     glengine::GLEngine eng;
-    eng.init({1280, 720, true});
+    eng.init({.window_width = width, .window_height = height, .vsync = vsync, .use_mrt = use_mrt});
 
     eng._camera_manipulator.set_azimuth(0.5f).set_elevation(0.8f);
 
