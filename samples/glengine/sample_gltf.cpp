@@ -11,19 +11,32 @@
 #include "gl_utils.h"
 #include "imgui/imgui.h"
 
+#include "cmdline.h"
+
 namespace glengine {
 std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename);
 }
 
 int main(int argc, char *argv[]) {
 
-    std::string gltf_filename = "";
-    if (argc > 1) {
-        gltf_filename = argv[1];
-    }
+    cmdline::parser cl;
+    cl.add<std::string>("file", 'f', "gltf file name", false, "");
+    cl.add<uint32_t>("width", 'w', "window width", false, 1280, cmdline::range(16, 65535));
+    cl.add<uint32_t>("height", 'h', "window height", false, 720, cmdline::range(16, 65535));
+    cl.add<float>("scaling", 's', "model scaling", false, 1.0f);
+    cl.add("mrt", 'm', "use MRT and enable effects");
+    cl.add("novsync", 'n', "disable vsync");
+    cl.parse_check(argc, argv);
+
+    std::string gltf_filename = cl.get<std::string>("file");
+    uint32_t width = cl.get<uint32_t>("width");
+    uint32_t height = cl.get<uint32_t>("height");
+    float scale = cl.get<float>("scaling");
+    bool vsync = !cl.exist("novsync");
+    bool use_mrt = cl.exist("mrt");
 
     glengine::GLEngine eng;
-    eng.init({1280, 720, true});
+    eng.init({.window_width = width, .window_height = height, .vsync = vsync, .use_mrt = use_mrt});
 
     eng._camera_manipulator.set_azimuth(0.6f).set_elevation(1.2f).set_distance(5.0f);
 
@@ -48,10 +61,9 @@ int main(int argc, char *argv[]) {
         printf("object bbox - center (%f,%f,%f) - size (%f,%f,%f)\n", aabb.center.x, aabb.center.y, aabb.center.z,
                aabb.size.x, aabb.size.y, aabb.size.z);
         eng._camera_manipulator.set_center(aabb.center);
-        eng._camera_manipulator.set_distance(1.0f * math::length(aabb.size));
+        eng._camera_manipulator.set_distance(1.5f * math::length(aabb.size));
 
-        if (argc > 2) {
-            float scale = std::atof(argv[2]);
+        if (cl.exist("scaling")) {
             gltf_obj->set_scale({scale, scale, scale});
             eng._camera_manipulator.center() *= scale;
             eng._camera_manipulator.distance() *= scale;
@@ -72,7 +84,7 @@ int main(int argc, char *argv[]) {
             float &azimuth = eng._camera_manipulator.azimuth();
             float &elevation = eng._camera_manipulator.elevation();
             float &distance = eng._camera_manipulator.distance();
-            ImGui::DragFloat("azimuth", &azimuth, 0.01, -2*M_PI, 2*M_PI);
+            ImGui::DragFloat("azimuth", &azimuth, 0.01, -2 * M_PI, 2 * M_PI);
             ImGui::DragFloat("elevation", &elevation, 0.01, 0, M_PI);
             ImGui::DragFloat("distance", &distance, 0.01, 0, 1000.0);
             ImGui::End();

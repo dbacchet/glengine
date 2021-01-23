@@ -6,6 +6,8 @@
 #include "imgui/imgui.h"
 #include "sokol_time.h"
 
+#include "cmdline.h"
+
 #include <numeric>
 #include <array>
 
@@ -20,15 +22,25 @@ template <typename T> T rand_range(T v1, T v2) {
 int main(int argc, char *argv[]) {
 
     srand(12345678);
-    std::string gltf_filename = "../resources/models/DamagedHelmet/DamagedHelmet.gltf";
-    if (argc > 1) {
-        gltf_filename = argv[1];
-    }
+
+    cmdline::parser cl;
+    cl.add<std::string>("file", 'f', "gltf file name", false, "../resources/models/DamagedHelmet/DamagedHelmet.gltf");
+    cl.add<uint32_t>("width", 'w', "window width", false, 1280, cmdline::range(16, 65535));
+    cl.add<uint32_t>("height", 'h', "window height", false, 720, cmdline::range(16, 65535));
+    cl.add<float>("scaling", 's', "model scaling", false, 1.0f);
+    cl.add("mrt", 'm', "use MRT and enable effects");
+    cl.add("novsync", 'n', "disable vsync");
+    cl.parse_check(argc, argv);
+
+    std::string gltf_filename = cl.get<std::string>("file");
+    uint32_t width = cl.get<uint32_t>("width");
+    uint32_t height = cl.get<uint32_t>("height");
+    float scale = cl.get<float>("scaling");
+    bool vsync = !cl.exist("novsync");
+    bool use_mrt = cl.exist("mrt");
 
     glengine::GLEngine eng;
-    // standard resolution and disable vsync
-    glengine::Config config{.window_width = 1280, .window_height = 720, .vsync = false, .use_mrt = true};
-    eng.init(config);
+    eng.init({.window_width = width, .window_height = height, .vsync = vsync, .use_mrt = use_mrt});
 
     eng._camera_manipulator.set_azimuth(-0.7f).set_elevation(1.3f).set_distance(4.0f);
 

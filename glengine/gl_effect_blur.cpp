@@ -1,7 +1,7 @@
 #include "gl_effect_blur.h"
 
 #include "gl_engine.h"
-#include "shaders/generated/ssao_blur.glsl.h"
+#include "generated/shaders/ssao_blur.glsl.h"
 
 #include "sokol_gfx.h"
 

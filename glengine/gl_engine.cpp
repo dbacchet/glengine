@@ -1,4 +1,5 @@
 #include "gl_engine.h"
+#include "gl_context.h"
 #include "gl_logger.h"
 
 #include "math/vmath.h"
@@ -9,12 +10,11 @@
 #include "sokol_gfx_imgui.h"
 #include "imgui/imgui.h"
 #include "sokol_imgui.h"
-#include "imgui/imgui_impl_glfw.h"
 
 #include "gl_material.h"
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
-#include "shaders/generated/multipass-basic.glsl.h"
+#include "generated/shaders/multipass-basic.glsl.h"
 #include "gl_effect_ssao.h"
 #include "gl_effect_blur.h"
 
@@ -43,7 +43,7 @@ struct State {
         bool enabled = true;
     } ssao;
     struct {
-        sg_pass_action pass_action = {0}; // only the pass action since the target is teh default framebuffer
+        sg_pass_action pass_action = {0}; // only the pass action since the target is the default framebuffer
         sg_pipeline pip = {0};
         sg_bindings bind = {0};
         bool debug = false;
@@ -52,136 +52,6 @@ struct State {
     sg_image default_textures[glengine::ResourceManager::DefaultImageNum] = {0};
 };
 
-} // namespace glengine
-
-namespace {
-
-int save_screenshot(const char *filename) {
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-
-    int x = viewport[0];
-    int y = viewport[1];
-    int width = viewport[2];
-    int height = viewport[3];
-
-    char *data = (char *)malloc((size_t)(width * height * 3)); // 3 components (R, G, B)
-
-    if (!data)
-        return 0;
-
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-    stbi_flip_vertically_on_write(true);
-    int saved = stbi_write_png(filename, width, height, 3, data, 0);
-
-    free(data);
-
-    return saved;
-}
-
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
-    auto &ctx = app._context;
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) {
-        ctx.input_state.ctrl_key_pressed = action == GLFW_PRESS;
-    }
-    if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT) {
-        ctx.input_state.shift_key_pressed = action == GLFW_PRESS;
-    }
-    if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT) {
-        ctx.input_state.alt_key_pressed = action == GLFW_PRESS;
-    }
-    // statistics
-    if (key == GLFW_KEY_F5 && action == GLFW_RELEASE) {
-        app._config.show_imgui_statistics = !app._config.show_imgui_statistics;
-    }
-    // buffers and tuning
-    if (key == GLFW_KEY_F6 && action == GLFW_RELEASE) {
-        app._config.show_framebuffer_texture = !app._config.show_framebuffer_texture;
-    }
-}
-
-void scroll_callback(GLFWwindow *window, double xoffs, double yoffs) {
-    if (ImGui::GetIO().WantCaptureMouse) {
-        // do nothing if the mouse is on top a UI element
-        return;
-    }
-    auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
-    app._camera_manipulator.set_distance(app._camera_manipulator.distance() * (1 - yoffs / 10));
-}
-
-void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
-    auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
-    auto &ctx = app._context;
-    auto &cm = app._camera_manipulator;
-    math::Vector2i cursor_pos(int(xpos + 0.5), int(ypos + 0.5));
-    math::Vector2i cursor_delta(0, 0);
-    if (ctx.input_state.previous_cursor_pos != math::Vector2i(-1, -1)) {
-        cursor_delta = cursor_pos - ctx.input_state.previous_cursor_pos;
-    }
-    // rotate view
-    if (ctx.input_state.left_button_pressed && ctx.input_state.ctrl_key_pressed == false) {
-        cm.add_azimuth(-0.003f * cursor_delta.x);
-        // cm.add_elevation(-0.003f * cursor_delta.y);
-        cm.set_elevation(math::utils::clamp<float>(cm.elevation() - 0.003f * cursor_delta.y, 0, M_PI));
-    }
-    // translate view center
-    if (ctx.input_state.middle_button_pressed ||
-        (ctx.input_state.left_button_pressed && ctx.input_state.ctrl_key_pressed == true)) {
-        float scaling = 0.001f * cm.distance();
-        float dx = scaling * cursor_delta.x;
-        float dy = scaling * cursor_delta.y;
-        float azimuth = cm.azimuth();
-        math::Vector3f delta(-std::cos(azimuth) * dx - std::sin(azimuth) * dy,
-                             -std::sin(azimuth) * dx + std::cos(azimuth) * dy, 0.0f);
-        cm.translate(delta);
-    }
-    // zoom view
-    if (ctx.input_state.right_button_pressed) {
-        cm.set_distance(cm.distance() * (1 - cursor_delta.y / 100.0f));
-    }
-    ctx.input_state.previous_cursor_pos = cursor_pos;
-}
-
-void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
-    if (ImGui::GetIO().WantCaptureMouse) {
-        // do nothing if the mouse is on top a UI element
-        return;
-    }
-    auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
-    auto &ctx = app._context;
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        ctx.input_state.left_button_pressed = action == GLFW_PRESS;
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-        ctx.input_state.middle_button_pressed = action == GLFW_PRESS;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-        ctx.input_state.right_button_pressed = action == GLFW_PRESS;
-    }
-}
-
-void window_size_callback(GLFWwindow *window, int width, int height) {
-    auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
-    auto &ctx = app._context;
-    ctx.window_state.window_size = {width, height};
-    printf("win size: %d %d\n", width, height);
-}
-
-void framebuffer_size_callback(GLFWwindow *window, int fb_width, int fb_height) {
-    auto &app = *(glengine::GLEngine *)glfwGetWindowUserPointer(window);
-    auto &ctx = app._context;
-    ctx.window_state.framebuffer_size = {fb_width, fb_height};
-    printf("fb size: %d %d\n", fb_width, fb_height);
-}
-
-} // namespace
-
-namespace glengine {
 
 GLEngine::~GLEngine() {}
 
@@ -194,17 +64,10 @@ bool GLEngine::init(const Config &config) {
 
     // gfx context
     _config = config;
-    _context = glengine::init_context(config, "GLEngine sample app", (void *)this,
-                                      {
-                                          scroll_callback,          // scroll_fun_callback
-                                          mouse_button_callback,    // mousebutton_fun_callback
-                                          key_callback,             // key_fun_callback
-                                          cursor_position_callback, // cursorpos_fun_callback
-                                          nullptr,                  // cursorenterexit_fun_callback
-                                          nullptr,                  // char_fun_callback
-                                          window_size_callback,
-                                          framebuffer_size_callback //
-                                      });
+    if (!glengine::init_context(config, "GLEngine sample app", (void *)this)) {
+        log_error("Error creating the rendering context");
+        return false;
+    }
     // state needed by the sokol renderer
     _state = new State;
 
@@ -213,7 +76,7 @@ bool GLEngine::init(const Config &config) {
     stm_setup();
     // use sokol-imgui with all default-options
     simgui_desc_t simgui_desc = {.ini_filename = "imgui.ini"};
-    simgui_desc.dpi_scale = _context.window_state.framebuffer_size.x / _context.window_state.window_size.x;
+    simgui_desc.dpi_scale = framebuffer_size().x / window_size().x;
     simgui_setup(&simgui_desc);
 
     sg_imgui_init(&_state->sg_imgui);
@@ -245,9 +108,10 @@ bool GLEngine::init(const Config &config) {
 }
 
 bool GLEngine::render() {
+    glengine::begin_frame();
     MICROPROFILE_SCOPEI("glengine", "render", MP_AUTO);
-    const auto &winsize = _context.window_state.window_size;
-    const auto &fbsize = _context.window_state.framebuffer_size;
+    const auto &winsize = window_size();
+    const auto &fbsize = framebuffer_size();
     const double delta_time = stm_sec(stm_laptime(&_curr_time));
 
     _camera_manipulator.update(_camera);
@@ -308,7 +172,6 @@ bool GLEngine::render() {
 
     // Start the Dear ImGui frame
     MICROPROFILE_ENTERI("glengine", "imgui", MP_AUTO);
-    ImGui_ImplGlfw_NewFrame();
     simgui_new_frame(fbsize.x, fbsize.y, delta_time);
     // statistics and debug
     if (_config.show_imgui_statistics) {
@@ -362,13 +225,12 @@ bool GLEngine::render() {
     MICROPROFILE_LEAVE();
 
     MICROPROFILE_ENTERI("glengine", "swapbuffers", MP_AUTO);
-    glfwSwapBuffers(_context.window);
-    glfwPollEvents();
+    glengine::end_frame();
     MICROPROFILE_LEAVE();
 
     MicroProfileFlip(0);
 
-    return !glfwWindowShouldClose(_context.window);
+    return !glengine::window_should_close();
 }
 
 bool GLEngine::terminate() {
@@ -385,7 +247,7 @@ bool GLEngine::terminate() {
     delete _state;
     // destroy the gfx context
     log_info("Glengine: destroy gfx context");
-    glengine::destroy_context(_context);
+    glengine::destroy_context();
     return true;
 }
 
@@ -461,8 +323,8 @@ void GLEngine::add_ui_function(std::function<void(void)> fun) {
 // called initially and when window size changes
 void GLEngine::create_offscreen_pass() {
     glengine::State &state = *_state;
-    const int width = _context.window_state.window_size.x;
-    const int height = _context.window_state.window_size.y;
+    const int width = window_size().x;
+    const int height = window_size().y;
     const int msaa_samples = _config.msaa_samples;
     // destroy previous resource (can be called for invalid id)
     sg_destroy_pass(state.offscreen.pass.pass_id);
@@ -527,8 +389,8 @@ void GLEngine::create_offscreen_pass() {
 void GLEngine::create_ssao_pass() {
     // ssao
     glengine::State &state = *_state;
-    const int width = _context.window_state.window_size.x;
-    const int height = _context.window_state.window_size.y;
+    const int width = window_size().x;
+    const int height = window_size().y;
     // destroy previous resource (can be called for invalid id)
     sg_destroy_pass(state.ssao.pass.pass_id);
     sg_destroy_image(state.ssao.pass.pass_desc.color_attachments[0].image);
@@ -576,8 +438,8 @@ void GLEngine::create_ssao_pass() {
 // create the final fullscreen quad rendering pass
 void GLEngine::create_fsq_pass() {
     glengine::State &state = *_state;
-    const int width = _context.window_state.window_size.x;
-    const int height = _context.window_state.window_size.y;
+    const int width = window_size().x;
+    const int height = window_size().y;
     state.fsq.pass_action = {0};
     state.fsq.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
     // fulscreen quad rendering
