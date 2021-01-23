@@ -14,7 +14,7 @@
 #include "gl_material.h"
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
-#include "shaders/generated/multipass-basic.glsl.h"
+#include "generated/shaders/multipass-basic.glsl.h"
 #include "gl_effect_ssao.h"
 #include "gl_effect_blur.h"
 

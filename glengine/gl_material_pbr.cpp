@@ -1,7 +1,7 @@
 #include "gl_material_pbr.h"
 
 #include "gl_engine.h"
-#include "shaders/generated/pbr.glsl.h"
+#include "generated/shaders/pbr.glsl.h"
 
 #include "sokol_gfx.h"
 
