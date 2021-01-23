@@ -1,7 +1,7 @@
 #include "gl_material_diffuse.h"
 
 #include "gl_engine.h"
-#include "shaders/generated/multipass-diffuse.glsl.h"
+#include "generated/shaders/multipass-diffuse.glsl.h"
 
 #include "sokol_gfx.h"
 

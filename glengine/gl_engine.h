@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gl_context.h"
 #include "gl_camera.h"
 #include "gl_camera_manipulator.h"
 #include "gl_resource_manager.h"
@@ -91,7 +90,6 @@ class GLEngine {
 
     // protected:
     Config _config;
-    Context _context;
     Camera _camera;
     CameraManipulator _camera_manipulator;
     ResourceManager _resource_manager;

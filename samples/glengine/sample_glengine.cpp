@@ -11,6 +11,8 @@
 #include "imgui/imgui.h"
 #include "uv_grid_256.png.h"
 
+#include "sokol_time.h"
+
 std::vector<glengine::Vertex> triangle_vertices = {{{-0.6f, -0.4f, 0.0f}, {255, 0, 0, 255}},
                                                    {{0.6f, -0.4f, 0.0f}, {0, 255, 0, 255}},
                                                    {{0.0f, 0.6f, 0.0f}, {0, 0, 255, 255}}};
@@ -25,6 +27,7 @@ std::vector<glengine::Vertex> create_polyline() {
 }
 
 int main(void) {
+    stm_setup();
 
     glengine::Config config;
     config.window_width = 1280;
@@ -134,8 +137,9 @@ int main(void) {
     (void)grid; // unused var
 
     int cnt = 0;
+    uint64_t start_time = stm_now();
     while (eng.render()) {
-        float t = glfwGetTime();
+        float t = float(stm_sec(stm_since(start_time))); 
         uint8_t k1 = uint8_t((std::sin(cnt / 100.0f) + 1) / 2 * 255);
         uint8_t k2 = uint8_t((std::cos(cnt / 100.0f) + 1) / 2 * 255);
 
