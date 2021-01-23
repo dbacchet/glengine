@@ -1,7 +1,7 @@
 #include "gl_effect_ssao.h"
 #include "gl_context.h"
 #include "gl_engine.h"
-#include "shaders/generated/ssao.glsl.h"
+#include "generated/shaders/ssao.glsl.h"
 
 #include "sokol_gfx.h"
 

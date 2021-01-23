@@ -1,7 +1,7 @@
 #include "gl_material_flat.h"
 
 #include "gl_engine.h"
-#include "shaders/generated/multipass-flat.glsl.h"
+#include "generated/shaders/multipass-flat.glsl.h"
 
 #include "sokol_gfx.h"
 
