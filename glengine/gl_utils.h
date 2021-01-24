@@ -24,4 +24,10 @@ class Object;
 /// return the bounding box of this object
 AABB calc_bounding_box(const glengine::Object *obj, bool include_children);
 
+
+/// generate a random number in the given range
+template <typename T> T rand_range(T v1, T v2) {
+    return v1 + T(double(rand()) / RAND_MAX * (v2 - v1));
+}
+
 } // namespace glengine

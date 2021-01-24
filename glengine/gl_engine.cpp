@@ -5,11 +5,17 @@
 #include "math/vmath.h"
 #include "math/math_utils.h"
 
+#include "sokol_app.h"
 #include "sokol_gfx.h"
 #include "sokol_time.h"
-#include "sokol_gfx_imgui.h"
+#include "sokol_glue.h"
 #include "imgui/imgui.h"
 #include "sokol_imgui.h"
+// #include "sokol_gfx.h"
+// #include "sokol_time.h"
+// #include "sokol_gfx_imgui.h"
+// #include "imgui/imgui.h"
+// #include "sokol_imgui.h"
 
 #include "gl_material.h"
 #include "gl_mesh.h"
@@ -48,7 +54,6 @@ struct State {
         sg_bindings bind = {0};
         bool debug = false;
     } fsq;
-    sg_imgui_t sg_imgui;
     sg_image default_textures[glengine::ResourceManager::DefaultImageNum] = {0};
 };
 
@@ -72,14 +77,12 @@ bool GLEngine::init(const Config &config) {
     _state = new State;
 
     // init sokol-gfx
-    sg_setup((sg_desc){0});
+    //sg_setup((sg_desc){0});
     stm_setup();
     // use sokol-imgui with all default-options
     simgui_desc_t simgui_desc = {.ini_filename = "imgui.ini"};
     simgui_desc.dpi_scale = framebuffer_size().x / window_size().x;
     simgui_setup(&simgui_desc);
-
-    sg_imgui_init(&_state->sg_imgui);
 
     // resource manager
     _resource_manager.init();
@@ -214,7 +217,6 @@ bool GLEngine::render() {
         fun();
     }
     // render ImGui
-    sg_imgui_draw(&_state->sg_imgui);
     simgui_render();
     MICROPROFILE_LEAVE();
     sg_end_pass();

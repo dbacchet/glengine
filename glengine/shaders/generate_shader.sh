@@ -15,4 +15,4 @@ fi
 
 OUT_DIR=`dirname ${output_file}`
 mkdir -p ${OUT_DIR}
-${CURR_DIR}/bin/${OS_PREFIX}/sokol-shdc -i ${shader_file} -o ${output_file} -l glsl330
+${CURR_DIR}/bin/${OS_PREFIX}/sokol-shdc -i ${shader_file} -o ${output_file} -l glsl330:metal_macos

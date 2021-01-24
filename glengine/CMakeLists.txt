@@ -30,21 +30,49 @@ foreach(shader ${shaders})
     generate_shader(${shader} ${output_file})
 endforeach()
 
-# glengine
-set(imgui_files imgui/imconfig.h
-                imgui/imgui.cpp
-                imgui/imgui.h
-                imgui/imgui_demo.cpp
-                imgui/imgui_draw.cpp
-                imgui/imgui_impl_glfw.cpp
-                imgui/imgui_impl_glfw.h
-                imgui/imgui_internal.h
-                imgui/imgui_tables.cpp
-                imgui/imgui_widgets.cpp
-                imgui/imstb_rectpack.h
-                imgui/imstb_textedit.h
-                imgui/imstb_truetype.h
+# sokol
+add_library(sokol sokol_impl.mm)
+#    - on macOS with Metal: Cocoa, QuartzCore, Metal, MetalKit
+#    - on macOS with GL: Cocoa, QuartzCore, OpenGL
+# target_compile_definitions(sokol PUBLIC SOKOL_GLCORE33)
+# target_link_libraries(sokol "-framework Cocoa"
+#                             "-framework QuartzCore"
+#                             "-framework OpenGL")
+target_compile_definitions(sokol PUBLIC SOKOL_METAL)
+target_link_libraries(sokol "-framework Cocoa"
+                            "-framework QuartzCore"
+                            "-framework Metal"
+                            "-framework MetalKit")
+
+add_library(imgui 
+    imgui/imconfig.h
+    imgui/imgui.cpp
+    imgui/imgui.h
+    imgui/imgui_demo.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_internal.h
+    imgui/imgui_tables.cpp
+    imgui/imgui_widgets.cpp
+    imgui/imstb_rectpack.h
+    imgui/imstb_textedit.h
+    imgui/imstb_truetype.h
 )
+
+# glengine
+# set(imgui_files imgui/imconfig.h
+#                 imgui/imgui.cpp
+#                 imgui/imgui.h
+#                 imgui/imgui_demo.cpp
+#                 imgui/imgui_draw.cpp
+#                 imgui/imgui_impl_glfw.cpp
+#                 imgui/imgui_impl_glfw.h
+#                 imgui/imgui_internal.h
+#                 imgui/imgui_tables.cpp
+#                 imgui/imgui_widgets.cpp
+#                 imgui/imstb_rectpack.h
+#                 imgui/imstb_textedit.h
+#                 imgui/imstb_truetype.h
+# )
 set(microprofile_files microprofile/microprofile.h
                        microprofile/microprofile.cpp
                        microprofile/microprofile_html.h
@@ -86,26 +114,30 @@ add_library(glengine STATIC gl_camera.h
                             gl_types.h
                             gl_utils.cpp
                             gl_utils.h
+                            sokol_app.h
                             sokol_gfx.h
                             sokol_gfx_imgui.h
-                            sokol_gfx_impl.cpp
+                            # sokol_gfx_impl.cpp
                             sokol_glue.h
                             sokol_imgui.h
                             sokol_time.h
+                            sokol_impl.mm
                             glad/glad_gl.c
                             stb/stb_image.cpp
                             tinygltf/tiny_gltf.cpp
                             ${generated_shader_files}
-                            ${imgui_files}
+                            # ${imgui_files}
                             ${microprofile_files}
 )
-target_compile_definitions(glengine PUBLIC SOKOL_GLCORE33
-                                           # SOKOL_TRACE_HOOKS
-                                           SOKOL_IMGUI_NO_SOKOL_APP)
+# target_compile_definitions(glengine PUBLIC SOKOL_GLCORE33
+#                                            # SOKOL_TRACE_HOOKS
+#                                            SOKOL_IMGUI_NO_SOKOL_APP)
 target_include_directories(glengine PUBLIC .
                                            ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(glengine PUBLIC glfw
                                       common
+                                      imgui
+                                      sokol
 )
 
 # # install
