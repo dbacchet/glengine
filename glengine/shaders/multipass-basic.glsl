@@ -3,6 +3,8 @@
 
 // shaders for rendering a fullscreen-quad in default pass
 @vs vs_fsq
+@msl_options flip_vert_y
+
 in vec2 pos;
 out vec2 uv0;
 

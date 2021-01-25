@@ -1,6 +1,7 @@
 #include "math/vmath.h"
 
 #include "gl_engine.h"
+#include "gl_context_glfw.h"
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
 #include "gl_material_diffuse.h"
@@ -13,8 +14,11 @@
 
 int main() {
 
+    glengine::Config config  = {.window_width = 1280, .window_height = 720};
+    glengine::ContextGLFW context;
+    context.init(config);
     glengine::GLEngine eng;
-    eng.init({1280, 720, true});
+    eng.init(&context, config);
 
     eng._camera_manipulator.set_azimuth(0.5f).set_elevation(0.8f);
 

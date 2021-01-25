@@ -1,8 +1,7 @@
 #pragma once
 
-#include "math/vmath.h"
 #include <cstdint>
-
+#include <string>
 
 namespace glengine {
 
@@ -10,6 +9,7 @@ namespace glengine {
 struct Config {
     uint32_t window_width = 1280;
     uint32_t window_height = 720;
+    std::string window_title = "GLEngine";
     bool vsync = true;
     // debug flags
     bool show_framebuffer_texture = false;
@@ -18,21 +18,29 @@ struct Config {
     bool use_mrt = false;
 };
 
-/// initialize the opengl context
-bool init_context(const Config &config = {}, const char *title = "sample", void *user_pointer=nullptr);
-/// destroy the given context
-void destroy_context();
-/// function called at the beginning of each frame
-/// This is usually a good place to update the inputs to imgui, etc
-void begin_frame();
-/// function called at the end of each frame
-/// This is typically a good place to trigger the swap chain and the rendering
-void end_frame();
-/// return if the window is still valid or being closed
-bool window_should_close();
-/// return the size of the window
-math::Vector2i window_size();
-/// return the size of the display framebuffer (can be different from window in highdpi displays)
-math::Vector2i framebuffer_size();
+class GLEngine;
+
+class Context {
+  public:
+    /// initialize the context
+    virtual bool init(const Config &config) = 0;
+    /// destroy the context
+    virtual bool destroy() = 0;
+    /// register a specific engine instance
+    virtual void register_engine_instance(GLEngine *eng) { _eng = eng; }
+    /// called at the beginning of a frame in the main loop.
+    /// This function is usually a good place to update per-frame info, like the imgui input
+    virtual void begin_frame(){};
+    /// called at the end of a frame in the main loop.
+    /// \return flag indicating that the context is still valid (window not closing for example)
+    virtual bool end_frame() { return true; }
+    // info on window and framebuffer size
+    virtual int window_width() const = 0;
+    virtual int window_height() const = 0;
+    virtual int framebuffer_width() const = 0;
+    virtual int framebuffer_height() const = 0;
+
+    GLEngine *_eng = nullptr;
+};
 
 } // namespace glengine

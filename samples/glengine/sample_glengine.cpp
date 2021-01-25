@@ -2,6 +2,7 @@
 #include "math/math_utils.h"
 
 #include "gl_engine.h"
+#include "gl_context_glfw.h"
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
 #include "gl_material_diffuse.h"
@@ -36,8 +37,11 @@ int main(void) {
     config.show_framebuffer_texture = true;
     config.show_imgui_statistics = false;
 
+    glengine::ContextGLFW context;
+    context.init(config);
     glengine::GLEngine eng;
-    eng.init(config);
+    eng.init(&context, config);
+
     auto &rm = eng.resource_manager();
 
     // create basic renderables

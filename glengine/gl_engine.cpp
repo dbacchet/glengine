@@ -52,7 +52,7 @@ struct State {
         sg_pass_action pass_action = {0}; // only the pass action since the target is the default framebuffer
         sg_pipeline pip = {0};
         sg_bindings bind = {0};
-        bool debug = false;
+        bool debug = true;
     } fsq;
     sg_image default_textures[glengine::ResourceManager::DefaultImageNum] = {0};
 };
@@ -60,7 +60,7 @@ struct State {
 
 GLEngine::~GLEngine() {}
 
-bool GLEngine::init(const Config &config) {
+bool GLEngine::init(Context *context, const Config &config) {
 
     MicroProfileOnThreadCreate("Main");
     // turn on profiling
@@ -68,11 +68,9 @@ bool GLEngine::init(const Config &config) {
     MicroProfileSetForceMetaCounters(true);
 
     // gfx context
+    _context = context;
+    context->register_engine_instance(this);
     _config = config;
-    if (!glengine::init_context(config, "GLEngine sample app", (void *)this)) {
-        log_error("Error creating the rendering context");
-        return false;
-    }
     // state needed by the sokol renderer
     _state = new State;
 
@@ -81,7 +79,7 @@ bool GLEngine::init(const Config &config) {
     stm_setup();
     // use sokol-imgui with all default-options
     simgui_desc_t simgui_desc = {.ini_filename = "imgui.ini"};
-    simgui_desc.dpi_scale = framebuffer_size().x / window_size().x;
+    simgui_desc.dpi_scale = _context->framebuffer_width() / _context->window_width();
     simgui_setup(&simgui_desc);
 
     // resource manager
@@ -111,11 +109,12 @@ bool GLEngine::init(const Config &config) {
 }
 
 bool GLEngine::render() {
-    glengine::begin_frame();
     MICROPROFILE_SCOPEI("glengine", "render", MP_AUTO);
-    const auto &winsize = window_size();
-    const auto &fbsize = framebuffer_size();
+    const auto &winsize = math::Vector2i(_context->window_width(),_context->window_height());
+    const auto &fbsize = math::Vector2i(_context->framebuffer_width(),_context->framebuffer_height());
     const double delta_time = stm_sec(stm_laptime(&_curr_time));
+
+    _context->begin_frame();
 
     _camera_manipulator.update(_camera);
     _camera.update(fbsize.x, fbsize.y);
@@ -227,12 +226,11 @@ bool GLEngine::render() {
     MICROPROFILE_LEAVE();
 
     MICROPROFILE_ENTERI("glengine", "swapbuffers", MP_AUTO);
-    glengine::end_frame();
     MICROPROFILE_LEAVE();
 
     MicroProfileFlip(0);
 
-    return !glengine::window_should_close();
+    return _context->end_frame();
 }
 
 bool GLEngine::terminate() {
@@ -247,9 +245,6 @@ bool GLEngine::terminate() {
     // destroy the renderer's state
     log_info("Glengine: delete internal state");
     delete _state;
-    // destroy the gfx context
-    log_info("Glengine: destroy gfx context");
-    glengine::destroy_context();
     return true;
 }
 
@@ -325,8 +320,8 @@ void GLEngine::add_ui_function(std::function<void(void)> fun) {
 // called initially and when window size changes
 void GLEngine::create_offscreen_pass() {
     glengine::State &state = *_state;
-    const int width = window_size().x;
-    const int height = window_size().y;
+    const int width = _context->window_width();
+    const int height = _context->window_height();
     const int msaa_samples = _config.msaa_samples;
     // destroy previous resource (can be called for invalid id)
     sg_destroy_pass(state.offscreen.pass.pass_id);
@@ -391,8 +386,8 @@ void GLEngine::create_offscreen_pass() {
 void GLEngine::create_ssao_pass() {
     // ssao
     glengine::State &state = *_state;
-    const int width = window_size().x;
-    const int height = window_size().y;
+    const int width = _context->window_width();
+    const int height = _context->window_height();
     // destroy previous resource (can be called for invalid id)
     sg_destroy_pass(state.ssao.pass.pass_id);
     sg_destroy_image(state.ssao.pass.pass_desc.color_attachments[0].image);
@@ -440,8 +435,8 @@ void GLEngine::create_ssao_pass() {
 // create the final fullscreen quad rendering pass
 void GLEngine::create_fsq_pass() {
     glengine::State &state = *_state;
-    const int width = window_size().x;
-    const int height = window_size().y;
+    const int width = _context->window_width();
+    const int height = _context->window_height();
     state.fsq.pass_action = {0};
     state.fsq.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
     // fulscreen quad rendering
