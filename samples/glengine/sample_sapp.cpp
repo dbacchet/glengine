@@ -3,8 +3,11 @@
 #include "sokol_gfx.h"
 #include "sokol_glue.h"
 #include "sokol_time.h"
+#include "sokol_imgui.h"
 
 #include "gl_engine.h"
+#include "gl_context_sapp.h"
+#include "gl_logger.h"
 #include "gl_utils.h"
 #include "gl_material_diffuse.h"
 #include "imgui/imgui.h"
@@ -16,31 +19,23 @@ namespace glengine {
 std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename);
 }
 
+glengine::ContextSapp context;
 glengine::GLEngine eng;
 glengine::Object *gltf_obj = nullptr;
-    double avg_time = 0;
+double avg_time = 0;
 
 /* listen for window-resize events and recreate offscreen rendertargets */
 void event(const sapp_event *e) {
-    // if (e->type == SAPP_EVENTTYPE_RESIZED) {
-    //     create_offscreen_pass(e->framebuffer_width, e->framebuffer_height);
-    // }
-    if (e->type == SAPP_EVENTTYPE_KEY_UP && e->key_code == SAPP_KEYCODE_ESCAPE) {
-        printf("ESC pressed: requesting quit\n");
-        sapp_request_quit();
-    }
-    if (e->type == SAPP_EVENTTYPE_QUIT_REQUESTED) {
-        printf("quit requested\n");
-    }
+    context.handle_event(e);
 }
 
 void init(void) {
-    sg_setup((sg_desc){.context = sapp_sgcontext()});
-
-    eng.init({.window_width = (uint32_t)sapp_width(),
-              .window_height = (uint32_t)sapp_height(),
-              .vsync = false,
-              .use_mrt = false});
+    glengine::Config config = {.window_width = (uint32_t)sapp_width(),
+                               .window_height = (uint32_t)sapp_height(),
+                               .vsync = false,
+                               .use_mrt = true};
+    context.init(config);
+    eng.init(&context, config);
 
     eng._camera_manipulator.set_azimuth(-0.7f).set_elevation(1.3f).set_distance(4.0f);
 
@@ -95,20 +90,24 @@ void frame(void) {
     static int cnt = 0;
     static std::array<double, 100> time_samples;
     static uint64_t curr_time = 0;
-        if (gltf_obj) {
-            gltf_obj->set_transform(
-                math::create_transformation<float>({0, 0, 0.5f}, math::quat_from_euler_321<float>(0, 0, cnt / 50.0f)));
-        }
+    if (gltf_obj) {
+        gltf_obj->set_transform(
+            math::create_transformation<float>({0, 0, 0.5f}, math::quat_from_euler_321<float>(0, 0, cnt / 50.0f)));
+    }
 
-        time_samples[cnt % time_samples.size()] = stm_ms(stm_laptime(&curr_time));
-        cnt++;
-        avg_time = std::accumulate(time_samples.begin(), time_samples.end(), 0.0) / time_samples.size();
-        eng.render();
+    time_samples[cnt % time_samples.size()] = stm_ms(stm_laptime(&curr_time));
+    cnt++;
+    avg_time = std::accumulate(time_samples.begin(), time_samples.end(), 0.0) / time_samples.size();
+    eng.render();
 }
 
 void cleanup(void) {
+    // shutdown engine
+    log_info("Glengine: terminate");
     eng.terminate();
-    sg_shutdown();
+    // destroy the gfx context
+    log_info("Glengine: destroy gfx context");
+    context.destroy();
 }
 
 sapp_desc sokol_main(int argc, char *argv[]) {

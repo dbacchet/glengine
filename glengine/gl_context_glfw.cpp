@@ -1,4 +1,4 @@
-#include "gl_context.h"
+#include "gl_context_glfw.h"
 
 #include "glad/glad.h"
 #define GLFW_INCLUDE_NONE
@@ -35,7 +35,7 @@ struct WindowState {
     math::Vector2i framebuffer_size{-1,-1};
 };
 
-struct Context {
+struct GLFWContext {
     GLFWwindow *window = nullptr;
     InputState input_state;
     WindowState window_state;
@@ -46,7 +46,7 @@ struct Context {
 namespace {
 
 // global application context
-glengine::Context g_context;
+glengine::GLFWContext g_context;
 
 int save_screenshot(const char *filename) {
     GLint viewport[4];
@@ -172,8 +172,8 @@ static void error_callback(int error, const char *description) {
     fprintf(stderr, "Error (%d) creating context: %s\n", error, description);
 }
 
-bool init_context(const Config &config, const char *title, void *user_pointer) {
-
+// initialize the context
+bool ContextGLFW::init(const Config &config) {
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
@@ -186,7 +186,7 @@ bool init_context(const Config &config, const char *title, void *user_pointer) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    g_context.window = glfwCreateWindow(config.window_width, config.window_height, title, NULL, NULL);
+    g_context.window = glfwCreateWindow(config.window_width, config.window_height, config.window_title.c_str(), NULL, NULL);
     if (!g_context.window) {
         glfwTerminate();
         return false;
@@ -199,9 +199,6 @@ bool init_context(const Config &config, const char *title, void *user_pointer) {
     printf("[context] OpenGL version %s\n", (char *)glGetString(GL_VERSION));
 
     // callbacks
-    if (user_pointer) {
-        glfwSetWindowUserPointer(g_context.window, user_pointer);
-    }
     glfwSetScrollCallback(g_context.window, scroll_callback);
     glfwSetMouseButtonCallback(g_context.window, mouse_button_callback);
     glfwSetKeyCallback(g_context.window, key_callback);
@@ -232,38 +229,51 @@ bool init_context(const Config &config, const char *title, void *user_pointer) {
     ImGui_ImplGlfw_InitForOpenGL(g_context.window, true);
     // ImGui_ImplOpenGL3_Init(NULL);
 
+    // init sokol-gfx
+    sg_setup((sg_desc){0});
     return true;
 }
-
-void destroy_context() {
+// destroy the context
+bool ContextGLFW::destroy() {
     // Cleanup
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
-
     glfwDestroyWindow(g_context.window);
     glfwTerminate();
+    return true;
 }
 
-void begin_frame() {
+void ContextGLFW::register_engine_instance(GLEngine *eng) {
+    Context::register_engine_instance(eng);
+    glfwSetWindowUserPointer(g_context.window, eng);
+}
+
+void ContextGLFW::begin_frame() {
     // update imgui inputs 
     ImGui_ImplGlfw_NewFrame();
 }
 
-void end_frame() {
+bool ContextGLFW::end_frame() {
     glfwSwapBuffers(g_context.window);
     glfwPollEvents();
+    return !glfwWindowShouldClose(g_context.window);
 }
 
-math::Vector2i window_size() {
-    return g_context.window_state.window_size;
-}
-/// return the size of the display framebuffer (can be different from window in highdpi displays)
-math::Vector2i framebuffer_size() {
-    return g_context.window_state.framebuffer_size;
+// info on window and framebuffer size
+int ContextGLFW::window_width() const {
+    return g_context.window_state.window_size.x;
 }
 
-bool window_should_close() {
-    return glfwWindowShouldClose(g_context.window);
+int ContextGLFW::window_height() const {
+    return g_context.window_state.window_size.y;
+}
+
+int ContextGLFW::framebuffer_width() const {
+    return g_context.window_state.framebuffer_size.x;
+}
+
+int ContextGLFW::framebuffer_height() const {
+    return g_context.window_state.framebuffer_size.y;
 }
 
 } // namespace glengine

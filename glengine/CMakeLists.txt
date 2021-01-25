@@ -1,5 +1,26 @@
+# ##### #
+# sokol #
+# ##### #
+add_library(sokol_sapp sokol_impl.mm)
+# - on macOS with GL: Cocoa, QuartzCore, OpenGL
+target_compile_definitions(sokol_sapp PRIVATE SOKOL_GLCORE33)
+target_link_libraries(sokol_sapp "-framework Cocoa"
+                            "-framework QuartzCore"
+                            "-framework OpenGL")
+# - on macOS with Metal: Cocoa, QuartzCore, Metal, MetalKit
+# target_compile_definitions(sokol_sapp PRIVATE SOKOL_METAL)
+# target_link_libraries(sokol "-framework Cocoa"
+#                             "-framework QuartzCore"
+#                             "-framework Metal"
+#                             "-framework MetalKit")
+
+add_library(sokol_glfw sokol_impl_glfw.cpp
+                       glad/glad_gl.c)
+target_compile_definitions(sokol_glfw PRIVATE SOKOL_GLCORE33
+                                              SOKOL_IMGUI_NO_SOKOL_APP)
+target_link_libraries(sokol_glfw glfw)
+
 # generate shader files
-set(CODEGEN sdfa)
 macro(generate_shader filename)
     get_filename_component(file_path ${filename} ABSOLUTE)
     get_filename_component(file_dir ${filename} DIRECTORY)
@@ -30,19 +51,6 @@ foreach(shader ${shaders})
     generate_shader(${shader} ${output_file})
 endforeach()
 
-# sokol
-add_library(sokol sokol_impl.mm)
-#    - on macOS with Metal: Cocoa, QuartzCore, Metal, MetalKit
-#    - on macOS with GL: Cocoa, QuartzCore, OpenGL
-# target_compile_definitions(sokol PUBLIC SOKOL_GLCORE33)
-# target_link_libraries(sokol "-framework Cocoa"
-#                             "-framework QuartzCore"
-#                             "-framework OpenGL")
-target_compile_definitions(sokol PUBLIC SOKOL_METAL)
-target_link_libraries(sokol "-framework Cocoa"
-                            "-framework QuartzCore"
-                            "-framework Metal"
-                            "-framework MetalKit")
 
 add_library(imgui 
     imgui/imconfig.h
@@ -58,21 +66,28 @@ add_library(imgui
     imgui/imstb_truetype.h
 )
 
-# glengine
-# set(imgui_files imgui/imconfig.h
-#                 imgui/imgui.cpp
-#                 imgui/imgui.h
-#                 imgui/imgui_demo.cpp
-#                 imgui/imgui_draw.cpp
-#                 imgui/imgui_impl_glfw.cpp
-#                 imgui/imgui_impl_glfw.h
-#                 imgui/imgui_internal.h
-#                 imgui/imgui_tables.cpp
-#                 imgui/imgui_widgets.cpp
-#                 imgui/imstb_rectpack.h
-#                 imgui/imstb_textedit.h
-#                 imgui/imstb_truetype.h
-# )
+# ############ #
+# context libs #
+# ############ #
+# using sokol_app
+add_library(glcontext_sapp gl_context_sapp.h
+                           gl_context_sapp.cpp)
+target_include_directories(glcontext_sapp PUBLIC .)
+target_link_libraries(glcontext_sapp PRIVATE sokol_sapp
+                                             common)
+# using GLFW
+add_library(glcontext_glfw gl_context_glfw.h
+                           gl_context_glfw.cpp
+                           imgui/imgui_impl_glfw.h 
+                           imgui/imgui_impl_glfw.cpp)
+target_include_directories(glcontext_glfw PUBLIC .)
+target_link_libraries(glcontext_glfw PRIVATE glfw
+                                             sokol_glfw
+                                             common)
+
+# ########## #
+# engine lib #
+# ########## #
 set(microprofile_files microprofile/microprofile.h
                        microprofile/microprofile.cpp
                        microprofile/microprofile_html.h
@@ -80,7 +95,6 @@ set(microprofile_files microprofile/microprofile.h
 add_library(glengine STATIC gl_camera.h
                             gl_camera_manipulator.cpp
                             gl_camera_manipulator.h
-                            gl_context.cpp
                             gl_context.h
                             gl_effect_blur.cpp
                             gl_effect_blur.h
@@ -117,27 +131,19 @@ add_library(glengine STATIC gl_camera.h
                             sokol_app.h
                             sokol_gfx.h
                             sokol_gfx_imgui.h
-                            # sokol_gfx_impl.cpp
                             sokol_glue.h
                             sokol_imgui.h
                             sokol_time.h
-                            sokol_impl.mm
-                            glad/glad_gl.c
                             stb/stb_image.cpp
                             tinygltf/tiny_gltf.cpp
                             ${generated_shader_files}
                             # ${imgui_files}
                             ${microprofile_files}
 )
-# target_compile_definitions(glengine PUBLIC SOKOL_GLCORE33
-#                                            # SOKOL_TRACE_HOOKS
-#                                            SOKOL_IMGUI_NO_SOKOL_APP)
 target_include_directories(glengine PUBLIC .
                                            ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(glengine PUBLIC glfw
-                                      common
+target_link_libraries(glengine PUBLIC common
                                       imgui
-                                      sokol
 )
 
 # # install

@@ -1,6 +1,7 @@
 #include "math/vmath.h"
 
 #include "gl_engine.h"
+#include "gl_context_glfw.h"
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
 #include "gl_material_diffuse.h"
@@ -35,8 +36,11 @@ int main(int argc, char *argv[]) {
     bool vsync = !cl.exist("novsync");
     bool use_mrt = cl.exist("mrt");
 
+    glengine::Config config  = {.window_width = width, .window_height = height, .vsync = vsync, .use_mrt = use_mrt};
+    glengine::ContextGLFW context;
+    context.init(config);
     glengine::GLEngine eng;
-    eng.init({.window_width = width, .window_height = height, .vsync = vsync, .use_mrt = use_mrt});
+    eng.init(&context, config);
 
     eng._camera_manipulator.set_azimuth(0.6f).set_elevation(1.2f).set_distance(5.0f);
 

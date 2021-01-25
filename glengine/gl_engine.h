@@ -12,6 +12,7 @@
 namespace glengine {
 
 struct State;
+class Context;
 
 class GLEngine {
   public:
@@ -21,7 +22,7 @@ class GLEngine {
     // engine //
     // ////// //
 
-    bool init(const Config &config = {});
+    bool init(Context *context, const Config &config = {});
 
     bool render();
 
@@ -89,6 +90,7 @@ class GLEngine {
     void create_fsq_pass();
 
     // protected:
+    Context *_context = nullptr;
     Config _config;
     Camera _camera;
     CameraManipulator _camera_manipulator;
