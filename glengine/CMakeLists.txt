@@ -1,25 +1,39 @@
 # ##### #
 # sokol #
 # ##### #
-add_library(sokol_sapp sokol_impl.mm)
-# - on macOS with GL: Cocoa, QuartzCore, OpenGL
-target_compile_definitions(sokol_sapp PRIVATE SOKOL_GLCORE33)
-target_link_libraries(sokol_sapp "-framework Cocoa"
-                            "-framework QuartzCore"
-                            "-framework OpenGL")
-# - on macOS with Metal: Cocoa, QuartzCore, Metal, MetalKit
-# target_compile_definitions(sokol_sapp PRIVATE SOKOL_METAL)
-# target_link_libraries(sokol "-framework Cocoa"
-#                             "-framework QuartzCore"
-#                             "-framework Metal"
-#                             "-framework MetalKit")
+# with sokol_app
+if (APPLE)
+    add_library(sokol_sapp sokol_impl_sapp.mm)
+    # - on macOS with GL: Cocoa, QuartzCore, OpenGL
+    target_compile_definitions(sokol_sapp PRIVATE SOKOL_GLCORE33)
+    target_link_libraries(sokol_sapp "-framework Cocoa"
+                                "-framework QuartzCore"
+                                "-framework OpenGL")
+    # - on macOS with Metal: Cocoa, QuartzCore, Metal, MetalKit
+    # target_compile_definitions(sokol_sapp PRIVATE SOKOL_METAL)
+    # target_link_libraries(sokol "-framework Cocoa"
+    #                             "-framework QuartzCore"
+    #                             "-framework Metal"
+    #                             "-framework MetalKit")
+else()
+    find_package(Threads REQUIRED)
+    find_package(OpenGL REQUIRED)
+    add_library(sokol_sapp sokol_impl_sapp.cpp)
+    # - on Linux: X11, Xi, Xcursor, GL, dl, pthread, m(?)
+    target_compile_definitions(sokol_sapp PRIVATE SOKOL_GLCORE33)
+    target_link_libraries(sokol_sapp Threads::Threads OpenGL::OpenGL "-lX11" "-lXi" "-lXcursor" "-ldl")
+endif()
 
+# with GLFW
 add_library(sokol_glfw sokol_impl_glfw.cpp
                        glad/glad_gl.c)
 target_compile_definitions(sokol_glfw PRIVATE SOKOL_GLCORE33
                                               SOKOL_IMGUI_NO_SOKOL_APP)
 target_link_libraries(sokol_glfw glfw)
 
+# ####### #
+# shaders #
+# ####### #
 # generate shader files
 macro(generate_shader filename)
     get_filename_component(file_path ${filename} ABSOLUTE)
