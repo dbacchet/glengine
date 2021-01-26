@@ -114,7 +114,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         cursor_delta = cursor_pos - g_context.input_state.previous_cursor_pos;
     }
     // rotate view
-    if (g_context.input_state.left_button_pressed && g_context.input_state.ctrl_key_pressed == false) {
+    if (g_context.input_state.left_button_pressed && g_context.input_state.ctrl_key_pressed == false && g_context.input_state.shift_key_pressed == false) {
         cm.add_azimuth(-0.003f * cursor_delta.x);
         // cm.add_elevation(-0.003f * cursor_delta.y);
         cm.set_elevation(math::utils::clamp<float>(cm.elevation() - 0.003f * cursor_delta.y, 0, M_PI));
@@ -131,7 +131,8 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
         cm.translate(delta);
     }
     // zoom view
-    if (g_context.input_state.right_button_pressed) {
+    if (g_context.input_state.right_button_pressed ||
+        (g_context.input_state.left_button_pressed && g_context.input_state.shift_key_pressed == true)) {
         cm.set_distance(cm.distance() * (1 - cursor_delta.y / 100.0f));
     }
     g_context.input_state.previous_cursor_pos = cursor_pos;
