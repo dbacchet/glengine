@@ -40,11 +40,11 @@ int main(int argc, char *argv[]) {
     bool vsync = !cl.exist("novsync");
     bool use_mrt = cl.exist("mrt");
 
-    glengine::Config config  = {.window_width = width, .window_height = height, .vsync = vsync, .use_mrt = use_mrt};
+    // create context and engine
     glengine::ContextGLFW context;
-    context.init(config);
+    context.init({.window_width = width, .window_height = height, .vsync = vsync});
     glengine::GLEngine eng;
-    eng.init(&context, config);
+    eng.init(&context, {.use_mrt = use_mrt});
 
     eng._camera_manipulator.set_azimuth(-0.7f).set_elevation(1.3f).set_distance(4.0f);
 

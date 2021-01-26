@@ -30,12 +30,11 @@ void event(const sapp_event *e) {
 }
 
 void init(void) {
-    glengine::Config config = {.window_width = (uint32_t)sapp_width(),
-                               .window_height = (uint32_t)sapp_height(),
-                               .vsync = false,
-                               .use_mrt = true};
-    context.init(config);
-    eng.init(&context, config);
+    // init context and engine
+    context.init({.window_width = (uint32_t)sapp_width(),
+                  .window_height = (uint32_t)sapp_height(),
+                  .vsync = false});
+    eng.init(&context, {.use_mrt = true});
 
     eng._camera_manipulator.set_azimuth(-0.7f).set_elevation(1.3f).set_distance(4.0f);
 

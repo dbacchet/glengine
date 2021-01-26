@@ -16,13 +16,22 @@ class Context;
 
 class GLEngine {
   public:
+    struct Config {
+        // debug flags
+        bool show_framebuffer_texture = false;
+        bool show_imgui_statistics = false;
+        uint16_t msaa_samples = 4;
+        bool use_mrt = false;
+    };
+
+  public:
     virtual ~GLEngine();
 
     // ////// //
     // engine //
     // ////// //
 
-    bool init(Context *context, const Config &config = {});
+    bool init(Context *context, const Config &config);
 
     bool render();
 
@@ -49,7 +58,8 @@ class GLEngine {
     Mesh *create_mesh();
     /// create a new mesh given vertices and (optionally) indices
     /// the mesh will be initialized, and the given usage (immutable, dynamic, stream) set
-    Mesh *create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_={}, sg_usage usage = SG_USAGE_IMMUTABLE);
+    Mesh *create_mesh(const std::vector<Vertex> &vertices_, const std::vector<uint32_t> &indices_ = {},
+                      sg_usage usage = SG_USAGE_IMMUTABLE);
     // prefab meshes
     /// axis gizmo
     Mesh *create_axis_mesh();
@@ -83,7 +93,6 @@ class GLEngine {
     // // //
     /// add a function to be called during the UI rendering
     void add_ui_function(std::function<void(void)> fun);
-
 
     void create_offscreen_pass();
     void create_ssao_pass();
