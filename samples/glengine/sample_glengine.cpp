@@ -2,6 +2,7 @@
 #include "math/math_utils.h"
 
 #include "gl_engine.h"
+#include "gl_context_glfw.h"
 #include "gl_mesh.h"
 #include "gl_prefabs.h"
 #include "gl_material_diffuse.h"
@@ -29,15 +30,21 @@ std::vector<glengine::Vertex> create_polyline() {
 int main(void) {
     stm_setup();
 
-    glengine::Config config;
-    config.window_width = 1280;
-    config.window_height = 720;
-    config.vsync = true;
-    config.show_framebuffer_texture = true;
-    config.show_imgui_statistics = false;
+    glengine::Context::Config ctx_config{
+        .window_width = 1280,
+        .window_height = 720,
+        .vsync = true,
+    };
+    glengine::ContextGLFW context;
+    context.init(ctx_config);
 
+    glengine::GLEngine::Config eng_config{
+        .show_framebuffer_texture = true,
+        .show_imgui_statistics = false,
+    };
     glengine::GLEngine eng;
-    eng.init(config);
+    eng.init(&context, eng_config);
+
     auto &rm = eng.resource_manager();
 
     // create basic renderables
@@ -139,7 +146,7 @@ int main(void) {
     int cnt = 0;
     uint64_t start_time = stm_now();
     while (eng.render()) {
-        float t = float(stm_sec(stm_since(start_time))); 
+        float t = float(stm_sec(stm_since(start_time)));
         uint8_t k1 = uint8_t((std::sin(cnt / 100.0f) + 1) / 2 * 255);
         uint8_t k2 = uint8_t((std::cos(cnt / 100.0f) + 1) / 2 * 255);
 
