@@ -14,11 +14,10 @@
 
 int main() {
 
-    glengine::Config config  = {.window_width = 1280, .window_height = 720};
     glengine::ContextGLFW context;
-    context.init(config);
+    context.init({.window_width = 1280, .window_height = 720});
     glengine::GLEngine eng;
-    eng.init(&context, config);
+    eng.init(&context, {});
 
     eng._camera_manipulator.set_azimuth(0.5f).set_elevation(0.8f);
 

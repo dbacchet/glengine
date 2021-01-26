@@ -11,11 +11,6 @@
 #include "sokol_glue.h"
 #include "imgui/imgui.h"
 #include "sokol_imgui.h"
-// #include "sokol_gfx.h"
-// #include "sokol_time.h"
-// #include "sokol_gfx_imgui.h"
-// #include "imgui/imgui.h"
-// #include "sokol_imgui.h"
 
 #include "gl_material.h"
 #include "gl_mesh.h"
@@ -52,7 +47,7 @@ struct State {
         sg_pass_action pass_action = {0}; // only the pass action since the target is the default framebuffer
         sg_pipeline pip = {0};
         sg_bindings bind = {0};
-        bool debug = true;
+        bool debug = false;
     } fsq;
     sg_image default_textures[glengine::ResourceManager::DefaultImageNum] = {0};
 };
