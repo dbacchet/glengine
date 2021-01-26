@@ -20,17 +20,18 @@ else()
     find_package(OpenGL REQUIRED)
     add_library(sokol_sapp sokol_impl_sapp.cpp)
     # - on Linux: X11, Xi, Xcursor, GL, dl, pthread, m(?)
-    target_compile_definitions(sokol_sapp PRIVATE SOKOL_GLCORE33)
-    target_link_libraries(sokol_sapp Threads::Threads OpenGL::OpenGL "-lX11" "-lXi" "-lXcursor" "-ldl")
+    # target_compile_definitions(sokol_sapp PRIVATE SOKOL_GLCORE33)
+    target_compile_definitions(sokol_sapp PRIVATE SOKOL_GLES3)
+    # target_link_libraries(sokol_sapp Threads::Threads OpenGL::OpenGL "-lX11" "-lXi" "-lXcursor" "-ldl")
 endif()
 
-# with GLFW
-add_library(sokol_glfw sokol_impl_glfw.cpp
-                       glad/glad_gl.c)
-target_compile_definitions(sokol_glfw PRIVATE SOKOL_GLCORE33
-                                              SOKOL_IMGUI_NO_SOKOL_APP)
-target_link_libraries(sokol_glfw glfw)
-
+# # with GLFW
+# add_library(sokol_glfw sokol_impl_glfw.cpp
+#                        glad/glad_gl.c)
+# target_compile_definitions(sokol_glfw PRIVATE SOKOL_GLCORE33
+#                                               SOKOL_IMGUI_NO_SOKOL_APP)
+# target_link_libraries(sokol_glfw glfw)
+#
 # ####### #
 # shaders #
 # ####### #
@@ -89,21 +90,21 @@ add_library(glcontext_sapp gl_context_sapp.h
 target_include_directories(glcontext_sapp PUBLIC .)
 target_link_libraries(glcontext_sapp PRIVATE sokol_sapp
                                              common)
-# using GLFW
-add_library(glcontext_glfw gl_context_glfw.h
-                           gl_context_glfw.cpp
-                           imgui/imgui_impl_glfw.h 
-                           imgui/imgui_impl_glfw.cpp)
-target_include_directories(glcontext_glfw PUBLIC .)
-target_link_libraries(glcontext_glfw PRIVATE glfw
-                                             sokol_glfw
-                                             common)
+# # using GLFW
+# add_library(glcontext_glfw gl_context_glfw.h
+#                            gl_context_glfw.cpp
+#                            imgui/imgui_impl_glfw.h 
+#                            imgui/imgui_impl_glfw.cpp)
+# target_include_directories(glcontext_glfw PUBLIC .)
+# target_link_libraries(glcontext_glfw PRIVATE glfw
+#                                              sokol_glfw
+#                                              common)
 
 # ########## #
 # engine lib #
 # ########## #
 set(microprofile_files microprofile/microprofile.h
-                       microprofile/microprofile.cpp
+                       # microprofile/microprofile.cpp
                        microprofile/microprofile_html.h
 )
 add_library(glengine STATIC gl_camera.h
@@ -159,6 +160,7 @@ target_include_directories(glengine PUBLIC .
 target_link_libraries(glengine PUBLIC common
                                       imgui
 )
+target_link_options(glengine PUBLIC -s USE_WEBGL2=1)
 
 # # install
 # # file(GLOB_RECURSE GLENGINE_PUBLIC_HEADERS "*.h*")

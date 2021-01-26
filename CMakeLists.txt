@@ -26,7 +26,7 @@ endif()
 
 enable_testing()
 # recurse subdirectories
-add_subdirectory(3rdparty)
+# add_subdirectory(3rdparty)
 add_subdirectory(common)
 add_subdirectory(glengine)
 add_subdirectory(samples)

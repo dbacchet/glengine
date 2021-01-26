@@ -62,7 +62,7 @@ void init(void) {
         }
     }
     // load a gltf file if passed in the command line
-    std::string gltf_filename = "../resources/models/DamagedHelmet/DamagedHelmet.gltf";
+    std::string gltf_filename = "";
     if (gltf_filename != "") {
         gltf_obj = eng.create_object();
         auto gltf_renderables = glengine::create_from_gltf(eng, gltf_filename.c_str());
