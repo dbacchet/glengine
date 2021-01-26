@@ -7,14 +7,14 @@ if (APPLE)
     # - on macOS with GL: Cocoa, QuartzCore, OpenGL
     target_compile_definitions(sokol_sapp PRIVATE SOKOL_GLCORE33)
     target_link_libraries(sokol_sapp "-framework Cocoa"
-                                "-framework QuartzCore"
-                                "-framework OpenGL")
+                                     "-framework QuartzCore"
+                                     "-framework OpenGL")
     # - on macOS with Metal: Cocoa, QuartzCore, Metal, MetalKit
     # target_compile_definitions(sokol_sapp PRIVATE SOKOL_METAL)
-    # target_link_libraries(sokol "-framework Cocoa"
-    #                             "-framework QuartzCore"
-    #                             "-framework Metal"
-    #                             "-framework MetalKit")
+    # target_link_libraries(sokol_sapp "-framework Cocoa"
+    #                                  "-framework QuartzCore"
+    #                                  "-framework Metal"
+    #                                  "-framework MetalKit")
 else()
     find_package(Threads REQUIRED)
     find_package(OpenGL REQUIRED)
