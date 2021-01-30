@@ -1,7 +1,7 @@
 GLEngine
 ========
 
-basic visualizer for rapid prototyping
+Basic visualizer for rapid prototyping
 
 ## Renderables and scene graph
 The engine basic unit is the Renderable, that is composed by a mesh and a material. All what the engine is doing is
@@ -29,7 +29,7 @@ Objects in this stage will be selectable, with the possibility to query the obje
 Additional rendering that can be useful as debug/annotations, like text, bounding boxes, etc.
 Objects in this stage will *not* be selectable.
 
-The `master` branch contains active rewrite of GLengine on top of [sokol_gfx](https://github.com/floooh/sokol), and is probably not very stable at the moment.
+The `master` branch contains an active rewrite of GLengine on top of [sokol_gfx](https://github.com/floooh/sokol), and is probably not very stable at the moment.
 
 ## Screenshots
 A few screenshot from the sample apps:
@@ -45,21 +45,35 @@ The previous version of the library can be found in the followin branches:
 
 # Internals
 
-resource ownership
+Resource ownership
 ------------------
+The resource ownership model is very simple, by design. For every resource (essentially memory allocations like buffers, images, etc.):
 * if created by the engine is managed by the engine
 * if created by the user has to be managed by the user
 * renderables are ephemeral and _copied_ into the glengine::Object. Make sure to always update the one in the final object, not a temporary object created when _constructing_ the object itself 
 
-why sokol
+Why sokol
 ---------
-* better support more than one platform/gfx api
-* passes and pipelines were implemented very well
-* low-level enough to have total flexibility on the architecture
-* very good validation layer in debug (useful for troubleshooting tricky opengl buffers/pipelines incompatibilities, for example)
+Compared to the previous generation of GLEngine, the actual version has been built on top of the awesome [sokol_gfx](https://github.com/floooh/sokol) library, that provides a very thin abstraction for OpenGL/Metal/DirectX/WebGL.
+The previous version was built directly on top of OpenGL (hence the "GL" in the name), but the OpenGL support in many platforms (read: macOS) is getting worse over time and I also wanted to be more future-proof and have a path to use the same tech on web applicaitons. 
+In terms of performance for example, the benchmark app runs at ~25 fps on my Macbook pro 13 (late 2018) on macOS, but at a steady 60 fps _with the same code, on the same machine_ when I boot from a linux usb-stick...
+
+Sokol Gfx has been chosen because:
+* it supports more than one platform/gfx api, with likely more to come
+* render passes and pipelines are implemented very well
+* it's low-level enough to have total flexibility on the architecture
+* it comes with a very good validation layer in debug (useful for troubleshooting tricky opengl buffers/pipelines incompatibilities, for example)
+* it's minimalistic and incredibly easy to integrate
+* it comes with a cross platform solution for the shading language (integrated in GLEngine) that uses glsl, but also offers the possibility to write shaders in the native API shading language if needed.
+* it comes with a few other small libraries like sokol_app, sokol_fetch, sokol_time that can optionally be used and are based on the same concepts
+
+There are a few things that are not supported (yet...), but compared to the benefits they are very minor. For example:
+* all render targets _must_ have the same pixel format (i.e. not possible to use MRT with color+float+depth textures)
+* no cross platform support to copy images/textures from GPU back to the main memory
 
 TODO
 ----
+The library is under active development, and the main features that under work are:
 - [x] dynamic meshes (update mesh data)
 - [ ] generate mipmaps
 - [x] gltf import
