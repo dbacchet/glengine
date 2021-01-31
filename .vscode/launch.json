@@ -8,7 +8,7 @@
         "name": "(lldb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build_debug/samples/glengine/benchmark_sapp",
+        "program": "${workspaceFolder}/build_debug/samples/glengine/sample_sapp",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/build_debug",

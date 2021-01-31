@@ -68,7 +68,9 @@ bool EffectSSAO::init(GLEngine &eng, sg_primitive_type primitive, sg_index_type 
     }
 
     tex_random = placeholders.random;
-    return true;
+
+    initialized = true;
+    return initialized;
 }
 
 void EffectSSAO::update_bindings() {
@@ -83,8 +85,7 @@ void EffectSSAO::apply_uniforms() {
         .u_projection = _eng->_camera.projection(),
         .u_inv_projection = math::inverse(_eng->_camera.projection()),
         .radius = radius,
-        .noise_scale = math::Vector4f(_eng->_context->window_width() / 4,
-                                      _eng->_context->window_height() / 4, 0, 0),
+        .noise_scale = math::Vector4f(_eng->_context->window_width() / 4, _eng->_context->window_height() / 4, 0, 0),
         .bias = bias,
     };
     sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_ssao_params, &ssao_params, sizeof(ssao_params));

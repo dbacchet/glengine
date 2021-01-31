@@ -12,7 +12,11 @@
 #include "gl_material_diffuse.h"
 #include "imgui/imgui.h"
 
+#include "cmdline.h"
+
 #include "stdio.h"
+#include <string>
+#include <cstdint>
 #include <numeric>
 
 namespace glengine {
@@ -110,15 +114,22 @@ void cleanup(void) {
 }
 
 sapp_desc sokol_main(int argc, char *argv[]) {
-    (void)argc;
-    (void)argv;
+
+    cmdline::parser cl;
+    cl.add<int32_t>("width", 'w', "window width", false, 1280, cmdline::range(16, 65535));
+    cl.add<int32_t>("height", 'h', "window height", false, 720, cmdline::range(16, 65535));
+    cl.parse_check(argc, argv);
+
+    int32_t width = cl.get<int32_t>("width");
+    int32_t height = cl.get<int32_t>("height");
+
     return (sapp_desc){
         .init_cb = init,
         .frame_cb = frame,
         .cleanup_cb = cleanup,
         .event_cb = event,
-        .width = 1280,
-        .height = 720,
+        .width = width,
+        .height = height,
         .sample_count = 1,
         .window_title = "GLEngine (sokol-app)",
     };

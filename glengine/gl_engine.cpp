@@ -1,6 +1,7 @@
 #include "gl_engine.h"
 #include "gl_context.h"
 #include "gl_logger.h"
+#include "gl_debug_hooks.h"
 
 #include "math/vmath.h"
 #include "math/math_utils.h"
@@ -50,8 +51,8 @@ struct State {
         bool debug = false;
     } fsq;
     sg_image default_textures[glengine::ResourceManager::DefaultImageNum] = {0};
+    bool should_resize = false;
 };
-
 
 GLEngine::~GLEngine() {}
 
@@ -70,12 +71,15 @@ bool GLEngine::init(Context *context, const Config &config) {
     _state = new State;
 
     // init sokol-gfx
-    //sg_setup((sg_desc){0});
+    // sg_setup((sg_desc){0});
     stm_setup();
     // use sokol-imgui with all default-options
     simgui_desc_t simgui_desc = {.ini_filename = "imgui.ini"};
     simgui_desc.dpi_scale = _context->framebuffer_width() / _context->window_width();
     simgui_setup(&simgui_desc);
+
+    // sokol trace hooks (only works if SOKOL_TRACE_HOOKS is defined at compile time)
+    // install_trace_hooks(this);
 
     // resource manager
     _resource_manager.init();
@@ -104,9 +108,12 @@ bool GLEngine::init(Context *context, const Config &config) {
 }
 
 bool GLEngine::render() {
+    if (_state->should_resize) {
+        resize();
+    }
     MICROPROFILE_SCOPEI("glengine", "render", MP_AUTO);
-    const auto &winsize = math::Vector2i(_context->window_width(),_context->window_height());
-    const auto &fbsize = math::Vector2i(_context->framebuffer_width(),_context->framebuffer_height());
+    const auto &winsize = math::Vector2i(_context->window_width(), _context->window_height());
+    const auto &fbsize = math::Vector2i(_context->framebuffer_width(), _context->framebuffer_height());
     const double delta_time = stm_sec(stm_laptime(&_curr_time));
 
     _context->begin_frame();
@@ -318,7 +325,7 @@ void GLEngine::create_offscreen_pass() {
     const int width = _context->window_width();
     const int height = _context->window_height();
     const int msaa_samples = _config.msaa_samples;
-    // destroy previous resource (can be called for invalid id)
+    // destroy previous resource (no-op if the current resource id is invalid)
     sg_destroy_pass(state.offscreen.pass.pass_id);
     sg_destroy_image(state.offscreen.pass.pass_desc.color_attachments[0].image);
     sg_destroy_image(state.offscreen.pass.pass_desc.color_attachments[1].image);
@@ -383,7 +390,7 @@ void GLEngine::create_ssao_pass() {
     glengine::State &state = *_state;
     const int width = _context->window_width();
     const int height = _context->window_height();
-    // destroy previous resource (can be called for invalid id)
+    // destroy previous resource (no-op if the current resource id is invalid)
     sg_destroy_pass(state.ssao.pass.pass_id);
     sg_destroy_image(state.ssao.pass.pass_desc.color_attachments[0].image);
     sg_image_desc color_img_desc = {.render_target = true,
@@ -403,12 +410,14 @@ void GLEngine::create_ssao_pass() {
     state.ssao.pass.pass_action = {};
     state.ssao.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 1.0f, 1.0f, 1.0f}};
     // initialize the effect
-    state.ssao.effect.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
+    if (!state.ssao.effect.initialized) {
+        state.ssao.effect.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
+    }
     state.ssao.effect.tex_normal = state.offscreen.pass.pass_desc.color_attachments[1].image;
     state.ssao.effect.tex_depth = state.offscreen.pass.pass_desc.color_attachments[2].image;
     state.ssao.effect.update_bindings();
     // blur
-    // destroy previous resource (can be called for invalid id)
+    // destroy previous resource (no-op if the current resource id is invalid)
     sg_destroy_pass(state.ssao.blur_pass.pass_id);
     sg_destroy_image(state.ssao.blur_pass.pass_desc.color_attachments[0].image);
     color_img_desc.label = "blur color image";
@@ -420,7 +429,9 @@ void GLEngine::create_ssao_pass() {
     state.ssao.blur_pass.pass_action = {};
     state.ssao.blur_pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 1.0f, 1.0f, 1.0f}};
     // initialize the effect
-    state.ssao.effect_blur.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
+    if (!state.ssao.effect_blur.initialized) {
+        state.ssao.effect_blur.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
+    }
     state.ssao.effect_blur.tex = state.ssao.pass.pass_desc.color_attachments[0].image;
     state.ssao.effect_blur.update_bindings();
     // also need to update the fullscreen-quad texture bindings
@@ -435,19 +446,22 @@ void GLEngine::create_fsq_pass() {
     state.fsq.pass_action = {0};
     state.fsq.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
     // fulscreen quad rendering
-    float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
-    sg_buffer quad_vbuf = sg_make_buffer(
-        (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
-    // the pipeline object to render the fullscreen quad
-    sg_pipeline_desc fsq_pip_desc = {0};
-    fsq_pip_desc.layout.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2;
-    fsq_pip_desc.shader = sg_make_shader(fsq_shader_desc());
-    fsq_pip_desc.primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP;
-    fsq_pip_desc.label = "fullscreen quad pipeline";
-    state.fsq.pip = sg_make_pipeline(fsq_pip_desc);
+    if (state.fsq.pip.id == SG_INVALID_ID) { // create pipeline and shader only the first time
+        float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+        sg_buffer quad_vbuf = sg_make_buffer(
+            (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
+        // the pipeline object to render the fullscreen quad
+        sg_pipeline_desc fsq_pip_desc = {0};
+        fsq_pip_desc.layout.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2;
+        fsq_pip_desc.shader = sg_make_shader(fsq_shader_desc());
+        fsq_pip_desc.primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP;
+        fsq_pip_desc.label = "fullscreen quad pipeline";
+        state.fsq.pip = sg_make_pipeline(fsq_pip_desc);
+        // resource bindings to render a fullscreen quad
+        state.fsq.bind = {0};
+        state.fsq.bind.vertex_buffers[0] = quad_vbuf;
+    }
     // resource bindings to render a fullscreen quad
-    state.fsq.bind = {0};
-    state.fsq.bind.vertex_buffers[0] = quad_vbuf;
     state.fsq.bind.fs_images[SLOT_tex0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
     if (_config.use_mrt) {
         state.fsq.bind.fs_images[SLOT_tex_normal] = state.offscreen.pass.pass_desc.color_attachments[1].image;
@@ -460,6 +474,22 @@ void GLEngine::create_fsq_pass() {
         state.fsq.bind.fs_images[SLOT_tex_depth] = state.default_textures[glengine::ResourceManager::White];
         state.fsq.bind.fs_images[SLOT_tex_ssao] = state.default_textures[glengine::ResourceManager::White];
     }
+}
+
+void GLEngine::should_resize(bool flag) {
+    _state->should_resize = flag;
+}
+
+void GLEngine::resize() {
+    log_debug("GLEngine: resize window and framebuffer");
+    // create offscreen pass
+    create_offscreen_pass();
+    // ssao pass
+    create_ssao_pass();
+    // final pass
+    create_fsq_pass();
+
+    _state->should_resize = false;
 }
 
 } // namespace glengine

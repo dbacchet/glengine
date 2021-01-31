@@ -98,6 +98,11 @@ class GLEngine {
     void create_ssao_pass();
     void create_fsq_pass();
 
+    // request a window/framebuffer resize
+    void should_resize(bool flag = true);
+    // update all internal buffers when the window and framebuffer are resized
+    void resize();
+
     // protected:
     Context *_context = nullptr;
     Config _config;
