@@ -25,6 +25,7 @@ class EffectSSAO {
     sg_pipeline pip = {0};
     sg_bindings bind = {0};
 
+    bool initialized = false;
     float radius = 0.25f; // effect radius
     float bias = 0.01f;  // min compenetration (to reduce acne effect)
     GLEngine *_eng;

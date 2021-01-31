@@ -84,5 +84,5 @@ The library is under active development, and the main features that under work a
 - [x] improve PBR materials
 - [ ] move to cgltf
 - [x] use HDR diffuse and specular images for IBL
-- [ ] resize offscreen context on window/fbuffer resize
+- [x] resize offscreen context on window/fbuffer resize
 - [ ] support translucent materials

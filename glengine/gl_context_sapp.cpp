@@ -150,8 +150,9 @@ void ContextSapp::handle_event(const sapp_event *e) {
             _eng->_camera_manipulator.set_distance(_eng->_camera_manipulator.distance() * (1 - e->mouse_dy / 100.0f));
         }
     }
-    // if (e->type == SAPP_EVENTTYPE_RESIZED) {
-    //     create_offscreen_pass(e->framebuffer_width, e->framebuffer_height);
-    // }
+    if (e->type == SAPP_EVENTTYPE_RESIZED) {
+        log_debug("context win resize: %d %d  - fb: %d %d\n", e->window_width, e->window_height, e->framebuffer_width, e->framebuffer_height);
+        _eng->should_resize(true);
+    }
 }
 } // namespace glengine

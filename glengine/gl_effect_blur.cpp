@@ -28,7 +28,8 @@ bool EffectBlur::init(GLEngine &eng, sg_primitive_type primitive, sg_index_type 
     bind.vertex_buffers[0] = sg_make_buffer(
         (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
 
-    return true;
+    initialized = true;
+    return initialized;
 }
 
 void EffectBlur::update_bindings() {

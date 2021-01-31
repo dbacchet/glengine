@@ -23,8 +23,7 @@ class EffectBlur {
     sg_pipeline pip = {0};
     sg_bindings bind = {0};
 
-    float radius = 0.25f; // effect radius
-    float bias = 0.01f;  // min compenetration (to reduce acne effect)
+    bool initialized = false;
     GLEngine *_eng;
 };
 
