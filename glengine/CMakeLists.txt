@@ -1,6 +1,10 @@
 # ##### #
 # sokol #
 # ##### #
+
+# enable the tracing hooks for glengine and the contexes
+# add_definitions(-DSOKOL_TRACE_HOOKS)
+
 # with sokol_app
 if (APPLE)
     add_library(sokol_sapp sokol_impl_sapp.mm)
@@ -111,6 +115,8 @@ add_library(glengine STATIC gl_camera.h
                             gl_camera_manipulator.cpp
                             gl_camera_manipulator.h
                             gl_context.h
+                            gl_debug_hooks.cpp
+                            gl_debug_hooks.h
                             gl_effect_blur.cpp
                             gl_effect_blur.h
                             gl_effect_ssao.cpp
