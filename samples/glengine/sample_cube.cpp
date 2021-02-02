@@ -46,7 +46,7 @@ int main() {
         eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     auto *box_mtl_flat = eng.create_material<glengine::MaterialFlat>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     auto *box_mtl_flat_textured = eng.create_material<glengine::MaterialFlatTextured>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
-    box_mtl_flat_textured->tex_diffuse = eng.resource_manager().get_or_create_image(uv_grid_256_png, uv_grid_256_png_len);
+    box_mtl_flat_textured->tex_diffuse = eng.resource_manager().get_or_create_image(uv_grid_256_png, uv_grid_256_png_len, true);
     auto *box_mtl_diffuse =
         eng.create_material<glengine::MaterialDiffuse>(SG_PRIMITIVETYPE_TRIANGLES, SG_INDEXTYPE_UINT32);
     auto *box_mtl_diffuse_textured =

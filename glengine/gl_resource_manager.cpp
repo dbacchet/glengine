@@ -5,7 +5,47 @@
 #include "gl_mesh.h"
 
 #include "stb/stb_image.h"
+#include "stb/stb_image_resize.h"
 
+namespace {
+
+// generate mipmaps for all the possible levels
+int generate_mipmaps(uint8_t *mip_levels[SG_MAX_MIPMAPS], int img_width, int img_height, int channels,
+                     sg_image_desc &img_desc) {
+    int level = 1;
+    for (level = 1; level < SG_MAX_MIPMAPS; level++) {
+        int w = img_width / (1 << level);
+        int h = img_height / (1 << level);
+        if (w < 1 || h < 1) {
+            break;
+        }
+        mip_levels[level] = (uint8_t *)malloc(w * h * channels);
+        printf("generate mipmap level %d with resolution %dx%d\n", level, w, h);
+        // resize image (starting from the original image). Use explicit call, setting all options
+        if (!stbir_resize_uint8_generic(mip_levels[0], img_width, img_height, 0, // input image data
+                                        mip_levels[level], w, h, 0,              // output image data
+                                        channels, channels == 3 ? STBIR_ALPHA_CHANNEL_NONE : 3, 0, STBIR_EDGE_CLAMP,
+                                        STBIR_FILTER_BOX, STBIR_COLORSPACE_SRGB, 0)) {
+            printf("Error resizing image to %dx%d\n", w, h);
+            break;
+        }
+        img_desc.content.subimage[0][level] = {
+            .ptr = mip_levels[level],
+            .size = w * h * channels,
+        };
+    }
+    img_desc.num_mipmaps = level;
+    // img_desc.min_lod = 0.0f;
+    // img_desc.max_lod = 9.0f;
+    img_desc.min_filter = SG_FILTER_LINEAR_MIPMAP_NEAREST;
+    img_desc.min_filter = SG_FILTER_LINEAR_MIPMAP_LINEAR;
+    printf("generated %d mipmap levels\n", level);
+    printf("generated %d mipmap levels\n", img_desc.num_mipmaps);
+
+    return level;
+}
+
+} // namespace
 namespace glengine {
 
 ResourceManager::~ResourceManager() {
@@ -59,7 +99,7 @@ void ResourceManager::terminate() {
         log_debug("Destroying image %u", it.second.id);
         sg_destroy_image(it.second);
     }
-    for (int i=0; i<DefaultImageNum; i++) {
+    for (int i = 0; i < DefaultImageNum; i++) {
         log_debug("Destroying (default) image %u", _default_images[i].id);
         sg_destroy_image(_default_images[i]);
     }
@@ -93,12 +133,13 @@ sg_image ResourceManager::get_or_create_image(const sg_image_desc &desc) {
     return img;
 }
 
-sg_image ResourceManager::get_or_create_image(const char *filename) {
+sg_image ResourceManager::get_or_create_image(const char *filename, bool gen_mipmaps) {
     int img_width, img_height, num_channels;
     const int desired_channels = 4;
     stbi_set_flip_vertically_on_load(true);
-    stbi_uc *pixels = stbi_load(filename, &img_width, &img_height, &num_channels, desired_channels);
-    if (pixels) {
+    uint8_t *mip_levels[SG_MAX_MIPMAPS] = {0};
+    mip_levels[0] = stbi_load(filename, &img_width, &img_height, &num_channels, desired_channels);
+    if (mip_levels[0]) {
         sg_image_desc img_desc = {0};
         img_desc.width = img_width;
         img_desc.height = img_height;
@@ -106,23 +147,33 @@ sg_image ResourceManager::get_or_create_image(const char *filename) {
         img_desc.min_filter = SG_FILTER_LINEAR;
         img_desc.mag_filter = SG_FILTER_LINEAR;
         img_desc.content.subimage[0][0] = {
-            .ptr = pixels,
-            .size = img_width * img_height * 4,
+            .ptr = mip_levels[0],
+            .size = img_width * img_height * desired_channels,
         };
         img_desc.label = filename;
+        // generate mipmaps
+        if (gen_mipmaps) {
+            generate_mipmaps(mip_levels, img_width, img_height, desired_channels, img_desc);
+        }
+        img_desc.max_anisotropy = 4;
         sg_image img = get_or_create_image(img_desc);
-        stbi_image_free(pixels);
+        for (int i = 0; i < SG_MAX_MIPMAPS; i++) {
+            if (mip_levels[i]) {
+                stbi_image_free(mip_levels[i]);
+            }
+        }
         return img;
     }
     return {SG_INVALID_ID};
 }
 
-sg_image ResourceManager::get_or_create_image(const uint8_t *data, int32_t len) {
+sg_image ResourceManager::get_or_create_image(const uint8_t *data, int32_t len, bool gen_mipmaps) {
     int img_width, img_height, num_channels;
     const int desired_channels = 4;
     stbi_set_flip_vertically_on_load(true);
-    stbi_uc *pixels = stbi_load_from_memory(data, len, &img_width, &img_height, &num_channels, desired_channels);
-    if (pixels) {
+    uint8_t *mip_levels[SG_MAX_MIPMAPS] = {0};
+    mip_levels[0] = stbi_load_from_memory(data, len, &img_width, &img_height, &num_channels, desired_channels);
+    if (mip_levels[0]) {
         char label[32];
         sprintf(label, "ptr:%p len:%d", data, len);
         sg_image_desc img_desc = {0};
@@ -132,12 +183,21 @@ sg_image ResourceManager::get_or_create_image(const uint8_t *data, int32_t len) 
         img_desc.min_filter = SG_FILTER_LINEAR;
         img_desc.mag_filter = SG_FILTER_LINEAR;
         img_desc.content.subimage[0][0] = {
-            .ptr = pixels,
-            .size = img_width * img_height * 4,
+            .ptr = mip_levels[0],
+            .size = img_width * img_height * desired_channels,
         };
         img_desc.label = label;
+        // generate mipmaps
+        if (gen_mipmaps) {
+            generate_mipmaps(mip_levels, img_width, img_height, desired_channels, img_desc);
+        }
+        img_desc.max_anisotropy = 4;
         sg_image img = get_or_create_image(img_desc);
-        stbi_image_free(pixels);
+        for (int i = 0; i < SG_MAX_MIPMAPS; i++) {
+            if (mip_levels[i]) {
+                stbi_image_free(mip_levels[i]);
+            }
+        }
         return img;
     }
     return {SG_INVALID_ID};
