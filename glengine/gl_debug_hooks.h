@@ -9,4 +9,6 @@ namespace glengine {
 
 void install_trace_hooks(GLEngine *eng);
 
+void print_capabilities();
+
 }

@@ -73,9 +73,9 @@ There are a few things that are not supported (yet...), but compared to the bene
 
 TODO
 ----
-The library is under active development, and the main features that under work are:
+The library is under active development, and the main features under work are:
 - [x] dynamic meshes (update mesh data)
-- [ ] generate mipmaps
+- [x] generate mipmaps
 - [x] gltf import
 - [x] support PBR materials (using gltf as reference)
 - [ ] object selection (ID buffer)
