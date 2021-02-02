@@ -75,7 +75,7 @@ TODO
 ----
 The library is under active development, and the main features that under work are:
 - [x] dynamic meshes (update mesh data)
-- [ ] generate mipmaps
+- [x] generate mipmaps
 - [x] gltf import
 - [x] support PBR materials (using gltf as reference)
 - [ ] object selection (ID buffer)

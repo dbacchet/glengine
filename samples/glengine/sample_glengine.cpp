@@ -100,7 +100,7 @@ int main(void) {
 
     // change object attributes
     auto *box2_mtl = (glengine::MaterialDiffuseTextured *)box2_renderable.material;
-    box2_mtl->tex_diffuse = rm.get_or_create_image(uv_grid_256_png, uv_grid_256_png_len);
+    box2_mtl->tex_diffuse = rm.get_or_create_image(uv_grid_256_png, uv_grid_256_png_len, true);
     box2.update_bindings(); // since we changed only material attributes, only update the bindings
     // basic object hierarchy
     auto sg0 = eng.create_object({box0_renderable.mesh, eng.create_material<glengine::MaterialDiffuse>(

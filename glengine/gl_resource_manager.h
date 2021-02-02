@@ -14,7 +14,7 @@ class Mesh;
 
 /// class used to manage resources (materials, shaders, pipelines etc.)
 class ResourceManager {
-public:
+  public:
     enum DefaultImage {
         White,  ///< rgba image with all white pixels, and alpha 0xFF
         Black,  ///< rgba image with all black pixels, and alpha 0xFF
@@ -29,8 +29,8 @@ public:
 
     /// image creation/retrieval
     sg_image get_or_create_image(const sg_image_desc &desc);
-    sg_image get_or_create_image(const char *filename);
-    sg_image get_or_create_image(const uint8_t *data, int32_t len);
+    sg_image get_or_create_image(const char *filename, bool gen_mipmaps = false);
+    sg_image get_or_create_image(const uint8_t *data, int32_t len, bool gen_mipmaps = false);
     /// default images
     sg_image default_image(DefaultImage type);
     /// shader creation/retrieval
@@ -42,12 +42,11 @@ public:
     void register_mesh(Mesh *msh);
 
     std::array<sg_image, DefaultImageNum> _default_images;
-    std::unordered_map<uint64_t, sg_image> _images; 
-    std::unordered_map<uint64_t, sg_shader> _shaders; 
-    std::unordered_map<uint64_t, sg_pipeline> _pipelines; 
-    std::set<Material*> _materials;
-    std::set<Mesh*> _meshes;
-
+    std::unordered_map<uint64_t, sg_image> _images;
+    std::unordered_map<uint64_t, sg_shader> _shaders;
+    std::unordered_map<uint64_t, sg_pipeline> _pipelines;
+    std::set<Material *> _materials;
+    std::set<Mesh *> _meshes;
 };
 
-} //
+} // namespace glengine

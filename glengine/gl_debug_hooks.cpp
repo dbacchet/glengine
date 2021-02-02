@@ -86,4 +86,24 @@ void install_trace_hooks(GLEngine *eng) {
     sg_install_trace_hooks(&hooks);
 }
 
+void print_capabilities() {
+    // supported features
+    auto features = sg_query_features();
+    printf("instancing %d\n", (int)features.instancing);
+    printf("origin_top_left %d\n",(int)features.origin_top_left);
+    printf("multiple_render_targets %d\n",(int)features.multiple_render_targets);
+    printf("msaa_render_targets %d\n",(int)features.msaa_render_targets);
+    printf("imagetype_3d %d\n",(int)features.imagetype_3d);
+    printf("imagetype_array %d\n",(int)features.imagetype_array);
+    printf("image_clamp_to_border %d\n",(int)features.image_clamp_to_border);
+
+    auto limits = sg_query_limits();
+    printf("limits max_image_size_2d %u\n",limits.max_image_size_2d);
+    printf("limits max_image_size_cube %u\n",limits.max_image_size_cube);
+    printf("limits max_image_size_3d %u\n",limits.max_image_size_3d);
+    printf("limits max_image_size_array %u\n",limits.max_image_size_array);
+    printf("limits max_image_array_layers %u\n",limits.max_image_array_layers);
+    printf("limits max_vertex_attrs %u\n",limits.max_vertex_attrs);
+
+}
 } // namespace glengine

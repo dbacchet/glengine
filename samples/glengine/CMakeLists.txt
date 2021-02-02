@@ -21,3 +21,6 @@ target_link_libraries(benchmark_app PUBLIC glengine
 add_executable(sample_sapp sample_sapp.cpp)
 target_link_libraries(sample_sapp PUBLIC glengine
                                          glcontext_sapp)
+
+add_executable(mipmap_generator mipmap_generator.cpp)
+target_link_libraries(mipmap_generator PUBLIC glengine)
