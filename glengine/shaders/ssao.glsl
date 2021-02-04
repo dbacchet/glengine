@@ -94,6 +94,10 @@ void main() {
     // get pos from depth texture
     vec4 depth_rgba = texture(tex_depth_sampler, uv0);
     float depth = decodeDepth(depth_rgba);
+    if (depth>0.999) { // ignore the far plane
+        frag_color = vec4(1,1,1,1);
+        return;
+    }
     vec3 pos_clipspace = vec3(uv0 * 2 - 1, depth);
     vec3 frag_pos = view_pos_from_depth(pos_clipspace, u_inv_projection);
     /* vec3 normal = normalize(texture(g_normal_texture, uv0).rgb); */
