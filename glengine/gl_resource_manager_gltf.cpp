@@ -202,9 +202,9 @@ class GltfLoader {
             img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
             img_desc.min_filter = SG_FILTER_LINEAR;
             img_desc.mag_filter = SG_FILTER_LINEAR;
-            img_desc.content.subimage[0][0] = {
+            img_desc.data.subimage[0][0] = {
                 .ptr = img.image.data(),
-                .size = (int)img.image.size(),
+                .size = img.image.size(),
             };
             img_desc.label = img.uri.c_str();
             _tx_map[i] = sg_make_image(img_desc);

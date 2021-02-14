@@ -174,7 +174,7 @@ bool GLEngine::render() {
     sg_apply_pipeline(_state->fsq.pip);
     sg_apply_bindings(&_state->fsq.bind);
     fsq_params_t fsq_params = {_state->fsq.debug ? 1.0f : 0.0f, _camera.near_plane(), _camera.far_plane()};
-    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fsq_params, &fsq_params, sizeof(fsq_params));
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fsq_params, SG_RANGE(fsq_params));
     sg_draw(0, 4, 1);
 
     // Start the Dear ImGui frame
@@ -375,15 +375,15 @@ void GLEngine::create_offscreen_pass() {
     state.offscreen.pass.pass_id = sg_make_pass(&state.offscreen.pass.pass_desc);
     // pass action and update fullscreen quad bindings
     state.offscreen.pass.pass_action = {};
-    state.offscreen.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
+    state.offscreen.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .value = {0.1f, 0.1f, 0.1f, 1.0f}};
     state.fsq.bind.fs_images[0] = state.offscreen.pass.pass_desc.color_attachments[0].image;
     if (_config.use_mrt) {
         state.fsq.bind.fs_images[1] = state.offscreen.pass.pass_desc.color_attachments[1].image;
         state.fsq.bind.fs_images[2] = state.offscreen.pass.pass_desc.color_attachments[2].image;
         state.offscreen.pass.pass_action.colors[1] = {.action = SG_ACTION_CLEAR,
-                                                      .val = {0.5f, 0.5f, 0.5f, 1.0f}}; // null normal
+                                                      .value = {0.5f, 0.5f, 0.5f, 1.0f}}; // null normal
         state.offscreen.pass.pass_action.colors[2] = {.action = SG_ACTION_CLEAR,
-                                                      .val = {1.0f, 1.0f, 1.0f, 1.0f}}; // far plane
+                                                      .value = {1.0f, 1.0f, 1.0f, 1.0f}}; // far plane
     }
 }
 
@@ -411,7 +411,7 @@ void GLEngine::create_ssao_pass() {
     state.ssao.pass.pass_id = sg_make_pass(&state.ssao.pass.pass_desc);
     // pass action for ssao pass
     state.ssao.pass.pass_action = {};
-    state.ssao.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 1.0f, 1.0f, 1.0f}};
+    state.ssao.pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .value = {1.0f, 1.0f, 1.0f, 1.0f}};
     // initialize the effect
     if (!state.ssao.effect.initialized) {
         state.ssao.effect.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
@@ -430,7 +430,7 @@ void GLEngine::create_ssao_pass() {
     state.ssao.blur_pass.pass_id = sg_make_pass(&state.ssao.blur_pass.pass_desc);
     // blur_pass action for ssao blur_pass
     state.ssao.blur_pass.pass_action = {};
-    state.ssao.blur_pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 1.0f, 1.0f, 1.0f}};
+    state.ssao.blur_pass.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .value = {1.0f, 1.0f, 1.0f, 1.0f}};
     // initialize the effect
     if (!state.ssao.effect_blur.initialized) {
         state.ssao.effect_blur.init(*this, SG_PRIMITIVETYPE_TRIANGLE_STRIP);
@@ -447,16 +447,16 @@ void GLEngine::create_fsq_pass() {
     const int width = _context->window_width();
     const int height = _context->window_height();
     state.fsq.pass_action = {0};
-    state.fsq.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.1f, 0.1f, 0.1f, 1.0f}};
+    state.fsq.pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .value = {0.1f, 0.1f, 0.1f, 1.0f}};
     // fulscreen quad rendering
     if (state.fsq.pip.id == SG_INVALID_ID) { // create pipeline and shader only the first time
         float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
         sg_buffer quad_vbuf = sg_make_buffer(
-            (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
+            (sg_buffer_desc){.size = sizeof(quad_vertices), .data = SG_RANGE(quad_vertices), .label = "quad vertices"});
         // the pipeline object to render the fullscreen quad
         sg_pipeline_desc fsq_pip_desc = {0};
         fsq_pip_desc.layout.attrs[ATTR_vs_fsq_pos].format = SG_VERTEXFORMAT_FLOAT2;
-        fsq_pip_desc.shader = sg_make_shader(fsq_shader_desc());
+        fsq_pip_desc.shader = sg_make_shader(fsq_shader_desc(sg_query_backend()));
         fsq_pip_desc.primitive_type = SG_PRIMITIVETYPE_TRIANGLE_STRIP;
         fsq_pip_desc.label = "fullscreen quad pipeline";
         state.fsq.pip = sg_make_pipeline(fsq_pip_desc);

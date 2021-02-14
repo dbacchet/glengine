@@ -19,35 +19,33 @@ bool Mesh::init(const std::vector<Vertex> &vertices_, const std::vector<uint32_t
 }
 
 void Mesh::setup_mesh() {
-    vbuf_size = int(vertices.size() * sizeof(Vertex));
-    ibuf_size = int(indices.size() * sizeof(uint32_t));
+    vbuf_size = vertices.size() * sizeof(Vertex);
+    ibuf_size = indices.size() * sizeof(uint32_t);
     if (_usage == SG_USAGE_IMMUTABLE) {
         // init with info and content
         vbuf = sg_make_buffer((sg_buffer_desc){.size = vbuf_size,
                                                .type = SG_BUFFERTYPE_VERTEXBUFFER,
                                                .usage = _usage,
-                                               .content = vertices.data(),
+                                               .data = {vertices.data(), vbuf_size},
                                                .label = "mesh-vertices"});
 
         if (indices.size() > 0) {
             ibuf = sg_make_buffer((sg_buffer_desc){.size = ibuf_size,
                                                    .type = SG_BUFFERTYPE_INDEXBUFFER,
                                                    .usage = _usage,
-                                                   .content = indices.data(),
+                                                   .data = {indices.data(), ibuf_size},
                                                    .label = "mesh-indices"});
         }
     } else { // dynamic and streaming mesh buffers have to be declared and initialized in 2 steps
         vbuf = sg_make_buffer((sg_buffer_desc){.size = vbuf_size,
                                                .type = SG_BUFFERTYPE_VERTEXBUFFER,
                                                .usage = _usage,
-                                               .content = nullptr,
                                                .label = "mesh-vertices"});
 
         if (indices.size() > 0) {
             ibuf = sg_make_buffer((sg_buffer_desc){.size = ibuf_size,
                                                    .type = SG_BUFFERTYPE_INDEXBUFFER,
                                                    .usage = _usage,
-                                                   .content = nullptr,
                                                    .label = "mesh-indices"});
         }
         update_buffers();
@@ -57,14 +55,13 @@ void Mesh::setup_mesh() {
 // update the data in the buffers. buffers have to be already allocated
 bool Mesh::update_buffers() {
     // in case the new data is bigger than the actual buffers, create a bigger one
-    int32_t new_vbuf_size = int32_t(vertices.size() * sizeof(Vertex));
-    int32_t new_ibuf_size = int32_t(indices.size() * sizeof(uint32_t));
+    uint32_t new_vbuf_size = vertices.size() * sizeof(Vertex);
+    uint32_t new_ibuf_size = indices.size() * sizeof(uint32_t);
     if (new_vbuf_size > vbuf_size) {
         sg_destroy_buffer(vbuf);
         vbuf = sg_make_buffer((sg_buffer_desc){.size = new_vbuf_size,
                                                .type = SG_BUFFERTYPE_VERTEXBUFFER,
                                                .usage = _usage,
-                                               .content = nullptr,
                                                .label = "mesh-vertices"});
         vbuf_size = new_vbuf_size;
     }
@@ -73,14 +70,13 @@ bool Mesh::update_buffers() {
         ibuf = sg_make_buffer((sg_buffer_desc){.size = new_ibuf_size,
                                                .type = SG_BUFFERTYPE_INDEXBUFFER,
                                                .usage = _usage,
-                                               .content = nullptr,
                                                .label = "mesh-vertices"});
         ibuf_size = new_ibuf_size;
     }
     // update_buffers content
-    sg_update_buffer(vbuf, vertices.data(), int(vertices.size() * sizeof(Vertex)));
+    sg_update_buffer(vbuf, {vertices.data(), vertices.size() * sizeof(Vertex)});
     if (ibuf.id != SG_INVALID_ID) {
-        sg_update_buffer(ibuf, indices.data(), int(indices.size() * sizeof(uint32_t)));
+        sg_update_buffer(ibuf, {indices.data(), indices.size() * sizeof(uint32_t)});
     }
     return true;
 }
