@@ -14,8 +14,8 @@ int generate_mipmaps(uint8_t *mip_levels[SG_MAX_MIPMAPS], int img_width, int img
                      sg_image_desc &img_desc) {
     int level = 1;
     for (level = 1; level < SG_MAX_MIPMAPS; level++) {
-        int w = img_width / (1 << level);
-        int h = img_height / (1 << level);
+        uint32_t w = img_width / (1 << level);
+        uint32_t h = img_height / (1 << level);
         if (w < 1 || h < 1) {
             break;
         }
@@ -29,7 +29,7 @@ int generate_mipmaps(uint8_t *mip_levels[SG_MAX_MIPMAPS], int img_width, int img
             printf("Error resizing image to %dx%d\n", w, h);
             break;
         }
-        img_desc.content.subimage[0][level] = {
+        img_desc.data.subimage[0][level] = {
             .ptr = mip_levels[level],
             .size = w * h * channels,
         };
@@ -61,7 +61,7 @@ void ResourceManager::init() {
         .height = 8,
         .pixel_format = SG_PIXELFORMAT_RGBA8,
     };
-    img.content.subimage[0][0] = {.ptr = pixels, .size = sizeof(pixels)};
+    img.data.subimage[0][0] = {.ptr = pixels, .size = sizeof(pixels)};
     // white
     for (int i = 0; i < 64; i++) {
         pixels[i] = 0xFFFFFFFF;
@@ -146,9 +146,9 @@ sg_image ResourceManager::get_or_create_image(const char *filename, bool gen_mip
         img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
         img_desc.min_filter = SG_FILTER_LINEAR;
         img_desc.mag_filter = SG_FILTER_LINEAR;
-        img_desc.content.subimage[0][0] = {
+        img_desc.data.subimage[0][0] = {
             .ptr = mip_levels[0],
-            .size = img_width * img_height * desired_channels,
+            .size = uint32_t(img_width * img_height * desired_channels),
         };
         img_desc.label = filename;
         // generate mipmaps
@@ -182,9 +182,9 @@ sg_image ResourceManager::get_or_create_image(const uint8_t *data, int32_t len, 
         img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
         img_desc.min_filter = SG_FILTER_LINEAR;
         img_desc.mag_filter = SG_FILTER_LINEAR;
-        img_desc.content.subimage[0][0] = {
+        img_desc.data.subimage[0][0] = {
             .ptr = mip_levels[0],
-            .size = img_width * img_height * desired_channels,
+            .size = uint32_t(img_width * img_height * desired_channels),
         };
         img_desc.label = label;
         // generate mipmaps

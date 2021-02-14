@@ -28,8 +28,8 @@ class Mesh {
 
     sg_buffer vbuf = {0};
     sg_buffer ibuf = {SG_INVALID_ID};
-    int32_t   vbuf_size = 0;
-    int32_t   ibuf_size = 0;
+    uint32_t   vbuf_size = 0;
+    uint32_t   ibuf_size = 0;
     sg_usage _usage = SG_USAGE_IMMUTABLE;
 
   private:

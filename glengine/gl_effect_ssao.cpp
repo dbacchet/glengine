@@ -28,7 +28,7 @@ void create_placeholder_textures() {
         .wrap_u = SG_WRAP_REPEAT,
         .wrap_v = SG_WRAP_REPEAT,
     };
-    img.content.subimage[0][0] = {.ptr = pixels, .size = sizeof(pixels)};
+    img.data.subimage[0][0] = {.ptr = pixels, .size = sizeof(pixels)};
     // ssao noise texture
     std::mt19937 gen(12345678);
     std::uniform_real_distribution<float> random_float(-1.0, 1.0); // generates random floats between -1.0 and 1.0
@@ -45,21 +45,22 @@ namespace glengine {
 bool EffectSSAO::init(GLEngine &eng, sg_primitive_type primitive, sg_index_type idx_type) {
     _eng = &eng;
     ResourceManager &rm = eng.resource_manager();
-    sg_shader shader = rm.get_or_create_shader(*ssao_shader_desc());
+    sg_shader shader = rm.get_or_create_shader(*ssao_shader_desc(sg_query_backend()));
 
     sg_pipeline_desc pip_desc = {0};
     pip_desc.layout.attrs[ATTR_vs_ssao_pos].format = SG_VERTEXFORMAT_FLOAT2;
     pip_desc.shader = shader;
     pip_desc.primitive_type = primitive;
     pip_desc.index_type = idx_type;
-    pip_desc.blend = {.color_attachment_count = 1, .depth_format = SG_PIXELFORMAT_NONE};
-    pip_desc.rasterizer = {.cull_mode = SG_CULLMODE_NONE, .face_winding = SG_FACEWINDING_CCW};
+    pip_desc.depth.pixel_format = SG_PIXELFORMAT_NONE;
+    pip_desc.cull_mode = SG_CULLMODE_NONE;
+    pip_desc.face_winding = SG_FACEWINDING_CCW;
     pip_desc.label = "PBR pipeline";
     pip = rm.get_or_create_pipeline(pip_desc);
     // quad vertices
     float quad_vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
     bind.vertex_buffers[0] = sg_make_buffer(
-        (sg_buffer_desc){.size = sizeof(quad_vertices), .content = quad_vertices, .label = "quad vertices"});
+        (sg_buffer_desc){.size = sizeof(quad_vertices), .data = SG_RANGE(quad_vertices), .label = "quad vertices"});
 
     // placeholder textures
     if (!have_placeholders) {
@@ -88,7 +89,7 @@ void EffectSSAO::apply_uniforms() {
         .noise_scale = math::Vector4f(_eng->_context->window_width() / 4, _eng->_context->window_height() / 4, 0, 0),
         .bias = bias,
     };
-    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_ssao_params, &ssao_params, sizeof(ssao_params));
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_ssao_params, SG_RANGE(ssao_params));
 }
 
 } // namespace glengine
