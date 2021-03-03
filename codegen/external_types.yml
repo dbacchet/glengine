@@ -1,0 +1,30 @@
+external_types:  # maps simulator C++ types to wire format types
+    # IDL    # C++ 
+    bool: 'bool'
+    int: 'int'
+    double: 'double'
+    float: 'float'
+    int32: 'int32_t'
+    uint32: 'uint32_t'
+    int64: 'int64_t'
+    uint64: 'uint64_t'
+    string: 'std::string'
+    math.Vec3: 'math::Vector3d'
+    math.Vec4: 'math::Vector4d'
+    math.Quat: 'math::Quatd'
+    math.Mat3: 'math::Matrix3d'
+    math.Mat4: 'math::Matrix4d'
+
+# Additional includes for externally defined C++ types.
+external_types_includes:
+    int32: '<cstdint>'
+    uint32: '<cstdint>'
+    int64: '<cstdint>'
+    uint64: '<cstdint>'
+    string: '<string>'
+    math.Vec3: '"math/vmath_types.h"'
+    math.Vec4: '"math/vmath_types.h"'
+    math.Quat: '"math/vmath_types.h"'
+    math.Mat3: '"math/vmath_types.h"'
+    math.Mat4: '"math/vmath_types.h"'
+

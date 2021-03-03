@@ -1,0 +1,196 @@
+component BicycleModel2D:
+  - BicycleModelParams params
+  - Vec3 pos
+  - double vx
+  - double accx
+  - double yaw
+  - double yaw_rate
+
+$ component ExternalBicycleModel:
+  - $ ExternalBicycleModel2D model
+
+BicycleModelParams:
+  - double m                    = 1500.0   # vehicle mass
+  - double lf                   = 1.421    # CG to front axle (m)
+  - double lr                   = 1.668    # CG to rear axle (m)
+  - double cg_h                 = 0.65  # height of the CG (from ground, m)
+  # [VOY-9587] revisit all scaling factors from commander output to commander input.
+  # Rationale for steering ratio: input is currently on [-1, 1]. The (road) wheel
+  # angle (in radians) should be 530 deg * 180/pi / 16.2 with 16.2 being the road
+  # wheel to hand wheel scaling. So maximum steer input (that is, 1.0) should
+  # yield 0.57 rad.
+  - double steering_ratio       = 0.57
+  - double throttle_force_ratio = 6750.0   # throttle to force conversion
+  - double brake_force_ratio    = 10500.0  # brake to force conversion
+  - double aero_cx              = 1.22     # aerodynamic coeff
+
+VehicleData:
+  - double lf             = 1.421 # CG to front axle (m)
+  - double lr             = 1.668 # CG to rear axle (m)
+  - double t              = 1.7   # front and rear wheel track (m)
+  - double cg_h           = 0.65  # height of the CG (from ground, m)
+  - double steering_ratio = 16.2
+  - double mass           = 1500.0
+  - Vec3 chassis_size     = 5.0, 2.1, 1.43
+  - Vec3 cm_offset        = 0.15, 0.0, -0.5
+  - double wheel_mass     = 20.0
+  - double wheel_radius   = 0.35
+  - double wheel_width    = 0.24
+  - Entity[] wheel_entities # entities for the wheels, ordered FL, FR, RL, RR
+  - string mesh_chassis
+  - string mesh_wheel_front
+  - string mesh_wheel_rear
+
+VehicleInput:
+  - double steering = 0.0  # steering wheel angle
+  - double throttle = 0.0  # normalized throttle (0-1 range)
+  - double brake    = 0.0  # normalized brake (0-1 range)
+
+component Node:
+  - Entity parent = entt::null
+  - Entity[] children
+  - Mat4 local_transform  = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1}
+  - Mat4 global_transform = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1}
+
+component Behavior:
+  - $ BehaviorTree tree
+
+enum MotionModel:
+  - NONE = 0  # Exact tracking of reference
+  - BICYCLEMODEL = 1
+
+enum ReferenceTrajectoryType:
+  - POLYLINE = 0
+  - CATMULL_ROMM = 1
+
+component ReferenceTrajectory:
+  - Vec3[] points
+  - Vec3[] tangents
+  - double[] lut
+  - double length
+  - bool lut_needs_update = true
+
+component ReferenceSpeed:
+  - double target_speed
+  - double current_speed
+  - double max_accel
+  - double max_decel
+  - bool decel_at_end
+
+component PerfectReferenceTracker:
+  - Vec3[] polyline
+  - double velocity
+  - double current_index
+  - double current_alpha
+  - double current_meters
+
+component RigidBody:
+  - Pose pose
+  - Screw twist
+  - Screw twist_wf # twist in world (global) frame
+  - Screw accel
+  - Screw accel_wf
+
+$ component Map:
+  - string name
+  - $ MapData map
+  - $ int mesh
+  - bool should_render = false
+
+enum RangeType:
+  - RECTANGULAR = 0
+
+RangeDefinition:
+  # Could obviously use variants here
+  - RangeType range_type
+  - double x_min
+  - double x_max
+  - double y_min
+  - double y_max
+
+# We probably need something more clever here in order to
+# limit lookups / redraws. But let's get something running
+# first.
+$ component Drawings:
+  - sim.ego.SendDrawing[] drawings
+
+# Component exists to hold drawings we send to the web viz.
+# We do this because LC-19 might raycast some drawings onto
+# the terrain.
+component ProcessedDrawings:
+  - sim.ego.SendDrawing[] drawings
+
+component GroundTruthSensor:
+  - RangeDefinition range_definition
+  - bool measure_in_world_frame
+
+component GroundTruthDetections:
+  - Detection[] detections
+
+Detection:
+  - Entity entity
+  - Vec3 box_position  # in our frame
+  - Vec3 box_size
+
+component Commander:
+  # tcp socket, more stuff...
+  - Vec3 destination
+  - $ CommanderData cmdr
+  - Controls controls_outputs
+
+component Label:
+  - string name
+
+enum TriggerState:
+#   - ENTERING = 0
+  - INSIDE = 0
+#   - LEAVING = 2
+
+TriggerMember:
+  - sim.Entity entity
+  - TriggerState state
+
+# Temporary component until we define something better
+component TriggerCylinder:
+  - double radius
+  - TriggerMember[] members
+
+# Tags
+component Pedestrian: []
+component PhysicsDynamic: [] # the object is managed completely by the physics engine (dynamics + collisions)
+component PhysicsKinematic: [] # the object is moved by the user, but interacts with the other physics entities (collisions)
+component PhysicsStatic: [] # the object is static and interacts with the other physics entities
+
+component IdmControllerInputs:
+  - double distance_to_next  # stop line or actor
+  - double speed_of_next  # in direction away from controller frame
+  - double speed_delta  # positive if object is moving away from IDM (we'll negate this internally to compute delta_v_alpha)
+  - double current_speed  # current speed of IDM vehicle itself
+  - double desired_speed
+
+IdmParameters:
+  - double max_accel                        = 2.0  # m/s^2
+  - double minimum_desired_gap              = 10  # m
+  - double desired_headway_time             = 5.0  # s
+  - double comfortable_braking_deceleration = 8.0  # m/s^2
+  - double delta_param                      = 4
+
+component IdmController:
+  - IdmParameters params
+  - double desired_acceleration  # output
+
+component Actor:
+  - ActorType type
+
+component EcsSettings (once):
+  # Make the path available so we can e.g. copy it to a log. For now.
+  - string scenario_path
+  - string output_path
+  # We will terminate the simulation if we reach this time
+  - Time simulation_timeout = {100'000, 0}
+
+component EcsState:
+  # Set to true if you want the currently running simulation to stop
+  - bool should_terminate
+  # TODO use a `Time` instance and make sure we can still serialize it
+  - Time current_time

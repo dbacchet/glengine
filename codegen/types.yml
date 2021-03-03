@@ -1,0 +1,30 @@
+Controls:
+  - double steer_normalized
+  - double throttle_normalized
+  - double brake_normalized
+  - bool use_accel_and_yaw_rate
+  - double accel
+  - double yaw_rate
+
+Pose:
+  - Vec3 pos
+  - Quat rot
+
+Screw:
+  - Vec3 lin
+  - Vec3 ang
+
+Route:
+  - Vec3 start
+  - Vec3 end
+
+ActorState:
+  - uint64 id
+  - Pose pose
+  - Screw twist
+  - Screw acceleration
+  - Vec3[] points
+  - ActorType type
+
+Polyline:
+  - Vec3[] points
