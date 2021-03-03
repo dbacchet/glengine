@@ -347,8 +347,8 @@ std::vector<Renderable> create_from_gltf(GLEngine &eng, const char *filename) {
     ml.parse_materials(model, true);
     // this loader makes the assumption that the entire scene is a single model
     math::Matrix4f root_tf = math::matrix4_identity<float>();
-    root_tf = math::create_transformation(
-        {0, 0, 0}, math::quat_from_euler_321<float>(M_PI_2, 0, 0)); // because by default gltf are y-up
+    // root_tf = math::create_transformation(
+    //     {0, 0, 0}, math::quat_from_euler_321<float>(M_PI_2, 0, 0)); // because by default gltf are y-up
     // root_tf = math::matrix4_identity<float>();
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
         assert((scene.nodes[i] >= 0) && (scene.nodes[i] < int(model.nodes.size())));

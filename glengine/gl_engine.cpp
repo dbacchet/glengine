@@ -283,9 +283,9 @@ Mesh *GLEngine::create_mesh(const std::vector<Vertex> &vertices_, const std::vec
     return mesh;
 }
 
-Mesh *GLEngine::create_axis_mesh() {
+Mesh *GLEngine::create_axis_mesh(float l) {
     Mesh *m = create_mesh();
-    MeshData md = create_axis_data();
+    MeshData md = create_axis_data(l);
     m->init(md.vertices, md.indices);
     return m;
 }

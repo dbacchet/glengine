@@ -62,7 +62,7 @@ class GLEngine {
                       sg_usage usage = SG_USAGE_IMMUTABLE);
     // prefab meshes
     /// axis gizmo
-    Mesh *create_axis_mesh();
+    Mesh *create_axis_mesh(float l=1.0f);
     /// quad that extends -1..1
     Mesh *create_quad_mesh();
     /// solid box

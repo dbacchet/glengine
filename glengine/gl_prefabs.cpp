@@ -135,14 +135,14 @@ bool create_sphere(float radius, uint32_t subdiv, std::vector<glengine::Vertex> 
 
 namespace glengine {
 
-MeshData create_axis_data() {
+MeshData create_axis_data(float l) {
     MeshData md;
     md.vertices = { {{0,0,0}, {255,0,0,255}},   // x0
-                    {{1,0,0}, {255,0,0,255}},   // x1
+                    {{l,0,0}, {255,0,0,255}},   // x1
                     {{0,0,0}, {0,255,0,255}},   // y0
-                    {{0,1,0}, {0,255,0,255}},   // y1
+                    {{0,l,0}, {0,255,0,255}},   // y1
                     {{0,0,0}, {0,0,255,255}},   // z0
-                    {{0,0,1}, {0,0,255,255}} }; // z1
+                    {{0,0,l}, {0,0,255,255}} }; // z1
     return md;
 }
 

@@ -156,6 +156,7 @@ add_library(glengine STATIC gl_camera.h
                             sokol_imgui.h
                             sokol_time.h
                             stb/stb_image.cpp
+                            cgltf/cgltf.c
                             tinygltf/tiny_gltf.cpp
                             ${generated_shader_files}
                             # ${imgui_files}

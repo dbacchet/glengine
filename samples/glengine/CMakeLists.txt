@@ -14,6 +14,10 @@ add_executable(sample_gltf sample_gltf.cpp)
 target_link_libraries(sample_gltf PUBLIC glengine
                                          glcontext_glfw)
 
+add_executable(sample_cgltf sample_cgltf.cpp)
+target_link_libraries(sample_cgltf PUBLIC glengine
+                                         glcontext_glfw)
+
 add_executable(benchmark_app benchmark_app.cpp)
 target_link_libraries(benchmark_app PUBLIC glengine
                                            glcontext_glfw)
