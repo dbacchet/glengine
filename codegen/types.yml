@@ -7,24 +7,21 @@ Controls:
   - double yaw_rate
 
 Pose:
-  - Vec3 pos
-  - Quat rot
+  - math.Vec3 pos
+  - math.Quat rot
 
 Screw:
-  - Vec3 lin
-  - Vec3 ang
+  - math.Vec3 lin
+  - math.Vec3 ang
 
 Route:
-  - Vec3 start
-  - Vec3 end
+  - math.Vec3 start
+  - math.Vec3 end
 
 ActorState:
   - uint64 id
   - Pose pose
   - Screw twist
   - Screw acceleration
-  - Vec3[] points
-  - ActorType type
-
-Polyline:
-  - Vec3[] points
+  # - Vec3[] points
+  # - ActorType type
