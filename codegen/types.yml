@@ -6,12 +6,12 @@ Controls:
   - double accel
   - double yaw_rate
 
-Pose:
+struct Pose:
   - math.Vec3 pos
   - math.Quat rot
 
 Screw:
-  - math.Vec3 lin
+  - math.namesp.Vec3 lin
   - math.Vec3 ang
 
 Route:
@@ -19,9 +19,14 @@ Route:
   - math.Vec3 end
 
 ActorState:
-  - uint64 id
-  - Pose pose
-  - Screw twist
-  - Screw acceleration
+  uint64 id
+  Pose[] pose
+  Screw twist
+  Screw[3] acceleration
   # - Vec3[] points
   # - ActorType type
+
+enum myEnum:
+  - val1
+  - val2
+  - val3
