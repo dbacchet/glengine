@@ -2,25 +2,43 @@ import sys
 from lark import Lark, Visitor
 
 type_grammar = r"""
-    ?start : types
-    types : [(struct|enum) NEWLINE]*
+?start : types
+types : [(struct|enum) NEWLINE]*
 
-    struct : "struct"? typename ":" NEWLINE struct_members
-    struct_members : [member]*
-    member : "-"? (typename|typename_vector|typename_array) _name
+struct : "struct"? typename ":" NEWLINE struct_members
+struct_members : [member]*
+member : "-"? (typename|typename_vector|typename_array) _name
 
-    enum : "enum" typename ":" NEWLINE enum_values
-    enum_values : [enum_value]*
-    enum_value : "-"? _name
+enum : "enum" typename ":" NEWLINE enum_values
+enum_values : [enum_value]*
+enum_value : "-"? _name
 
-    typename : _namespace _name
-    typename_array : _namespace _name "[" SIGNED_NUMBER "]"
-    typename_vector : _namespace _name "[" "]"
-    _namespace : (_name ".")*
-    _name : CNAME
+typename : _namespace _name
+typename_array : _namespace _name "[" SIGNED_NUMBER "]"
+typename_vector : _namespace _name "[" "]"
+_namespace : (_name ".")*
+_name : CNAME
 
 %import common.CNAME
 %import common.SIGNED_NUMBER
+%import common.NEWLINE
+%import common.WS
+%import common.SH_COMMENT
+%ignore WS
+%ignore SH_COMMENT
+"""
+
+simple_type_grammar = r"""
+?start : [type]*
+type : (struct | enum) NEWLINE
+struct : "struct"? typename ":" NEWLINE members
+enum : "enum" typename ":" NEWLINE members
+typename : TSTRING
+members : MSTRING [MSTRING]* NEWLINE
+
+TSTRING : /.+/
+MSTRING : /("-" "a".."z" "A".."Z" ":").*/
+
 %import common.NEWLINE
 %import common.WS
 %import common.SH_COMMENT
@@ -77,7 +95,8 @@ if __name__ == "__main__":
         # ast = basic_tokenizer.parse("A B CCC")
         # ast = basic_tokenizer.parse(txt)
         # ast = json_parser.parse('[{"a": "b"}, [1,-2.6,3,"bbb",true] ]')
-        type_parser = Lark(type_grammar)#, parser='lalr', transformer=MyTransformer())
+        type_parser = Lark(simple_type_grammar)#, parser='lalr')#, transformer=MyTransformer())
+        # type_parser = Lark(type_grammar)
         ast = type_parser.parse(txt)
         print(ast.pretty())
         # print(ast)

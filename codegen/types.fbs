@@ -1,0 +1,19 @@
+include "math.fbs";
+
+namespace uno.due;
+
+struct SampleType {
+  first_val : i32; 
+  second_val : f64 = 123.34; 
+}
+
+struct Pose {
+  pos : math.Vec3 = {1,2,3};
+  rot : math.Quat;
+}
+
+enum Color { 
+  Red = 1, 
+  Green, 
+  Blue ,
+}
