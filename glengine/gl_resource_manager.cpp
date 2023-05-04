@@ -175,7 +175,7 @@ sg_image ResourceManager::get_or_create_image(const uint8_t *data, int32_t len, 
     mip_levels[0] = stbi_load_from_memory(data, len, &img_width, &img_height, &num_channels, desired_channels);
     if (mip_levels[0]) {
         char label[32];
-        sprintf(label, "ptr:%p len:%d", data, len);
+        snprintf(label, sizeof(label), "ptr:%p len:%d", data, len);
         sg_image_desc img_desc = {0};
         img_desc.width = img_width;
         img_desc.height = img_height;
