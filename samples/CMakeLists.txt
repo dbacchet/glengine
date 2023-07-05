@@ -1,1 +1,2 @@
 add_subdirectory(glengine)
+add_subdirectory(map_rasterizer)

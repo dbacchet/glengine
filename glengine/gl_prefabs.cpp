@@ -62,7 +62,7 @@ uint8_t srgb_i(uint8_t v) {
 }
 std::vector<glengine::Vertex> create_grid(float len, float step) {
     std::vector<glengine::Vertex> vertices;
-    const int32_t major = 5;
+    const int32_t major = 10;
     int32_t nlines = len / step;
     glengine::Color col_x = {120, 20, 20, 255};
     glengine::Color col_y = {20, 120, 20, 255};

@@ -101,7 +101,7 @@ bool GLEngine::init(Context *context, const Config &config) {
     // create root of the scene
     _root = new Object();
     // sensible defaults for the view
-    _camera.set_perspective(1.0f, 100.0f, math::utils::deg2rad(45.0f));
+    _camera.set_perspective(1.0f, 1000.0f, math::utils::deg2rad(45.0f));
     _camera.set_transform(math::create_lookat<float>({-10.0f, -1.0f, 10.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}));
 
     // supported features
