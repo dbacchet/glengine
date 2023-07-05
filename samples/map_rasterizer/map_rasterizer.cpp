@@ -33,7 +33,7 @@ std::vector<glengine::Vertex> create_polyline() {
 
 void create_line_segment(glengine::GLEngine &eng, glengine::Object *parent, const nlohmann::json &ls) {
 
-    if (ls.count("point")<2) {
+    if (ls.count("point")<1) {
         return;
     }
     std::vector<glengine::Vertex> vertices;
