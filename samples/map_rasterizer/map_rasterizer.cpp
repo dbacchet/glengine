@@ -53,7 +53,9 @@ void create_line_segment(glengine::GLEngine &eng, glengine::Object *parent, cons
 void create_map_polylines(glengine::GLEngine &eng, glengine::Object *parent, const std::string &map_filename) {
     std::ifstream f(map_filename.c_str());
     auto data = nlohmann::json::parse(f);
-    printf("num lanes: %lu\n",data.count("lane"));
+    if (data.count("lane")>0) {
+        printf("num lanes: %lu\n",data["lane"].size());
+    }
     // draw all lanes, one renderable object per line segment
     for (const auto &l : data["lane"]) {
         if (l.count("leftBoundary")>0) {
@@ -65,9 +67,11 @@ void create_map_polylines(glengine::GLEngine &eng, glengine::Object *parent, con
             }
         }
         if (l.count("rightBoundary")>0) {
-            const auto &lb = l["rightBoundary"];
-            for (const auto &segm : lb["curve"]["segment"]) {
-                create_line_segment(eng, parent, segm["lineSegment"]);
+            const auto &rb = l["rightBoundary"];
+            if (rb.count("curve")>0 && rb["curve"].count("segment")>0) {
+                for (const auto &segm : rb["curve"]["segment"]) {
+                    create_line_segment(eng, parent, segm["lineSegment"]);
+                }
             }
         }
     }
