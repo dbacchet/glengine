@@ -4,7 +4,6 @@
 #include "gtest/gtest.h"
 
 #include "grid.h"
-#include "stb/stb_image_write.h"
 
 namespace {
 }
@@ -88,9 +87,6 @@ TEST(Grid2D, Access) {
     c = grid.at_pos_safe(3.5,1);
     ASSERT_TRUE(c);
     ASSERT_FLOAT_EQ(*c,1.23);
-
-    // auto gridsize = grid.size();
-    // stbi_write_png("grid_image.png", gridsize.first, gridsize.second, 1, (void*)grid.data, int stride_in_bytes);
 }
 
 TEST(Grid2D, Set) {

@@ -8,8 +8,10 @@
 #include "gl_material_diffuse.h"
 #include "gl_material_flat.h"
 #include "gl_material_vertexcolor.h"
-
 #include "imgui/imgui.h"
+
+#include "grid.h"
+#include "grid_renderer.h"
 
 #include "sokol_time.h"
 #include "cmdline.h"
@@ -148,31 +150,25 @@ int main(int argc, char *argv[]) {
 
     // create basic renderables
     glengine::Renderable grid_renderable = {
-        eng.create_grid_mesh(50.0f, 0.1f),
+        eng.create_grid_mesh(50.0f, 1.0f),
         eng.create_material<glengine::MaterialVertexColor>(SG_PRIMITIVETYPE_LINES, SG_INDEXTYPE_NONE)};
-    // create custom renderables:
-    glengine::Mesh *polyline_mesh = eng.create_mesh();
-    polyline_mesh->init(create_polyline());
-    // polyline_mesh->update();
-    glengine::Renderable polyline_renderable = {
-        polyline_mesh, eng.create_material<glengine::MaterialFlat>(SG_PRIMITIVETYPE_LINES, SG_INDEXTYPE_NONE)};
 
 
     // add renderables to the scene
-    auto &grid = *eng.create_object(grid_renderable, nullptr, 101); // renderable is _copied_ in the renderobject
-    auto &polyline = *eng.create_object(polyline_renderable, nullptr, 102);
+    eng.create_object(grid_renderable, nullptr, 101); // renderable is _copied_ in the renderobject
+
+    Grid2D<double> grid(15.0,5.0, 20.0, 10.0, 1.0/10);
+    for (double xx=0; xx<50; xx+=0.1) {
+        grid.set_at_pos_safe(xx,xx/2+0.2,1);
+    }
+    grid.set_at_pos_safe(15.1,5.5,1);
+    GridRenderer<double> grid_renderer(&eng, &grid);
+    grid_renderer.init();
 
     // create map from file
     if (map_filename!="") {
         glengine::Object *map_object = eng.create_object();
         create_map_polylines(eng, map_object, map_filename);
-
-        // glengine::Mesh *map_mesh = eng.create_mesh();
-        // map_mesh->init(create_map_polyline(map_filename));
-        // // map_mesh->update();
-        // glengine::Renderable map_renderable = {
-        //     map_mesh, eng.create_material<glengine::MaterialFlat>(SG_PRIMITIVETYPE_LINES, SG_INDEXTYPE_NONE)};
-        // auto &map = *eng.create_object(map_renderable, nullptr, 102);
 
         eng.add_ui_function([&]() {
             ImGui::Begin("Object Info");
@@ -202,17 +198,15 @@ int main(int argc, char *argv[]) {
         ImGui::End();
     });
 
-    (void)grid; // unused var
-
     int cnt = 0;
     uint64_t start_time = stm_now();
     while (eng.render()) {
         float t = float(stm_sec(stm_since(start_time)));
-        uint8_t k1 = uint8_t((std::sin(cnt / 100.0f) + 1) / 2 * 255);
-        uint8_t k2 = uint8_t((std::cos(cnt / 100.0f) + 1) / 2 * 255);
-
-        // polyline
-        polyline_renderable.material->color = {k2, 0, k1, 255};
+        // uint8_t k1 = uint8_t((std::sin(cnt / 100.0f) + 1) / 2 * 255);
+        // uint8_t k2 = uint8_t((std::cos(cnt / 100.0f) + 1) / 2 * 255);
+        //
+        // // polyline
+        // polyline_renderable.material->color = {k2, 0, k1, 255};
         cnt++;
     }
 
