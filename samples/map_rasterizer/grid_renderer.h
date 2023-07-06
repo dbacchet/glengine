@@ -12,8 +12,7 @@ public:
 
     bool init() {
         create_grid();
-        update();
-        return false;
+        return true;
     }
     void update();
 protected:
@@ -28,6 +27,11 @@ protected:
 
     void create_tiles();
 };
+
+
+// ////////////// //
+// implementation //
+// ////////////// //
 
 template <typename CellT>
 void GridRenderer<CellT>::create_grid() {
@@ -60,10 +64,12 @@ void GridRenderer<CellT>::create_grid() {
     // add a ui function to interact with the grid
     _eng->add_ui_function([&]() {
             ImGui::Begin("Grid Info");
-            auto &gmat = _grid_obj->_transform;
-            ImGui::DragFloat("grid x", &gmat.at(3,0), 1, -1000, 1000);
-            ImGui::DragFloat("grid y", &gmat.at(3,1), 1, -1000, 1000);
-            ImGui::DragFloat("grid z", &gmat.at(3,2), 1, -1000, 1000);
+            float orig_x = _grid->origin().first;
+            float orig_y = _grid->origin().second;
+            ImGui::DragFloat("origin x", &orig_x, 1, -1000, 1000);
+            ImGui::DragFloat("origin y", &orig_y, 1, -1000, 1000);
+            _grid->set_origin(orig_x, orig_y);
+            math::set_translation(_grid_obj->_transform, {orig_x, orig_y, 0});
             ImGui::End();
         });
     // create the tiles and set them to non-visible
@@ -88,12 +94,6 @@ void GridRenderer<CellT>::create_tiles() {
                    {{ step, 0.0f, 0.0f}, {255,155,155,255}},//, { 0, 0, 1}, {1,0}},
                    {{ step, step, 0.0f}, {255,155,155,255}},//, { 0, 0, 1}, {1,1}}, 
     };
-    // md.vertices = {{{-1.0f, 1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,1}},
-    //                {{-1.0f,-1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,0}},
-    //                {{ 1.0f,-1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {1,0}},
-    //                {{-1.0f, 1.0f, 0.0f}, {255,255,255,255}, { 0, 0, 1}, {0,1}},
-    //                {{ 1.0f,-1.0f,-0.0f}, {255,255,255,255}, { 0, 0,-1}, {1,0}},
-    //                {{ 1.0f, 1.0f,-0.0f}, {255,255,255,255}, { 0, 0,-1}, {1,1}}, };
     // mesh
     glengine::Mesh *mesh = _eng->create_mesh(md.vertices, md.indices);
 

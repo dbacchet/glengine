@@ -4,7 +4,9 @@ add_library(grid STATIC grid.h
 target_include_directories(grid PUBLIC .
                                        ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(map_rasterizer map_rasterizer.cpp)
+add_executable(map_rasterizer cmdline.h
+                              grid_renderer.h
+                              map_rasterizer.cpp)
 target_link_libraries(map_rasterizer PUBLIC grid
                                             glengine
                                             glcontext_glfw)

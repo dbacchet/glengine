@@ -33,17 +33,25 @@ template <typename CellT = double> class Grid2D {
     }
     virtual ~Grid2D() = default;
 
+    void clean() {
+        _data.clear();
+        _data.resize(_nx * _ny);
+    }
     std::pair<double, double> origin() const { return std::make_pair(_origin_x, _origin_y); }
+    void set_origin(double ox, double oy) {
+        _origin_x = ox;
+        _origin_y = oy;
+    }
     std::pair<uint32_t, uint32_t> size() const { return std::make_pair(_nx, _ny); }
     std::pair<double, double> len() const { return std::make_pair(_len_x, _len_y); }
     double cell_len() const { return _cell_len; }
 
-    std::vector<CellT>& data() { return _data; }
+    std::vector<CellT> &data() { return _data; }
 
     /// offset in the data array for the given coordinate
     std::optional<uint32_t> offset_for_pos(double px, double py) {
-        int32_t ix = int32_t(std::floor((px-_origin_x)/_cell_len));
-        int32_t iy = int32_t(std::floor((py-_origin_y)/_cell_len));
+        int32_t ix = int32_t(std::floor((px - _origin_x) / _cell_len));
+        int32_t iy = int32_t(std::floor((py - _origin_y) / _cell_len));
         if (ix < 0 || ix >= _nx || iy < 0 || iy >= _ny) {
             return std::optional<uint32_t>();
         }
@@ -59,32 +67,30 @@ template <typename CellT = double> class Grid2D {
         return _data[iy * _nx + ix];
     }
     // access grid cell by index, with no bounds check
-    CellT& at_index(int32_t ix, int32_t iy) {
-        return _data[iy * _nx + ix];
-    }
+    CellT &at_index(int32_t ix, int32_t iy) { return _data[iy * _nx + ix]; }
 
     /// access grid cell by position, with bound checking
     /// \return optional with a copy of the cell value or nothing
     std::optional<CellT> at_pos_safe(double px, double py) const {
-        int32_t ix = int32_t(std::floor((px-_origin_x)/_cell_len));
-        int32_t iy = int32_t(std::floor((py-_origin_y)/_cell_len));
+        int32_t ix = int32_t(std::floor((px - _origin_x) / _cell_len));
+        int32_t iy = int32_t(std::floor((py - _origin_y) / _cell_len));
         if (ix < 0 || ix >= _nx || iy < 0 || iy >= _ny) {
             return std::optional<CellT>();
         }
         return _data[iy * _nx + ix];
     }
     /// access grid cell by position, with no bounds check
-    CellT& at_pos(double px, double py) {
-        int32_t ix = int32_t(std::floor((px-_origin_x)/_cell_len));
-        int32_t iy = int32_t(std::floor((py-_origin_y)/_cell_len));
+    CellT &at_pos(double px, double py) {
+        int32_t ix = int32_t(std::floor((px - _origin_x) / _cell_len));
+        int32_t iy = int32_t(std::floor((py - _origin_y) / _cell_len));
         return _data[iy * _nx + ix];
     }
 
     /// set value at a given pos, performing bounds check.
     /// \return true if the value has been set, false otherwise
     bool set_at_pos_safe(double px, double py, CellT value) {
-        int32_t ix = int32_t(std::floor((px-_origin_x)/_cell_len));
-        int32_t iy = int32_t(std::floor((py-_origin_y)/_cell_len));
+        int32_t ix = int32_t(std::floor((px - _origin_x) / _cell_len));
+        int32_t iy = int32_t(std::floor((py - _origin_y) / _cell_len));
         if (ix < 0 || ix >= _nx || iy < 0 || iy >= _ny) {
             return false;
         }
@@ -92,6 +98,15 @@ template <typename CellT = double> class Grid2D {
         return true;
     }
 
+    void rasterize_segment(double p0x, double p0y, double p1x, double p1y, double step, CellT value) {
+        double len = std::sqrt((p1x - p0x) * (p1x - p0x) + (p1y - p0y) * (p1y - p0y));
+        double u = step / len;
+        for (double u = 0; u <= len; u += step / len) {
+            double px = p0x * (1 - u) + u * p1x;
+            double py = p0y * (1 - u) + u * p1y;
+            set_at_pos_safe(px, py, value);
+        }
+    }
 
   protected:
     double _origin_x = 0.0;
