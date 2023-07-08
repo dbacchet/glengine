@@ -108,7 +108,7 @@ std::vector<glengine::Vertex> create_map_polyline(const std::string &map_filenam
     };
 
     for (const auto &l : data["lane"]) {
-        if (l.count("leftBoundary")>0) {
+        if (l.count("leftBoundary") > 0) {
             const auto &b = l["leftBoundary"];
             parse_lane_boundary(b);
         }
@@ -122,11 +122,29 @@ std::vector<glengine::Vertex> create_map_polyline(const std::string &map_filenam
     return vertices;
 }
 
+// create a map polyline from a json file with segments
+std::vector<glengine::Vertex> create_map_polyline_from_json(const std::string &map_filename) {
+    std::vector<glengine::Vertex> vertices;
+
+    std::ifstream f(map_filename.c_str());
+    auto data = nlohmann::json::parse(f);
+    f.close();
+
+    for (const auto &s : data) {
+        const auto &p0 = s["p0"];
+        const auto &p1 = s["p1"];
+        vertices.push_back({{float(p0["x"]), float(p0["y"]), p0["z"]}});
+        vertices.push_back({{float(p1["x"]), float(p1["y"]), p1["z"]}});
+    }
+    return vertices;
+}
+
 int main(int argc, char *argv[]) {
     stm_setup();
 
     cmdline::parser cl;
     cl.add<std::string>("file", 'f', "map file name", false, "");
+    cl.add<std::string>("json", 'j', "map segments file name", false, "");
     cl.add<uint32_t>("width", 'w', "window width", false, 1280, cmdline::range(16, 65535));
     cl.add<uint32_t>("height", 'h', "window height", false, 720, cmdline::range(16, 65535));
     cl.add("mrt", 'm', "use MRT and enable effects");
@@ -134,6 +152,7 @@ int main(int argc, char *argv[]) {
     cl.parse_check(argc, argv);
 
     std::string map_filename = cl.get<std::string>("file");
+    std::string json_segments_filename = cl.get<std::string>("json");
     uint32_t width = cl.get<uint32_t>("width");
     uint32_t height = cl.get<uint32_t>("height");
     bool vsync = !cl.exist("novsync");
@@ -160,7 +179,7 @@ int main(int argc, char *argv[]) {
     // add renderables to the scene
     eng.create_object(grid_renderable, nullptr, 101); // renderable is _copied_ in the renderobject
 
-    Grid2D<double> grid(200.0, 90.0, 50.0, 30.0, 0.1);
+    Grid2D<double> grid(200.0, 90.0, 50.0, 30.0, 0.2);
     // for (double xx = 0; xx < 50; xx += 0.1) {
     //     grid.set_at_pos_safe(xx, xx / 2 + 0.2, 1);
     // }
@@ -169,49 +188,52 @@ int main(int argc, char *argv[]) {
     GridRenderer<double> grid_renderer(&eng, &grid);
     grid_renderer.init();
 
+    std::vector<glengine::Vertex> map_segments;
     // create map from file
     if (map_filename != "") {
-        glengine::Object *map_object = eng.create_object();
-        create_map_polylines(eng, map_object, map_filename);
-
         // create a single polyline for the map
-        std::vector<glengine::Vertex> map_segments = create_map_polyline(map_filename);
-        glengine::Mesh *map_mesh = eng.create_mesh();
-        map_mesh->init(map_segments);
-        glengine::Renderable map_renderable = {
-            map_mesh, eng.create_material<glengine::MaterialFlat>(SG_PRIMITIVETYPE_LINES, SG_INDEXTYPE_NONE)};
-        auto map_object2 = eng.create_object(map_renderable);
-
-        eng.add_ui_function([&]() {
-            ImGui::Begin("Map Info");
-            auto &mat = map_object->_transform;
-            ImGui::DragFloat("center x", &mat.at(3, 0), 1, -1000, 1000);
-            ImGui::DragFloat("center y", &mat.at(3, 1), 1, -1000, 1000);
-            ImGui::DragFloat("center z", &mat.at(3, 2), 1, -1000, 1000);
-            ImGui::End();
-
-            ImGui::Begin("Camera Info");
-            float &azimuth = eng._camera_manipulator.azimuth();
-            float &elevation = eng._camera_manipulator.elevation();
-            float &distance = eng._camera_manipulator.distance();
-            ImGui::DragFloat("azimuth", &azimuth, 0.01, -2 * M_PI, 2 * M_PI);
-            ImGui::DragFloat("elevation", &elevation, 0.01, 0, M_PI);
-            ImGui::DragFloat("distance", &distance, 0.01, 0, 1000.0);
-            ImGui::End();
-
-            ImGui::Begin("Grid Info");
-            if (ImGui::Button("rasterize")) {
-                grid.clean();
-                for (int i=0; i<map_segments.size()-1; i+=2) {
-                    const auto &p0 = map_segments[i];
-                    const auto &p1 = map_segments[i+1];
-                    grid.rasterize_segment(p0.pos.x,p0.pos.y,p1.pos.x,p1.pos.y,0.05, 1.0);
-                }
-                grid_renderer.update();
-            }
-            ImGui::End();
-        });
+        map_segments = create_map_polyline(map_filename);
     }
+    // create map from file
+    if (json_segments_filename != "") {
+        // create a single polyline for the map
+        map_segments = create_map_polyline_from_json(json_segments_filename);
+    }
+    glengine::Mesh *map_mesh = eng.create_mesh();
+    map_mesh->init(map_segments);
+    glengine::Renderable map_renderable = {
+        map_mesh, eng.create_material<glengine::MaterialFlat>(SG_PRIMITIVETYPE_LINES, SG_INDEXTYPE_NONE)};
+    glengine::Object *map_object = eng.create_object(map_renderable);
+
+    eng.add_ui_function([&]() {
+        ImGui::Begin("Map Info");
+        auto &mat = map_object->_transform;
+        ImGui::DragFloat("center x", &mat.at(3, 0), 1, -1000, 1000);
+        ImGui::DragFloat("center y", &mat.at(3, 1), 1, -1000, 1000);
+        ImGui::DragFloat("center z", &mat.at(3, 2), 1, -1000, 1000);
+        ImGui::End();
+
+        ImGui::Begin("Camera Info");
+        float &azimuth = eng._camera_manipulator.azimuth();
+        float &elevation = eng._camera_manipulator.elevation();
+        float &distance = eng._camera_manipulator.distance();
+        ImGui::DragFloat("azimuth", &azimuth, 0.01, -2 * M_PI, 2 * M_PI);
+        ImGui::DragFloat("elevation", &elevation, 0.01, 0, M_PI);
+        ImGui::DragFloat("distance", &distance, 0.01, 0, 1000.0);
+        ImGui::End();
+
+        ImGui::Begin("Grid Info");
+        if (ImGui::Button("rasterize")) {
+            grid.clean();
+            for (int i = 0; i < map_segments.size() - 1; i += 2) {
+                const auto &p0 = map_segments[i];
+                const auto &p1 = map_segments[i + 1];
+                grid.rasterize_segment(p0.pos.x, p0.pos.y, p1.pos.x, p1.pos.y, 0.05, 1.0);
+            }
+            grid_renderer.update();
+        }
+        ImGui::End();
+    });
 
     eng._camera_manipulator.set_azimuth(-0.4f).set_elevation(0.8f).set_distance(100.0f);
 
